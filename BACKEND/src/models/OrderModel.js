@@ -7,6 +7,19 @@ const OrderSchema = new mongoose.Schema(
             ref: 'User',
             required: false,
         },
+        // 🔥 NUEVO: Folio de orden limpio para WhatsApp (Ej: 1001, 1002)
+        orderNumber: {
+            type: Number,
+            unique: true,
+            sparse: true, // Permite que órdenes antiguas sin este número no generen error de duplicado
+        },
+        // 🔥 NUEVO: Tipo de entrega
+        deliveryType: {
+            type: String,
+            enum: ['delivery', 'pickup'],
+            required: true,
+            default: 'pickup',
+        },
         products: [
             {
                 productId: {
@@ -14,22 +27,10 @@ const OrderSchema = new mongoose.Schema(
                     ref: 'Product',
                     required: true,
                 },
-                name: {
-                    type: String,
-                    required: false,
-                },
-                price: {
-                    type: Number,
-                    required: true,
-                },
-                quantity: {
-                    type: Number,
-                    required: true,
-                },
-                imageUrl: {
-                    type: String,
-                    required: false,
-                },
+                name: { type: String, required: false },
+                price: { type: Number, required: true },
+                quantity: { type: Number, required: true },
+                imageUrl: { type: String, required: false },
             },
         ],
         totalAmount: {
@@ -45,88 +46,34 @@ const OrderSchema = new mongoose.Schema(
                 'rejected',
                 'cancelled',
                 'in_process',
+                'whatsapp_pending', // Estado específico para pedidos manuales
             ],
-            default: 'pending',
+            default: 'whatsapp_pending',
         },
-        // Información específica de Mercado Pago
-        mercadoPagoData: {
-            preferenceId: {
-                type: String,
-                required: false,
-            },
-            payerEmail: {
-                type: String,
-                required: false,
-            },
-            // Campos mínimos para webhook
-            paymentId: {
-                type: String,
-                required: false,
-            },
-            paymentStatus: {
-                type: String,
-                enum: [
-                    'pending',
-                    'approved',
-                    'rejected',
-                    'cancelled',
-                    'in_process',
-                ],
-                default: 'pending',
-            },
-            transactionAmount: {
-                type: Number,
-                required: false,
-            },
-            paymentMethodId: {
-                type: String,
-                required: false,
-            },
-            paidAt: {
-                type: Date,
-                required: false,
-            },
-        },
-        // Información de envío
         shippingInfo: {
-            firstName: {
-                type: String,
-                required: true,
-            },
-            lastName: {
-                type: String,
-                required: true,
-            },
-            email: {
-                type: String,
-                required: false,
-            },
-            phone: {
-                type: String,
-                required: true,
-            },
+            firstName: { type: String, required: true },
+            lastName: { type: String, required: true },
+            email: { type: String, required: false },
+            phone: { type: String, required: true },
+            // La dirección ahora es un objeto pero sus campos no son "required: true" a nivel de base de datos
+            // para permitir el modo "retiro/pickup"
             address: {
-                street: {
-                    type: String,
-                    required: true,
-                },
-                number: {
-                    type: String,
-                    required: true,
-                },
-                city: {
-                    type: String,
-                    required: true,
-                },
-                state: {
-                    type: String,
-                    required: true,
-                },
-                zipCode: {
-                    type: String,
-                    required: true,
-                },
+                street: { type: String, default: '' },
+                number: { type: String, default: '' },
+                city: { type: String, default: '' },
+                state: { type: String, default: '' },
+                zipCode: { type: String, default: '' },
             },
+        },
+        // Conservamos Mercado Pago para el futuro
+        mercadoPagoData: {
+            preferenceId: { type: String },
+            payerEmail: { type: String },
+            paymentId: { type: String },
+            paymentStatus: { type: String },
+            transactionAmount: { type: Number },
+            paymentMethodId: { type: String },
+            paidAt: { type: Date },
         },
     },
     { timestamps: true }

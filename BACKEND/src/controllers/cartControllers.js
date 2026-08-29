@@ -86,9 +86,9 @@ export const getCart = async (req, res) => {
     try {
         const { userId } = req.params
 
-        const cart = await CartModel.findOne({ userId }).populate(
-            'products.productId'
-        )
+        const cart = await CartModel.findOne({ userId }).populate({
+            path: 'products.productId',
+        })
 
         if (cart) {
             res.status(200).json({
@@ -237,13 +237,13 @@ export const getCartTotal = async (req, res) => {
 
         if (!userId) {
             return res.status(400).json({
-                message: 'El userId es requerid',
+                message: 'El userId es requerido',
             })
         }
 
-        const cart = await CartModel.findOne({ userId }).populate(
-            'products.productId'
-        )
+        const cart = await CartModel.findOne({ userId }).populate({
+            path: 'products.productId',
+        })
 
         if (!cart) {
             return res.status(404).json({
@@ -251,21 +251,18 @@ export const getCartTotal = async (req, res) => {
             })
         }
 
-        if (cart) {
-            const total = cart.products.reduce((acc, item) => {
-                return acc + item.productId.price * item.quantity
-            }, 0)
+        const total = cart.products.reduce((acc, item) => {
+            return acc + (item.productId?.price || 0) * item.quantity
+        }, 0)
 
-            res.status(200).json({
-                message: 'Total obtenido con éxito',
-                total,
-            })
-        } else {
-            res.status(404).json({ message: 'Carrito no encontrado' })
-        }
+        res.status(200).json({
+            message: 'Total obtenido con éxito',
+            total,
+        })
     } catch (error) {
         res.status(500).json({
             message: 'Error del servidor al obtener el total',
+            error: error.message,
         })
     }
 }

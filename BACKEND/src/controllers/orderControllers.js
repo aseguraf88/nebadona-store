@@ -1,86 +1,82 @@
-import mercadopago from '../config/mercadoPagoConfig.js'
 import OrderModel from '../models/OrderModel.js'
 
-export const createOrder = async (req, res) => {
+export const createWhatsAppOrder = async (req, res) => {
     try {
-        const { items, payer, shippingInfo } = req.body
+        const { items, customer, deliveryType, shippingInfo, totalAmount } =
+            req.body
 
-        if (!items || !items.length) {
-            return res.status(400).json({
-                success: false,
-                message: 'Se requieren items para crear la orden',
-            })
+        // 1. Validaciones de seguridad
+        if (!items || items.length === 0) {
+            return res
+                .status(400)
+                .json({ success: false, message: 'El carrito está vacío' })
+        }
+        if (!customer || !customer.firstName || !customer.phone) {
+            return res
+                .status(400)
+                .json({ success: false, message: 'Faltan datos de contacto' })
         }
 
-        if (!payer || !payer.email) {
-            return res.status(400).json({
-                success: false,
-                message: 'Se requiere email del comprador',
-            })
+        // 2. Generación de Folio Autoincremental
+        // Busca la última orden que tenga un orderNumber asignado
+        const lastOrder = await OrderModel.findOne({
+            orderNumber: { $exists: true },
+        })
+            .sort({ orderNumber: -1 })
+            .limit(1)
+
+        const orderNumber =
+            lastOrder && lastOrder.orderNumber
+                ? lastOrder.orderNumber + 1
+                : 1001
+
+        // 3. Formateo de dirección según la modalidad
+        const formattedShippingInfo = {
+            firstName: customer.firstName,
+            lastName: customer.lastName,
+            email: customer.email || '',
+            phone: customer.phone,
+            address:
+                deliveryType === 'delivery'
+                    ? {
+                          street: shippingInfo?.street || '',
+                          number: shippingInfo?.number || '',
+                          city: shippingInfo?.city || '',
+                          state: shippingInfo?.state || '',
+                          zipCode: shippingInfo?.zipCode || '',
+                      }
+                    : {},
         }
 
-        if (!shippingInfo?.firstName || !shippingInfo?.lastName || !shippingInfo?.phone || !shippingInfo?.address) {
-            return res.status(400).json({
-                success: false,
-                message: 'Faltan datos de envío obligatorios',
-            })
-        }
-
-        // Crear la orden en la base de datos primero
+        // 4. Guardar en Base de Datos
         const newOrder = new OrderModel({
-            userId: req.user?._id,
+            userId: req.user?._id || null,
+            orderNumber,
+            deliveryType,
             products: items.map((item) => ({
-                productId: item.id,
+                productId: item._id || item.id, // Compatibilidad por si pasas _id o id
+                name: item.name,
+                price: item.price,
                 quantity: item.quantity,
-                price: item.unit_price,
+                imageUrl: item.imageUrl || '',
             })),
-            totalAmount: items.reduce(
-                (total, item) => total + item.unit_price * item.quantity,
-                0
-            ),
-            status: 'pending',
-            shippingInfo: shippingInfo,
-            mercadoPagoData: {
-                payerEmail: payer.email,
-            },
+            totalAmount,
+            status: 'whatsapp_pending',
+            shippingInfo: formattedShippingInfo,
         })
 
         const savedOrder = await newOrder.save()
 
-        // Crear preferencia en Mercado Pago con external_reference
-        const mpPayload = {
-            items: items,
-            payer: { email: payer.email },
-            external_reference: savedOrder._id.toString(),
-            back_urls: {
-                success: `${process.env.FRONTEND_URL}/payment/success`,
-                failure: `${process.env.FRONTEND_URL}/payment/failure`,
-                pending: `${process.env.FRONTEND_URL}/payment/pending`,
-            },
-            notification_url: `${process.env.BACKEND_URL || 'http://localhost:3001'}/api/webhook`,
-            metadata: { order_id: savedOrder._id.toString() },
-        }
-
-        const result = await mercadopago.preferences.create(mpPayload)
-
-        // response body contains preference info
-        const pref = result.body || result
-
-        // Actualizar la orden con el ID de preferencia de MP
-        savedOrder.mercadoPagoData.preferenceId = pref.id
-        await savedOrder.save()
-
         res.status(201).json({
             success: true,
-            message: 'Orden creada exitosamente',
-            paymentUrl: (pref.init_point || '').trim(),
-            preferenceId: pref.id,
+            message: 'Orden registrada con éxito',
+            orderNumber: savedOrder.orderNumber,
         })
     } catch (error) {
-        console.error('Error al crear orden:', error)
+        console.error('Error en createWhatsAppOrder:', error)
         res.status(500).json({
             success: false,
-            message: 'Error al crear la orden',
+            message: 'Error interno del servidor',
         })
     }
 }
