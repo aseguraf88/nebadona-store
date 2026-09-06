@@ -85,43 +85,12 @@ export const ProductContextProvider = ({ children }) => {
     // MUTACIONES DE PRODUCTOS (CRUD)
     // ==========================================
     const updateProduct = useCallback(async (id, data) => {
-        const sanitizedImageUrls = (data.imageUrls || [])
-            .filter(Boolean)
-            .slice(0, 6)
-        const colorData = normalizeProductColorData({
-            color: data.color,
-            colors: data.colors,
-            source: 'manual',
-        })
-
-        const cleanData = {
-            name: data.name,
-            description: data.description,
-            price: Number(data.price),
-            stock: Number(data.stock),
-            ...(data.sku ? { sku: data.sku } : {}),
-            imageUrl: data.imageUrl || sanitizedImageUrls[0] || '',
-            imageUrls: sanitizedImageUrls,
-            color: colorData.color,
-            colors: colorData.colors,
-            compareAtPrice:
-                data.compareAtPrice === null || data.compareAtPrice === ''
-                    ? null
-                    : Number(data.compareAtPrice),
-            tags: Array.isArray(data.tags) ? data.tags : [],
-            featured: Boolean(data.featured),
-            popular: Boolean(data.popular),
-            isActive: data.isActive ?? true,
-            size: data.size || '',
-            sock_type: data.sock_type || '',
-            product_category: data.product_category || '',
-            design_theme: data.design_theme || '',
-            franchise_name: data.franchise_name || '',
-        }
+        setProductsLoading(true)
+        setProductLoading(true)
 
         try {
-            // AQUÍ DELEGAMOS A PRODUCT SERVICES
-            const response = await productServices.updateProduct(id, cleanData)
+            // ¡Pasamos la data directamente sin botar nada a la basura!
+            const response = await productServices.updateProduct(id, data)
 
             if (response.status === 200) {
                 setProduct(response.data)
@@ -147,43 +116,11 @@ export const ProductContextProvider = ({ children }) => {
     }, [])
 
     const createProduct = useCallback(async (data) => {
-        const sanitizedImageUrls = (data.imageUrls || [])
-            .filter(Boolean)
-            .slice(0, 6)
-        const colorData = normalizeProductColorData({
-            color: data.color,
-            colors: data.colors,
-            source: 'manual',
-        })
-
-        const cleanData = {
-            name: data.name,
-            description: data.description,
-            price: Number(data.price),
-            stock: Number(data.stock),
-            ...(data.sku ? { sku: data.sku } : {}),
-            imageUrl: data.imageUrl || sanitizedImageUrls[0] || '',
-            imageUrls: sanitizedImageUrls,
-            color: colorData.color,
-            colors: colorData.colors,
-            compareAtPrice:
-                data.compareAtPrice === null || data.compareAtPrice === ''
-                    ? null
-                    : Number(data.compareAtPrice),
-            tags: Array.isArray(data.tags) ? data.tags : [],
-            featured: Boolean(data.featured),
-            popular: Boolean(data.popular),
-            isActive: data.isActive ?? true,
-            size: data.size || '',
-            sock_type: data.sock_type || '',
-            product_category: data.product_category || '',
-            design_theme: data.design_theme || '',
-            franchise_name: data.franchise_name || '',
-        }
+        setProductLoading(true)
 
         try {
-            // AQUÍ DELEGAMOS A PRODUCT SERVICES
-            const response = await productServices.createProduct(cleanData)
+            // ¡Pasamos la data directamente!
+            const response = await productServices.createProduct(data)
 
             if (response.status === 201) {
                 setProducts((prevProducts) => [

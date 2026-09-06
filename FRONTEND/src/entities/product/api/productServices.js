@@ -12,8 +12,9 @@ const FRANCHISE_NAMES_API_URL =
 axios.defaults.withCredentials = true
 
 const productServices = {
-    getProducts: async () => {
-        const response = await axios.get(API_URL)
+    getProducts: async (queryString = '') => {
+        // Axios sumará el filtro al final de la URL si es que se lo envías
+        const response = await axios.get(`${API_URL}${queryString}`)
         return response.data
     },
     getProductById: async (id) => {

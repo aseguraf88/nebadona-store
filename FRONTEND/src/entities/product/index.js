@@ -2,7 +2,6 @@
 
 export { default as ProductCard } from './ui/ProductCard'
 
-export { COLOR_FAMILIES } from './config/colorFamilies.js'
 export { normalizeCategoryKey } from './config/productTypeOptions.js'
 export { SIZE_OPTIONS } from './config/productTypeOptions.js'
 export { getProductTypesByCategory } from './config/productTypeOptions.js'

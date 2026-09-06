@@ -50,7 +50,17 @@ const ShoppingPage = () => {
 
     // 🔥 LÓGICA DE FILTRADO Y ORDENAMIENTO (Usamos useMemo para mayor rendimiento)
     const processedProducts = useMemo(() => {
-        let result = [...(products || [])]
+        let result = [...(products || [])].filter(
+            (p) => p.status?.trim().toUpperCase() === 'PUBLISHED',
+        )
+
+        console.log(
+            '🔍 LO QUE LLEGA DE LA BD:',
+            products.map((p) => ({
+                nombre: p.name,
+                estado: p.status,
+            })),
+        )
 
         // 1. Motor de búsqueda
         if (searchQuery) {

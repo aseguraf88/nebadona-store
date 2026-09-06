@@ -5,6 +5,19 @@ import { HeroCarousel } from '../../../widgets/hero'
 const Home = () => {
     const { products, productsLoading, error } = useProduct()
 
+    // 🔥 LA MAGIA: Filtramos la lista antes de que toque la pantalla
+    const publishedProducts = (products || []).filter(
+        (p) => p.status?.trim().toUpperCase() === 'PUBLISHED',
+    )
+
+    console.log(
+        '🔍 LO QUE LLEGA DE LA BD:',
+        products.map((p) => ({
+            nombre: p.name,
+            estado: p.status,
+        })),
+    )
+
     return (
         <div>
             <HeroCarousel />
@@ -17,14 +30,14 @@ const Home = () => {
                     <div className="loading loading-infinity" />
                 ) : error ? (
                     <p>Error al cargar los productos</p>
-                ) : products.length === 0 ? (
+                ) : publishedProducts.length === 0 ? ( // Usamos la lista limpia aquí
                     <p className="text-base-content/70">
                         No encontramos productos para esta búsqueda.
                     </p>
                 ) : (
                     <ProductSection
                         title="Lo Nuevo"
-                        products={products}
+                        products={publishedProducts} // Y le pasamos la lista limpia aquí
                         verMasHref="#catalogo"
                     />
                 )}

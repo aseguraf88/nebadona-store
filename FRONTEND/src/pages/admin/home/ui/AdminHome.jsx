@@ -1,12 +1,10 @@
 import { Link } from 'react-router-dom'
 
 const AdminHome = () => {
-    // Datos simulados para visualizar el layout.
-    // En el futuro, estos vendrán de tu base de datos.
     const stats = {
         salesToday: 45990,
-        pendingOrders: 3,
-        lowStockItems: 2,
+        salesCount: 12,
+        ticketMedio: 3832,
         totalCustomers: 124,
     }
 
@@ -17,154 +15,175 @@ const AdminHome = () => {
         }).format(amount || 0)
     }
 
+    // Datos estructurados para la columna izquierda
+    const kpiCards = [
+        {
+            title: 'Facturación',
+            value: formatPrice(stats.salesToday),
+            trend: '+15%',
+            isPositive: true,
+            active: true, // Para simular el estado seleccionado de Kyte
+        },
+        {
+            title: 'Ventas',
+            value: stats.salesCount,
+            trend: '+2',
+            isPositive: true,
+            active: false,
+        },
+        {
+            title: 'Ticket Medio',
+            value: formatPrice(stats.ticketMedio),
+            trend: '-5%',
+            isPositive: false,
+            active: false,
+        },
+        {
+            title: 'Clientes Activos',
+            value: stats.totalCustomers,
+            trend: '+12',
+            isPositive: true,
+            active: false,
+        },
+    ]
+
     return (
-        <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-            <div className="mb-8">
-                <h1 className="text-2xl font-black text-base-content sm:text-3xl">
-                    Centro de Operaciones
+        <div className="w-full max-w-[1400px] mx-auto flex flex-col gap-6">
+            <header className="flex items-center justify-between">
+                <h1 className="text-2xl font-bold text-base-content">
+                    Estadísticas
                 </h1>
-                <p className="text-sm text-base-content/60 mt-1">
-                    Resumen de tu tienda al día de hoy.
-                </p>
-            </div>
-
-            {/* --- PILAR 1: KPIs (Tarjetas de métricas rápidas) --- */}
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8">
-                {/* Tarjeta Ventas */}
-                <div className="card bg-base-100 shadow-sm border border-base-200">
-                    <div className="card-body p-5">
-                        <div className="flex items-center justify-between">
-                            <h2 className="text-sm font-bold uppercase tracking-wider text-base-content/60">
-                                Ventas Hoy
-                            </h2>
-                            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-success/10 text-success">
-                                💰
-                            </span>
-                        </div>
-                        <p className="text-2xl font-black text-base-content mt-2">
-                            {formatPrice(stats.salesToday)}
-                        </p>
-                    </div>
+                {/* Selector de fecha simulado tipo Kyte */}
+                <div className="flex items-center gap-2 bg-base-100 border border-base-300 px-3 py-1.5 rounded-lg text-sm font-medium shadow-sm">
+                    <i className="ti ti-calendar text-base-content/50" />
+                    Este año: 2026
                 </div>
+            </header>
 
-                {/* Tarjeta Órdenes Pendientes */}
-                <div className="card bg-base-100 shadow-sm border border-base-200">
-                    <div className="card-body p-5">
-                        <div className="flex items-center justify-between">
-                            <h2 className="text-sm font-bold uppercase tracking-wider text-base-content/60">
-                                Órdenes Pendientes
-                            </h2>
-                            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-warning/10 text-warning">
-                                📦
-                            </span>
-                        </div>
-                        <p className="text-2xl font-black text-base-content mt-2">
-                            {stats.pendingOrders}
-                        </p>
-                        {stats.pendingOrders > 0 && (
-                            <div className="mt-2 text-xs text-warning font-semibold">
-                                Requieren tu atención
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
+                {/* COLUMNA IZQUIERDA: Tarjetas de KPI Verticales */}
+                <div className="lg:col-span-1 flex flex-col gap-3">
+                    {kpiCards.map((card, idx) => (
+                        <div
+                            key={idx}
+                            className={`card bg-base-100 border cursor-pointer transition-all ${
+                                card.active
+                                    ? 'border-l-4 border-l-primary border-y-base-200 border-r-base-200 shadow-sm'
+                                    : 'border-base-200 hover:border-base-300'
+                            }`}
+                        >
+                            <div className="card-body p-4">
+                                <span className="text-xs font-bold uppercase tracking-wider text-base-content/50 mb-1">
+                                    {card.title}
+                                </span>
+                                <div className="flex items-end justify-between">
+                                    <span
+                                        className={`text-2xl font-black ${card.active ? 'text-primary' : 'text-base-content'}`}
+                                    >
+                                        {card.value}
+                                    </span>
+                                    <span
+                                        className={`text-xs font-bold flex items-center gap-1 ${card.isPositive ? 'text-success' : 'text-error'}`}
+                                    >
+                                        <i
+                                            className={`ti ${card.isPositive ? 'ti-trending-up' : 'ti-trending-down'} text-base`}
+                                        />
+                                        {card.trend}
+                                    </span>
+                                </div>
                             </div>
-                        )}
-                    </div>
-                </div>
-
-                {/* Tarjeta Alertas de Inventario */}
-                <div className="card bg-base-100 shadow-sm border border-base-200">
-                    <div className="card-body p-5">
-                        <div className="flex items-center justify-between">
-                            <h2 className="text-sm font-bold uppercase tracking-wider text-base-content/60">
-                                Stock Crítico
-                            </h2>
-                            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-error/10 text-error">
-                                ⚠️
-                            </span>
                         </div>
-                        <p className="text-2xl font-black text-base-content mt-2">
-                            {stats.lowStockItems}
-                        </p>
-                    </div>
+                    ))}
                 </div>
 
-                {/* Tarjeta Clientes Totales */}
-                <div className="card bg-base-100 shadow-sm border border-base-200">
-                    <div className="card-body p-5">
-                        <div className="flex items-center justify-between">
-                            <h2 className="text-sm font-bold uppercase tracking-wider text-base-content/60">
-                                Clientes
-                            </h2>
-                            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                                👥
-                            </span>
-                        </div>
-                        <p className="text-2xl font-black text-base-content mt-2">
-                            {stats.totalCustomers}
-                        </p>
-                    </div>
-                </div>
-            </div>
+                {/* COLUMNA DERECHA: Gráfico y Datos Detallados */}
+                <div className="lg:col-span-3 flex flex-col gap-6">
+                    {/* Tarjeta de Gráfico (Placeholder) */}
+                    <div className="card bg-base-100 border border-base-200 shadow-sm">
+                        <div className="card-body p-0">
+                            {/* Tabs del gráfico */}
+                            <div className="flex border-b border-base-200 px-6 pt-4 gap-6 text-sm font-bold text-base-content/50 uppercase tracking-wider">
+                                <div className="pb-3 border-b-2 border-primary text-primary cursor-pointer">
+                                    Hora
+                                </div>
+                                <div className="pb-3 hover:text-base-content cursor-pointer transition-colors">
+                                    Día
+                                </div>
+                                <div className="pb-3 hover:text-base-content cursor-pointer transition-colors">
+                                    Mes
+                                </div>
+                            </div>
 
-            {/* --- SECCIÓN INFERIOR: Atajos Rápidos --- */}
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                {/* Tareas Rápidas */}
-                <div className="card bg-base-100 shadow-sm border border-base-200">
-                    <div className="card-body">
-                        <h3 className="text-lg font-bold border-b border-base-200 pb-2 mb-2">
-                            Acciones Rápidas
-                        </h3>
-                        <div className="flex flex-col gap-3 mt-2">
-                            <Link
-                                to="/admin/dashboard/products"
-                                className="btn btn-outline justify-start"
-                            >
-                                ➕ Añadir Nuevo Producto
-                            </Link>
-                            <Link
-                                to="/admin/dashboard/orders"
-                                className="btn btn-outline justify-start"
-                            >
-                                🚚 Coordinar Entregas
-                            </Link>
+                            {/* Simulación del área del gráfico */}
+                            <div className="h-64 w-full flex items-center justify-center bg-base-100/50">
+                                <div className="text-center text-base-content/40 flex flex-col items-center gap-2">
+                                    <i className="ti ti-chart-line text-4xl" />
+                                    <span className="text-sm font-medium">
+                                        El gráfico de {kpiCards[0].title} se
+                                        renderizará aquí
+                                    </span>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                {/* Últimas Órdenes (Mini-tabla) */}
-                <div className="card bg-base-100 shadow-sm border border-base-200">
-                    <div className="card-body">
-                        <h3 className="text-lg font-bold border-b border-base-200 pb-2 mb-2">
-                            Últimas Órdenes
-                        </h3>
+                    {/* Tabla de Detalle */}
+                    <div className="card bg-base-100 border border-base-200 shadow-sm">
                         <div className="overflow-x-auto">
-                            <table className="table table-sm">
+                            <table className="table table-zebra table-sm w-full">
                                 <thead>
-                                    <tr>
-                                        <th>Folio</th>
-                                        <th>Cliente</th>
-                                        <th>Estado</th>
+                                    <tr className="bg-base-200/50 text-base-content/60 text-xs uppercase tracking-wider">
+                                        <th className="py-3 px-6">Hora</th>
+                                        <th className="py-3 px-6">
+                                            Facturación
+                                        </th>
+                                        <th className="py-3 px-6">Ventas</th>
+                                        <th className="py-3 px-6">
+                                            Ticket Medio
+                                        </th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <tr>
-                                        <td className="font-mono font-bold">
-                                            #ORD-1042
+                                        <td className="py-3 px-6 text-error font-bold">
+                                            10:00
                                         </td>
-                                        <td>Juan Pérez</td>
-                                        <td>
-                                            <span className="badge badge-warning badge-sm">
-                                                Pendiente
-                                            </span>
+                                        <td className="py-3 px-6 text-error font-medium">
+                                            $ 0
+                                        </td>
+                                        <td className="py-3 px-6 text-error font-medium">
+                                            0
+                                        </td>
+                                        <td className="py-3 px-6 text-error font-medium">
+                                            $ 0
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td className="font-mono font-bold">
-                                            #ORD-1041
+                                        <td className="py-3 px-6 font-bold text-base-content/70">
+                                            11:00
                                         </td>
-                                        <td>María Gómez</td>
-                                        <td>
-                                            <span className="badge badge-success badge-sm">
-                                                Entregado
-                                            </span>
+                                        <td className="py-3 px-6 font-medium">
+                                            $ 14.990
+                                        </td>
+                                        <td className="py-3 px-6 font-medium">
+                                            1
+                                        </td>
+                                        <td className="py-3 px-6 font-medium">
+                                            $ 14.990
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td className="py-3 px-6 text-success font-bold">
+                                            12:00
+                                        </td>
+                                        <td className="py-3 px-6 text-success font-medium">
+                                            $ 31.000
+                                        </td>
+                                        <td className="py-3 px-6 text-success font-medium">
+                                            11
+                                        </td>
+                                        <td className="py-3 px-6 text-success font-medium">
+                                            $ 2.818
                                         </td>
                                     </tr>
                                 </tbody>

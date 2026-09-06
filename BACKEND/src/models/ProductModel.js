@@ -1,224 +1,183 @@
 import mongoose from 'mongoose'
-import { COLOR_FAMILY_NAMES } from '../constants/colorFamilies.js'
+const { Schema } = mongoose
 
-const normalizeSku = (value = '') => {
-    return String(value || '')
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .toUpperCase()
-        .replace(/\s+/g, '-')
-        .replace(/[^A-Z0-9-]/g, '')
-        .replace(/-+/g, '-')
-        .replace(/^-+|-+$/g, '')
-}
-
-// NUEVA FUNCIÓN: Corta a 3 letras o toma iniciales
-const formatSkuPart = (value = '') => {
-    const cleanValue = String(value || '')
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .toUpperCase()
-        .trim()
-        .replace(/[^A-Z0-9\s]/g, '') // Quita puntuación pero mantiene espacios
-
-    if (!cleanValue) return ''
-
-    const words = cleanValue.split(/\s+/)
-    if (words.length === 1) {
-        // Una sola palabra: toma hasta las 3 primeras letras (ej. Calcetines -> CAL)
-        return words[0].substring(0, 3)
-    } else {
-        // Varias palabras: toma la primera letra/número de cada una (ej. Goku Super Saijan 2 -> GSS2)
-        return words.map((word) => word.charAt(0)).join('')
-    }
-}
-
-const resolveSkuColorPart = (doc) => {
-    // Busca el nombre del color en lugar del hex (ej. "Naranjo" en vez de "#FFA500")
-    if (Array.isArray(doc?.colors) && doc.colors.length > 0) {
-        const firstUseful = doc.colors.find(
-            (entry) => entry?.name && !entry.name.startsWith('#')
-        )
-        if (firstUseful) return firstUseful.name
-    }
-
-    // Fallback: si hay una familia de color guardada
-    if (Array.isArray(doc?.colorFamily) && doc.colorFamily.length > 0) {
-        return doc.colorFamily[0]
-    }
-
-    return doc?.color || ''
-}
-
-const generateSkuBase = (doc) => {
-    const parts = [
-        formatSkuPart(doc?.product_category),
-        formatSkuPart(doc?.franchise_name),
-        formatSkuPart(doc?.character_name), // <-- Tu nuevo campo de Personaje
-        formatSkuPart(resolveSkuColorPart(doc)),
-        normalizeSku(doc?.size), // <-- La talla la dejamos intacta (L, XL, S-M)
-    ]
-
-    return parts.filter(Boolean).join('-')
-}
-
-const colorOptionSchema = new mongoose.Schema(
+const VariantSchema = new Schema(
     {
-        name: {
+        sku: {
             type: String,
             required: true,
             trim: true,
+            uppercase: true,
         },
-        hex: {
+        size: {
             type: String,
-            required: true,
             trim: true,
-            match: /^#([A-Fa-f0-9]{3}|[A-Fa-f0-9]{6})$/,
+            uppercase: true,
+            default: null,
         },
-        percentage: {
-            type: Number,
-            min: 0,
-            max: 100,
-            default: 0,
-        },
-        source: {
+        baseColor: {
             type: String,
-            enum: ['auto', 'manual', 'fallback'],
-            default: 'auto',
-        },
-        selected: {
-            type: Boolean,
-            default: false,
-        },
-    },
-    { _id: false }
-)
-
-const ProductSchema = new mongoose.Schema(
-    {
-        name: {
-            type: String,
-            required: true,
             trim: true,
+            lowercase: true,
+            default: null,
         },
-        description: {
-            type: String,
-            required: true,
-            trim: true,
-        },
-        price: {
-            type: Number,
-            required: true,
-            min: 0,
+        designColors: {
+            type: [String],
+            default: [],
         },
         stock: {
             type: Number,
             required: true,
             min: 0,
+            default: 0,
         },
-        sku: {
+        price: {
+            type: Number,
+            min: 0,
+            default: null,
+        },
+    },
+    { _id: false }
+)
+
+const ProductSchema = new Schema(
+    {
+        handle: {
+            type: String,
+            required: [true, 'Handle is required.'],
+            unique: true,
+            trim: true,
+            uppercase: true,
+            index: true,
+        },
+        name: {
             type: String,
             required: true,
-            unique: true,
-            uppercase: true,
             trim: true,
+            index: true,
         },
-        imageUrl: {
+        description: {
             type: String,
-            required: false,
-            default: '',
-        },
-        imageUrls: {
-            type: [String],
-            default: [],
-            validate: {
-                validator: (value) => value.length <= 6,
-                message: 'Se permiten hasta 6 imagenes por producto.',
-            },
-        },
-        color: {
-            type: String,
-            default: '',
             trim: true,
+            maxlength: 1000,
+            default: '',
+            required: [
+                function () {
+                    return this.status === 'PUBLISHED'
+                },
+                'Description is required to publish.',
+            ],
+        },
+        product_category: {
+            type: String,
+            required: true,
+            trim: true,
+            lowercase: true,
+            index: true,
+        },
+        gender: {
+            type: String,
+            enum: ['men', 'women', 'unisex', 'kids'],
+            default: 'unisex',
+            index: true,
+        },
+        material: {
+            type: String,
+            trim: true,
+            lowercase: true,
+            default: null,
+        },
+        franchise_name: {
+            type: String,
+            trim: true,
+            lowercase: true,
+            default: null,
+        },
+        character_name: {
+            type: String,
+            trim: true,
+            lowercase: true,
+            default: null,
+        },
+        design_theme: {
+            type: String,
+            trim: true,
+            lowercase: true,
+            default: null,
+        },
+        price: {
+            type: Number,
+            min: 0,
+            required: [
+                function () {
+                    return this.status === 'PUBLISHED'
+                },
+                'Base price is required to publish.',
+            ],
             validate: {
-                validator: (value) =>
-                    !value ||
-                    /^#([A-Fa-f0-9]{3}|[A-Fa-f0-9]{6})$/.test(value) ||
-                    /^[\p{L}\s]+$/u.test(value),
+                validator: function (value) {
+                    if (this.status === 'PUBLISHED' && value <= 0) return false
+                    return true
+                },
                 message:
-                    'color debe ser un nombre o un valor hexadecimal válido.',
+                    'A published product must have a price greater than 0.',
             },
-        },
-        colors: {
-            type: [colorOptionSchema],
-            default: [],
-            validate: {
-                validator: (value) => Array.isArray(value) && value.length <= 4,
-                message: 'colors debe tener máximo 4 opciones.',
-            },
-        },
-        colorFamily: {
-            type: [String],
-            enum: COLOR_FAMILY_NAMES,
-            validate: {
-                validator: (value) =>
-                    value.length === 0 ||
-                    (value.length >= 1 && value.length <= 4),
-                message:
-                    'colorFamily debe tener entre 1 y 4 valores, el primero es el principal.',
-            },
-        },
-        featured: {
-            type: Boolean,
-            default: false,
-        },
-        popular: {
-            type: Boolean,
-            default: false,
         },
         compareAtPrice: {
             type: Number,
             min: 0,
             default: null,
         },
-        tags: {
+        cost_price: {
+            type: Number,
+            min: 0,
+            default: null,
+            select: false,
+        },
+        imageUrl: {
+            type: String,
+            trim: true,
+            default: '',
+            required: [
+                function () {
+                    return this.status === 'PUBLISHED'
+                },
+                'Main image is required to publish.',
+            ],
+        },
+        imageUrls: {
             type: [String],
             default: [],
         },
         isActive: {
             type: Boolean,
-            default: true,
+            default: false,
         },
-        size: {
-            type: String,
-            required: false,
-            default: '',
+        featured: { type: Boolean, default: false },
+        popular: { type: Boolean, default: false },
+        tags: { type: [String], default: [], index: true },
+        variants: {
+            type: [VariantSchema],
+            required: true,
+            validate: {
+                validator: (arr) => Array.isArray(arr) && arr.length > 0,
+                message: 'Product must have at least one variant.',
+            },
         },
-        sock_type: {
-            type: String,
-            required: false,
-            default: '',
+        attributes: {
+            type: [
+                {
+                    key: { type: String, trim: true },
+                    value: { type: String, trim: true },
+                },
+            ],
+            default: [],
         },
-        product_category: {
+        status: {
             type: String,
-            required: false,
-            default: '',
-        },
-        design_theme: {
-            type: String,
-            required: false,
-            default: '',
-        },
-        franchise_name: {
-            type: String,
-            required: false,
-            default: '',
-        },
-        character_name: {
-            type: String,
-            required: false,
-            default: '',
-            trim: true,
+            enum: ['DRAFT', 'PUBLISHED'],
+            default: 'DRAFT',
+            index: true,
         },
     },
     {
@@ -229,41 +188,7 @@ const ProductSchema = new mongoose.Schema(
     }
 )
 
-ProductSchema.pre('validate', function (next) {
-    if (this.isNew) {
-        if (this.sku) {
-            this.sku = normalizeSku(this.sku)
-        } else {
-            this.sku = generateSkuBase(this)
-        }
-    } else if (this.isModified('sku')) {
-        this.sku = normalizeSku(this.sku)
-    }
-
-    if (!this.sku) {
-        this.invalidate(
-            'sku',
-            'SKU invalido. Debe contener categoria, franquicia, color y talla o enviarse manualmente.'
-        )
-    }
-
-    next()
-})
-
-ProductSchema.pre('findOneAndUpdate', function (next) {
-    const update = this.getUpdate()
-    if (!update) return next()
-
-    if (update.sku !== undefined) {
-        update.sku = normalizeSku(update.sku)
-    }
-
-    if (update.$set && update.$set.sku !== undefined) {
-        update.$set.sku = normalizeSku(update.$set.sku)
-    }
-
-    this.setUpdate(update)
-    next()
-})
+ProductSchema.index({ product_category: 1, gender: 1 })
+ProductSchema.index({ 'variants.sku': 1 }, { unique: true })
 
 export default mongoose.model('Product', ProductSchema)

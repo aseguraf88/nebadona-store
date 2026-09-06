@@ -9,8 +9,8 @@ import {
 import { ProductCard } from '../../../../entities/product'
 import { ProductAttributesForm } from '../../../../features/products'
 import { CatalogManagerModal } from '../../../../features/products'
-import { ProductImagesModal } from '../../../../features/products'
 import { ProductEditModal } from '../../../../features/products'
+import { CsvImportModal } from '../../../../features/products'
 import { ConfirmationModal } from '../../../../shared/ui'
 
 const buildImageFromUrl = (url) => ({
@@ -21,27 +21,36 @@ const buildImageFromUrl = (url) => ({
 })
 
 const EMPTY_TEMPLATE = {
+    handle: '', // NUEVO
     title: 'Titulo',
-    price: '0000',
     description:
         'Producto editable desde dashboard. Descripcion base para crear o editar productos sin bloquear el guardado.',
-    stock: 0,
-    sku: '',
+    product_category: '',
+    gender: 'unisex', // NUEVO
+    material: '', // NUEVO
+    franchise_name: '',
+    character_name: '',
+    design_theme: '',
+    price: '0000', // Precio Base
     compareAtPrice: '',
+    cost_price: '', // NUEVO
     tags: '',
     featured: false,
     popular: false,
     isActive: true,
-    color: '',
-    colors: [],
-    colorFamily: '',
-    size: '',
-    sock_type: '',
-    product_category: '',
-    design_theme: '',
-    franchise_name: '',
-    character_name: '',
+    status: 'DRAFT', // NUEVO
     images: [],
+    // EL NUEVO CORAZÓN DEL PRODUCTO:
+    variants: [
+        {
+            sku: '',
+            size: '',
+            baseColor: '',
+            designColors: [],
+            stock: 0,
+            price: '',
+        },
+    ],
 }
 
 const normalizeTemplateColors = (value) => {
@@ -63,27 +72,29 @@ const normalizeTemplateColors = (value) => {
 }
 
 const normalizeTemplate = (value) => ({
+    handle: value.handle || '',
     title: value.title || 'Titulo',
-    price: value.price || '0000',
     description: value.description || '',
-    stock: Number(value.stock || 0),
-    sku: value.sku || '',
-    compareAtPrice:
-        value.compareAtPrice === null || value.compareAtPrice === undefined
-            ? ''
-            : String(value.compareAtPrice),
+    product_category: value.product_category || '',
+    gender: value.gender || 'unisex',
+    material: value.material || '',
+    franchise_name: value.franchise_name || '',
+    character_name: value.character_name || '',
+    design_theme: value.design_theme || '',
+    price: value.price || '0000',
+    compareAtPrice: value.compareAtPrice || '',
+    cost_price: value.cost_price || '',
     tags: value.tags || '',
     featured: Boolean(value.featured),
     popular: Boolean(value.popular),
-    isActive: value.isActive ?? true,
-    color: value.color || '',
-    colors: Array.isArray(value.colors) ? value.colors : [],
-    size: value.size || '',
-    sock_type: value.sock_type || '',
-    product_category: value.product_category || '',
-    design_theme: value.design_theme || '',
-    franchise_name: value.franchise_name || '',
-    images: value.images.map((image) => image.src),
+    isActive: Boolean(value.isActive),
+    status: value.status || 'DRAFT', // 🔥 ¡EL CABLE DEL ESTADO!
+    variants: Array.isArray(value.variants)
+        ? value.variants
+        : EMPTY_TEMPLATE.variants,
+    images: Array.isArray(value.images)
+        ? value.images.map((image) => image.src)
+        : [],
 })
 
 const readFileAsDataUrl = (file) =>
@@ -98,6 +109,7 @@ const ProductsPage = () => {
     const {
         products,
         productsLoading,
+        fetchProducts,
         createProduct,
         updateProduct,
         productCategories,
@@ -118,19 +130,17 @@ const ProductsPage = () => {
     const [selectedProductId, setSelectedProductId] = useState(null)
     const [template, setTemplate] = useState(EMPTY_TEMPLATE)
     const [savedTemplate, setSavedTemplate] = useState(EMPTY_TEMPLATE)
-    const [currentImageIndex, setCurrentImageIndex] = useState(0)
 
-    const [isImageModalOpen, setIsImageModalOpen] = useState(false)
     const [isEditModalOpen, setIsEditModalOpen] = useState(false)
     const [isSaveModalOpen, setIsSaveModalOpen] = useState(false)
     const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false)
     const [isFranchiseModalOpen, setIsFranchiseModalOpen] = useState(false)
     const [isThemeModalOpen, setIsThemeModalOpen] = useState(false)
     const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false)
+    const [isCsvModalOpen, setIsCsvModalOpen] = useState(false)
 
     const [isSaving, setIsSaving] = useState(false)
     const [editSearch, setEditSearch] = useState('')
-    const [dragIndex, setDragIndex] = useState(null)
     const [categoryDraft, setCategoryDraft] = useState('')
     const [franchiseDraft, setFranchiseDraft] = useState('')
     const [themeDraft, setThemeDraft] = useState('')
@@ -171,43 +181,44 @@ const ProductsPage = () => {
 
     const handleSelectProduct = (product) => {
         const selectedTemplate = {
+            handle: product?.handle || '',
             title: product?.name || 'Titulo',
+            description: product?.description || EMPTY_TEMPLATE.description,
+            product_category: product?.product_category || '',
+            gender: product?.gender || 'unisex',
+            material: product?.material || '',
+            franchise_name: product?.franchise_name || '',
+            character_name: product?.character_name || '',
+            design_theme: product?.design_theme || '',
             price:
                 product?.price === 0 || product?.price
                     ? String(product.price)
                     : '0000',
-            description: product?.description || EMPTY_TEMPLATE.description,
-            stock: Number(product?.stock || 0),
-            sku: product?.sku || '',
-            compareAtPrice:
-                product?.compareAtPrice === null ||
-                product?.compareAtPrice === undefined
-                    ? ''
-                    : String(product.compareAtPrice),
+            compareAtPrice: product?.compareAtPrice
+                ? String(product.compareAtPrice)
+                : '',
+            cost_price: product?.cost_price ? String(product.cost_price) : '',
             tags: Array.isArray(product?.tags) ? product.tags.join(', ') : '',
             featured: Boolean(product?.featured),
             popular: Boolean(product?.popular),
-            isActive: product?.isActive ?? true,
-            color: product?.color || '',
-            colors:
-                Array.isArray(product?.colors) && product.colors.length
-                    ? product.colors
-                    : product?.color
-                      ? [
-                            {
-                                name: product.color,
-                                hex: product.color,
-                                percentage: 100,
-                                source: 'manual',
-                                selected: true,
-                            },
-                        ]
-                      : [],
-            size: product?.size || '',
-            sock_type: product?.sock_type || '',
-            product_category: product?.product_category || '',
-            design_theme: product?.design_theme || '',
-            franchise_name: product?.franchise_name || '',
+            isActive: product?.isActive ?? false,
+            status: product?.status || 'DRAFT',
+
+            // LA MAGIA ESTÁ AQUÍ: Leemos el array de variantes de Mongoose
+            variants:
+                Array.isArray(product?.variants) && product.variants.length > 0
+                    ? product.variants.map((v) => ({
+                          sku: v.sku || '',
+                          size: v.size || '',
+                          baseColor: v.baseColor || '',
+                          designColors: Array.isArray(v.designColors)
+                              ? v.designColors
+                              : [],
+                          stock: Number(v.stock || 0),
+                          price: v.price ? String(v.price) : '',
+                      }))
+                    : EMPTY_TEMPLATE.variants,
+
             images: (Array.isArray(product?.imageUrls)
                 ? product.imageUrls
                 : product?.imageUrl
@@ -226,68 +237,6 @@ const ProductsPage = () => {
         setCurrentImageIndex(0)
         setIsEditModalOpen(false)
     }
-
-    const handleImageUpload = (event) => {
-        const files = Array.from(event.target.files || [])
-        if (!files.length) return
-
-        setTemplate((prev) => ({
-            ...prev,
-            images: [
-                ...prev.images,
-                ...files
-                    .slice(0, Math.max(0, 6 - prev.images.length))
-                    .map((file) => ({
-                        id: crypto.randomUUID(),
-                        src: URL.createObjectURL(file),
-                        file,
-                        isObjectUrl: true,
-                    })),
-            ],
-        }))
-
-        event.target.value = ''
-    }
-
-    const handleRemoveImage = (id) => {
-        setTemplate((prev) => {
-            const imageToDelete = prev.images.find((image) => image.id === id)
-            if (imageToDelete?.isObjectUrl) {
-                URL.revokeObjectURL(imageToDelete.src)
-            }
-
-            return {
-                ...prev,
-                images: prev.images.filter((image) => image.id !== id),
-            }
-        })
-    }
-
-    const handleDropImage = (dropIndex) => {
-        if (dragIndex === null || dragIndex === dropIndex) return
-
-        setTemplate((prev) => {
-            const reorderedImages = [...prev.images]
-            const [draggedItem] = reorderedImages.splice(dragIndex, 1)
-            reorderedImages.splice(dropIndex, 0, draggedItem)
-            return {
-                ...prev,
-                images: reorderedImages,
-            }
-        })
-
-        setDragIndex(null)
-    }
-
-    const activeImage =
-        template.images.length > 0
-            ? template.images[
-                  Math.min(
-                      currentImageIndex,
-                      Math.max(template.images.length - 1, 0),
-                  )
-              ]?.src
-            : ''
 
     const hasUnsavedChanges =
         JSON.stringify(normalizeTemplate(template)) !==
@@ -314,35 +263,53 @@ const ProductsPage = () => {
                 .map((tag) => tag.trim())
                 .filter(Boolean)
                 .slice(0, 10)
+
             const parsedCompareAtPrice =
                 template.compareAtPrice === ''
                     ? null
                     : Number(template.compareAtPrice)
+            const parsedCostPrice =
+                template.cost_price === '' ? null : Number(template.cost_price)
 
             const payload = {
+                handle: template.handle?.trim().toUpperCase() || '',
                 name: (template.title || 'Titulo').trim(),
-                description: template.description || EMPTY_TEMPLATE.description,
+                description: template.description || '',
+                product_category: template.product_category || '',
+                gender: template.gender || 'unisex',
+                material: template.material?.trim().toLowerCase() || null,
+                franchise_name:
+                    template.franchise_name?.trim().toLowerCase() || null,
+                character_name:
+                    template.character_name?.trim().toLowerCase() || null,
+                design_theme:
+                    template.design_theme?.trim().toLowerCase() || null,
                 price: Number(template.price || 0),
-                stock: Number(template.stock || 0),
-                sku: template.sku?.trim() || undefined,
-                imageUrl: imageUrls[0] || '',
-                imageUrls,
-                color: template.color || normalizedColors[0]?.hex || '',
-                colors: normalizedColors,
-                colorFamily: template.colorFamily ? [template.colorFamily] : [],
                 compareAtPrice: Number.isNaN(parsedCompareAtPrice)
                     ? null
                     : parsedCompareAtPrice,
-                tags: parsedTags,
+                cost_price: Number.isNaN(parsedCostPrice)
+                    ? null
+                    : parsedCostPrice,
+                imageUrl: imageUrls[0] || '',
+                imageUrls,
+                isActive: template.isActive ?? false,
                 featured: Boolean(template.featured),
                 popular: Boolean(template.popular),
-                isActive: template.isActive ?? true,
-                size: template.size || '',
-                sock_type: template.sock_type || '',
-                product_category: template.product_category || '',
-                design_theme: template.design_theme || '',
-                franchise_name: template.franchise_name || '',
-                character_name: template.character_name || '',
+                tags: parsedTags,
+                status: template.status || 'DRAFT',
+
+                // AQUÍ VAN LAS VARIANTES EMPAQUETADAS
+                variants: template.variants.map((v) => ({
+                    sku: v.sku?.trim().toUpperCase() || '',
+                    size: v.size?.trim().toUpperCase() || null,
+                    baseColor: v.baseColor?.trim().toLowerCase() || null,
+                    designColors: Array.isArray(v.designColors)
+                        ? v.designColors
+                        : [],
+                    stock: Number(v.stock || 0),
+                    price: v.price ? Number(v.price) : null,
+                })),
             }
 
             let result
@@ -574,8 +541,8 @@ const ProductsPage = () => {
         description: template.description,
         category: template.product_category || 'Categoría',
         imageUrl:
-            activeImage ||
-            'https://via.placeholder.com/400x400?text=Sin+Imagen',
+            template.images?.[0]?.src ||
+            '[https://via.placeholder.com/400x400?text=Sin+Imagen](https://via.placeholder.com/400x400?text=Sin+Imagen)',
         imageUrls: template.images.map((img) => img.src),
         stock: Number(template.stock) || 0,
         tags: template.tags
@@ -605,23 +572,23 @@ const ProductsPage = () => {
                         >
                             ✏️ Editar
                         </button>
-
-                        <div className="divider divider-horizontal mx-0 hidden sm:flex"></div>
-
                         <button
                             type="button"
-                            className="btn btn-sm btn-outline btn-info"
-                            onClick={() => setIsImageModalOpen(true)}
+                            className="btn btn-sm btn-outline"
+                            onClick={() => setIsCsvModalOpen(true)}
                         >
-                            📸 Img ({template.images?.length || 0})
+                            <i className="ti ti-file-upload text-base" />
+                            Importar CSV
                         </button>
-                        <button
-                            type="button"
-                            className="btn btn-sm btn-outline btn-secondary"
-                            onClick={() => setIsPreviewModalOpen(true)}
+                        {/* NUEVO BOTÓN PARA EXPORTAR */}
+                        <a
+                            href="http://localhost:3001/api/products/export/csv"
+                            download="inventario_nebadon.csv"
+                            className="btn btn-sm btn-outline btn-success"
                         >
-                            👁️ Previa
-                        </button>
+                            <i className="ti ti-file-download text-base" />
+                            Exportar CSV
+                        </a>
                     </div>
 
                     {/* Botón Guardar - 100% de ancho en móvil, flotando a la derecha en PC */}
@@ -764,17 +731,6 @@ const ProductsPage = () => {
                 }}
             />
 
-            <ProductImagesModal
-                open={isImageModalOpen}
-                template={template}
-                setTemplate={setTemplate}
-                setDragIndex={setDragIndex}
-                handleDropImage={handleDropImage}
-                handleImageUpload={handleImageUpload}
-                handleRemoveImage={handleRemoveImage}
-                onClose={() => setIsImageModalOpen(false)}
-            />
-
             <ProductEditModal
                 open={isEditModalOpen}
                 editSearch={editSearch}
@@ -803,6 +759,16 @@ const ProductsPage = () => {
                 confirmLabel="Eliminar"
                 cancelLabel="Cancelar"
                 confirmButtonClass="btn btn-error"
+            />
+
+            <CsvImportModal
+                open={isCsvModalOpen}
+                onClose={() => setIsCsvModalOpen(false)}
+                onSuccess={() => {
+                    setIsCsvModalOpen(false) // Cierra el modal
+                    openCreateTemplate() // Limpia cualquier cosa a medio editar en el form
+                    if (fetchProducts) fetchProducts() // <-- RECARGA LA BASE DE DATOS MÁGICAMENTE
+                }}
             />
         </div>
     )

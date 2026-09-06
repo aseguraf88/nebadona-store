@@ -5,7 +5,6 @@ const AdminLayout = () => {
     const [isDrawerOpen, setIsDrawerOpen] = useState(false)
     const location = useLocation()
 
-    // Pequeña función para saber en qué página estamos y pintar el menú
     const isActive = (path) => {
         if (
             path === '/admin/dashboard' &&
@@ -17,9 +16,41 @@ const AdminLayout = () => {
         return false
     }
 
+    const navigationGroups = [
+        {
+            title: 'Principal',
+            items: [
+                {
+                    name: 'Estadísticas',
+                    path: '/admin/dashboard',
+                    icon: 'ti ti-chart-bar',
+                },
+                {
+                    name: 'Órdenes',
+                    path: '/admin/dashboard/orders',
+                    icon: 'ti ti-shopping-bag',
+                },
+            ],
+        },
+        {
+            title: 'Gestión',
+            items: [
+                {
+                    name: 'Productos',
+                    path: '/admin/dashboard/products',
+                    icon: 'ti ti-box',
+                },
+                {
+                    name: 'Clientes',
+                    path: '/admin/dashboard/customers',
+                    icon: 'ti ti-users',
+                },
+            ],
+        },
+    ]
+
     return (
-        <div className="drawer lg:drawer-open min-h-screen bg-base-200">
-            {/* Input oculto para móvil (Controla el estado global) */}
+        <div className="drawer lg:drawer-open bg-base-200 min-h-screen font-sans">
             <input
                 id="admin-global-drawer"
                 type="checkbox"
@@ -28,131 +59,123 @@ const AdminLayout = () => {
                 onChange={(e) => setIsDrawerOpen(e.target.checked)}
             />
 
-            {/* CONTENIDO CENTRAL DINÁMICO */}
-            <div className="drawer-content flex flex-col">
-                {/* 🔥 CABECERA MÓVIL ESTILO APP NATIVA (Solo celulares) */}
-                <div className="sticky top-0 z-30 flex items-center justify-between bg-base-100 px-4 py-3 shadow-sm lg:hidden border-b border-base-200">
-                    {/* IZQUIERDA: Logo y Título */}
-                    <div className="flex items-center gap-3">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-white font-black shadow-md text-lg">
-                            N
-                        </div>
-                        <h1 className="text-xl font-black text-base-content tracking-tight">
-                            Admin
-                        </h1>
-                    </div>
-
-                    {/* DERECHA: Menú Sándwich Minimalista */}
+            {/* CONTENIDO DERECHO (Topbar + Outlet) */}
+            <div className="drawer-content flex flex-col h-screen overflow-hidden">
+                {/* 1. TOPBAR HORIZONTAL */}
+                <header className="w-full bg-base-100 border-b border-base-200 flex items-center justify-between lg:justify-end px-4 py-2 shrink-0 z-20 h-16">
+                    {/* Botón menú móvil (Solo visible en pantallas pequeñas) */}
                     <label
                         htmlFor="admin-global-drawer"
-                        className="btn btn-square btn-ghost drawer-button"
+                        className="btn btn-square btn-ghost lg:hidden"
                     >
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            className="inline-block w-6 h-6 stroke-current text-base-content"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2"
-                                d="M4 6h16M4 12h16M4 18h16"
-                            ></path>
-                        </svg>
+                        <i className="ti ti-menu-2 text-2xl text-base-content" />
                     </label>
-                </div>
 
-                {/* AQUÍ OCURRE LA MAGIA: <Outlet /> inyecta la página */}
-                <div className="flex-1 overflow-y-auto">
+                    {/* Menú de Usuario (Extremo derecho) */}
+                    <div className="flex items-center gap-4">
+                        <span className="text-sm font-medium text-base-content/70 hidden sm:block">
+                            Ayuda
+                        </span>
+                        <div className="dropdown dropdown-end">
+                            <label
+                                tabIndex={0}
+                                className="btn btn-ghost btn-circle avatar border border-base-300 shadow-sm"
+                            >
+                                <div className="w-9 rounded-full bg-neutral text-neutral-content flex items-center justify-center">
+                                    <span className="text-sm font-bold">
+                                        NS
+                                    </span>
+                                </div>
+                            </label>
+                            <ul
+                                tabIndex={0}
+                                className="mt-3 z-[1] p-2 shadow-lg menu menu-sm dropdown-content bg-base-100 rounded-box w-48 border border-base-200"
+                            >
+                                <li>
+                                    <a className="py-3">
+                                        <i className="ti ti-settings text-lg opacity-70" />
+                                        Configuración
+                                    </a>
+                                </li>
+                                <li>
+                                    <a className="py-3 text-error">
+                                        <i className="ti ti-logout text-lg" />
+                                        Cerrar Sesión
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </header>
+
+                {/* 2. ÁREA DE TRABAJO DINÁMICA */}
+                <main className="flex-1 overflow-y-auto p-4 lg:p-8">
                     <Outlet />
-                </div>
+                </main>
             </div>
 
-            {/* BARRA LATERAL MAESTRA */}
+            {/* BARRA LATERAL IZQUIERDA (Estilo Kyte - Oscura) */}
             <aside className="drawer-side z-40">
-                {/* 🔥 EL OVERLAY MÁGICO (Sin onClick, HTML hace la magia) */}
                 <label
                     htmlFor="admin-global-drawer"
-                    aria-label="close sidebar"
                     className="drawer-overlay"
-                ></label>
+                />
 
-                <div className="flex h-full w-64 flex-col border-r border-base-300 bg-base-100 px-4 py-6 shadow-xl lg:shadow-none">
-                    {/* Logo de tu tienda */}
-                    <div className="mb-8 flex flex-col items-center border-b border-base-200 pb-6">
-                        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-3xl font-black text-white shadow-md">
+                <div className="flex h-full w-64 flex-col bg-slate-900 text-slate-300 border-r border-slate-800">
+                    {/* Logo Area */}
+                    <div className="flex items-center gap-3 px-6 h-16 border-b border-slate-800 shrink-0">
+                        <div className="flex h-8 w-8 items-center justify-center rounded bg-primary text-primary-content font-bold">
                             N
                         </div>
-                        <span className="mt-3 text-xs font-bold uppercase tracking-widest text-base-content/60">
-                            Nebadona Store
+                        <span className="font-bold text-white tracking-wide">
+                            Nebadona
                         </span>
                     </div>
 
-                    {/* Navegación Global */}
-                    <ul className="menu gap-2 p-0 flex-1 text-base-content font-medium">
-                        <li>
-                            <Link
-                                to="/admin/dashboard"
-                                onClick={() => setIsDrawerOpen(false)}
-                                className={
-                                    isActive('/admin/dashboard')
-                                        ? 'active bg-primary/10 text-primary font-bold'
-                                        : 'hover:bg-base-200'
-                                }
-                            >
-                                🏠 Centro de Operaciones
-                            </Link>
-                        </li>
-                        <li>
-                            <Link
-                                to="/admin/dashboard/orders"
-                                onClick={() => setIsDrawerOpen(false)}
-                                className={
-                                    isActive('/admin/dashboard/orders')
-                                        ? 'active bg-primary/10 text-primary font-bold'
-                                        : 'hover:bg-base-200'
-                                }
-                            >
-                                📦 Órdenes de Compra
-                            </Link>
-                        </li>
-                        <li>
-                            <Link
-                                to="/admin/dashboard/products"
-                                onClick={() => setIsDrawerOpen(false)}
-                                className={
-                                    isActive('/admin/dashboard/products')
-                                        ? 'active bg-primary/10 text-primary font-bold'
-                                        : 'hover:bg-base-200'
-                                }
-                            >
-                                🏷️ Catálogo de Productos
-                            </Link>
-                        </li>
-                        <li>
-                            <Link
-                                to="/admin/dashboard/customers"
-                                onClick={() => setIsDrawerOpen(false)}
-                                className={
-                                    isActive('/admin/dashboard/customers')
-                                        ? 'active bg-primary/10 text-primary font-bold'
-                                        : 'hover:bg-base-200'
-                                }
-                            >
-                                👥 Clientes y CRM
-                            </Link>
-                        </li>
-                    </ul>
+                    {/* Navegación */}
+                    <nav className="flex-1 overflow-y-auto py-6 flex flex-col gap-8">
+                        {navigationGroups.map((group, groupIndex) => (
+                            <div key={groupIndex}>
+                                <h2 className="px-6 text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-3">
+                                    {group.title}
+                                </h2>
+                                <ul className="flex flex-col gap-1 px-3">
+                                    {group.items.map((item, itemIndex) => {
+                                        const active = isActive(item.path)
+                                        return (
+                                            <li key={itemIndex}>
+                                                <Link
+                                                    to={item.path}
+                                                    onClick={() =>
+                                                        setIsDrawerOpen(false)
+                                                    }
+                                                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                                                        active
+                                                            ? 'bg-primary/10 text-primary border-l-2 border-primary rounded-l-none'
+                                                            : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                                                    }`}
+                                                >
+                                                    <i
+                                                        className={`${item.icon} text-xl ${active ? 'text-primary' : 'opacity-70'}`}
+                                                    />
+                                                    {item.name}
+                                                </Link>
+                                            </li>
+                                        )
+                                    })}
+                                </ul>
+                            </div>
+                        ))}
+                    </nav>
 
-                    {/* Volver al mundo real */}
-                    <div className="mt-auto pt-6 border-t border-base-200">
+                    {/* Footer del Sidebar */}
+                    <div className="p-4 border-t border-slate-800 shrink-0">
                         <Link
                             to="/"
-                            className="btn btn-ghost w-full justify-start gap-3 text-base-content/70 hover:text-primary transition-colors"
+                            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white transition-all"
                         >
-                            <span className="ti ti-arrow-left text-lg" />
-                            Ver Tienda Pública
+                            <i className="ti ti-external-link text-xl opacity-70" />
+                            Tienda Pública
                         </Link>
                     </div>
                 </div>

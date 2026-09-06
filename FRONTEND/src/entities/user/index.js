@@ -5,4 +5,9 @@ export {
     UserContextProvider,
     useUser,
 } from './model/UserContext.jsx'
-export * from './api/authServices' // <-- Ajustado al nombre real de tu archivo
+export {
+    getProfileService,
+    loginService,
+    registerService,
+    logoutService,
+} from './api/authServices' // <-- Ajustado al nombre real de tu archivo
