@@ -84,13 +84,12 @@ function App() {
                                 path="products/:id/editar"
                                 element={<ProductFormPage />}
                             />
-                            {/* Ojo: NO va anidada bajo /products. Como AdminLayout
-                                marca el link activo con pathname.includes(path),
-                                si esto fuera /products/settings, el sidebar
-                                marcaría "Productos" y "Configuración" activos
-                                a la vez. Por eso es una ruta hermana. */}
+                            {/* Anidada bajo /products: el isActive de AdminLayout
+                                elige el path más específico que matchee, así que
+                                estar en /products/settings activa solo
+                                "Configuración" y no también "Productos". */}
                             <Route
-                                path="catalog-settings"
+                                path="products/settings"
                                 element={<CatalogSettingsPage />}
                             />
                             <Route

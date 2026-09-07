@@ -5,17 +5,6 @@ const AdminLayout = () => {
     const [isDrawerOpen, setIsDrawerOpen] = useState(false)
     const location = useLocation()
 
-    const isActive = (path) => {
-        if (
-            path === '/admin/dashboard' &&
-            location.pathname === '/admin/dashboard'
-        )
-            return true
-        if (path !== '/admin/dashboard' && location.pathname.includes(path))
-            return true
-        return false
-    }
-
     const navigationGroups = [
         {
             title: 'Principal',
@@ -41,13 +30,44 @@ const AdminLayout = () => {
                     icon: 'ti ti-box',
                 },
                 {
+                    name: 'Inventario',
+                    path: '/admin/dashboard/inventory',
+                    icon: 'ti ti-packages',
+                },
+                {
                     name: 'Clientes',
                     path: '/admin/dashboard/customers',
                     icon: 'ti ti-users',
                 },
+                {
+                    name: 'Configuración',
+                    path: '/admin/dashboard/products/settings',
+                    icon: 'ti ti-settings',
+                },
             ],
         },
     ]
+
+    const allNavPaths = navigationGroups.flatMap((group) =>
+        group.items.map((item) => item.path)
+    )
+
+    // Gana el path más específico que matchee la URL actual, así una ruta
+    // anidada (ej. /products/settings) no activa también a su padre (/products).
+    const isActive = (path) => {
+        const bestMatch = allNavPaths
+            .filter(
+                (p) =>
+                    location.pathname === p ||
+                    (p !== '/admin/dashboard' &&
+                        location.pathname.startsWith(`${p}/`))
+            )
+            .reduce(
+                (longest, p) => (p.length > longest.length ? p : longest),
+                ''
+            )
+        return path === bestMatch
+    }
 
     return (
         <div className="drawer lg:drawer-open bg-base-200 min-h-screen font-sans">
