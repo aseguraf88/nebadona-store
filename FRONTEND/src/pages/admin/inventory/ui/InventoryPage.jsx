@@ -1,291 +1,154 @@
-import { useState } from 'react'
-import toast from 'react-hot-toast'
+import { useMemo, useState } from 'react'
 import { useProduct } from '../../../../entities/product'
-import { CatalogManagerModal } from '../../../../features/products'
-import { ConfirmationModal } from '../../../../shared/ui'
+import { CsvImportModal } from '../../../../features/products'
 
-const CatalogSettingsPage = () => {
-    const {
-        productCategories,
-        designThemes,
-        franchiseNames,
-        createProductCategory,
-        updateProductCategory,
-        deleteProductCategory,
-        createDesignTheme,
-        updateDesignTheme,
-        deleteDesignTheme,
-        createFranchiseName,
-        updateFranchiseName,
-        deleteFranchiseName,
-    } = useProduct()
+const InventoryPage = () => {
+    const { products, productsLoading, fetchProducts } = useProduct()
+    const [isCsvModalOpen, setIsCsvModalOpen] = useState(false)
+    const [query, setQuery] = useState('')
 
-    const [openModal, setOpenModal] = useState(null) // 'category' | 'franchise' | 'theme' | null
+    const variantRows = useMemo(() => {
+        const rows = []
+        products.forEach((product) => {
+            const variants =
+                Array.isArray(product.variants) && product.variants.length > 0
+                    ? product.variants
+                    : [{}]
+            variants.forEach((v) => {
+                rows.push({
+                    productId: product._id,
+                    productName: product.name,
+                    handle: product.handle,
+                    sku: v.sku || '—',
+                    size: v.size || '—',
+                    baseColor: v.baseColor || '—',
+                    stock: Number(v.stock || 0),
+                })
+            })
+        })
+        return rows
+    }, [products])
 
-    const [categoryDraft, setCategoryDraft] = useState('')
-    const [franchiseDraft, setFranchiseDraft] = useState('')
-    const [themeDraft, setThemeDraft] = useState('')
-
-    const [editingCategoryId, setEditingCategoryId] = useState('')
-    const [editingCategoryName, setEditingCategoryName] = useState('')
-    const [editingFranchiseId, setEditingFranchiseId] = useState('')
-    const [editingFranchiseName, setEditingFranchiseName] = useState('')
-    const [editingThemeId, setEditingThemeId] = useState('')
-    const [editingThemeName, setEditingThemeName] = useState('')
-
-    const [deleteConfirmation, setDeleteConfirmation] = useState({
-        open: false,
-        entityType: '',
-        id: '',
-        name: '',
-    })
-
-    // --- Categorías ---
-    const handleCategoryCreate = async () => {
-        const name = categoryDraft.trim()
-        if (!name) return
-        const result = await createProductCategory(name)
-        if (result?.success) {
-            setCategoryDraft('')
-            toast.success(result.message)
-        } else toast.error(result?.message || 'No se pudo crear la categoria.')
-    }
-    const startCategoryEditing = (item) => {
-        setEditingCategoryId(item._id)
-        setEditingCategoryName(item.name)
-    }
-    const cancelCategoryEditing = () => {
-        setEditingCategoryId('')
-        setEditingCategoryName('')
-    }
-    const handleCategoryUpdate = async () => {
-        if (!editingCategoryId || !editingCategoryName.trim()) return
-        const result = await updateProductCategory(
-            editingCategoryId,
-            editingCategoryName,
+    const filteredRows = useMemo(() => {
+        const q = query.trim().toLowerCase()
+        if (!q) return variantRows
+        return variantRows.filter(
+            (row) =>
+                row.productName?.toLowerCase().includes(q) ||
+                row.sku?.toLowerCase().includes(q) ||
+                row.handle?.toLowerCase().includes(q),
         )
-        if (result?.success) {
-            toast.success(result.message)
-            cancelCategoryEditing()
-        } else
-            toast.error(
-                result?.message || 'No se pudo actualizar la categoria.',
-            )
-    }
-    const requestCategoryDelete = (item) =>
-        setDeleteConfirmation({
-            open: true,
-            entityType: 'category',
-            id: item._id,
-            name: item.name,
-        })
+    }, [variantRows, query])
 
-    // --- Franquicias ---
-    const handleFranchiseCreate = async () => {
-        const name = franchiseDraft.trim()
-        if (!name) return
-        const result = await createFranchiseName(name)
-        if (result?.success) {
-            setFranchiseDraft('')
-            toast.success(result.message)
-        } else toast.error(result?.message || 'No se pudo crear la franquicia.')
-    }
-    const startFranchiseEditing = (item) => {
-        setEditingFranchiseId(item._id)
-        setEditingFranchiseName(item.name)
-    }
-    const cancelFranchiseEditing = () => {
-        setEditingFranchiseId('')
-        setEditingFranchiseName('')
-    }
-    const handleFranchiseUpdate = async () => {
-        if (!editingFranchiseId || !editingFranchiseName.trim()) return
-        const result = await updateFranchiseName(
-            editingFranchiseId,
-            editingFranchiseName,
-        )
-        if (result?.success) {
-            toast.success(result.message)
-            cancelFranchiseEditing()
-        } else
-            toast.error(
-                result?.message || 'No se pudo actualizar la franquicia.',
-            )
-    }
-    const requestFranchiseDelete = (item) =>
-        setDeleteConfirmation({
-            open: true,
-            entityType: 'franchise',
-            id: item._id,
-            name: item.name,
-        })
-
-    // --- Temas ---
-    const handleThemeCreate = async () => {
-        const name = themeDraft.trim()
-        if (!name) return
-        const result = await createDesignTheme(name)
-        if (result?.success) {
-            setThemeDraft('')
-            toast.success(result.message)
-        } else toast.error(result?.message || 'No se pudo crear el tema.')
-    }
-    const startThemeEditing = (item) => {
-        setEditingThemeId(item._id)
-        setEditingThemeName(item.name)
-    }
-    const cancelThemeEditing = () => {
-        setEditingThemeId('')
-        setEditingThemeName('')
-    }
-    const handleThemeUpdate = async () => {
-        if (!editingThemeId || !editingThemeName.trim()) return
-        const result = await updateDesignTheme(editingThemeId, editingThemeName)
-        if (result?.success) {
-            toast.success(result.message)
-            cancelThemeEditing()
-        } else toast.error(result?.message || 'No se pudo actualizar el tema.')
-    }
-    const requestThemeDelete = (item) =>
-        setDeleteConfirmation({
-            open: true,
-            entityType: 'theme',
-            id: item._id,
-            name: item.name,
-        })
-
-    // --- Borrado genérico ---
-    const closeDeleteConfirmation = () =>
-        setDeleteConfirmation({ open: false, entityType: '', id: '', name: '' })
-
-    const handleConfirmDelete = async () => {
-        const { entityType, id } = deleteConfirmation
-        if (!id) return
-
-        let result
-        if (entityType === 'category') result = await deleteProductCategory(id)
-        if (entityType === 'franchise') result = await deleteFranchiseName(id)
-        if (entityType === 'theme') result = await deleteDesignTheme(id)
-
-        if (result?.success) toast.success(result.message)
-        else toast.error(result?.message || 'No se pudo eliminar.')
-
-        closeDeleteConfirmation()
-    }
+    const lowStockCount = variantRows.filter((r) => r.stock <= 3).length
 
     return (
         <div className="flex w-full flex-col gap-6 pb-12">
-            <section className="card w-full bg-base-100 shadow-xl border border-base-200 p-6">
-                <h2 className="text-xl font-black text-base-content mb-1">
-                    Categorías, Franquicias y Temas
-                </h2>
-                <p className="text-sm text-base-content/60 mb-6">
-                    Gestioná las listas que usa el formulario de productos para
-                    clasificar el catálogo.
-                </p>
-                <div className="flex flex-wrap gap-3">
-                    <button
-                        type="button"
-                        className="btn btn-outline"
-                        onClick={() => setOpenModal('category')}
-                    >
-                        Categorías ({productCategories?.length || 0})
-                    </button>
-                    <button
-                        type="button"
-                        className="btn btn-outline"
-                        onClick={() => setOpenModal('franchise')}
-                    >
-                        Franquicias ({franchiseNames?.length || 0})
-                    </button>
-                    <button
-                        type="button"
-                        className="btn btn-outline"
-                        onClick={() => setOpenModal('theme')}
-                    >
-                        Temas ({designThemes?.length || 0})
-                    </button>
+            <section className="card w-full bg-base-100 shadow-xl border border-base-200">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3 border-b border-base-200 bg-base-200/30 p-4 rounded-t-2xl">
+                    <h2 className="text-xl font-black text-base-content">
+                        Inventario
+                    </h2>
+
+                    <div className="flex flex-wrap items-center gap-2 sm:ml-auto">
+                        <button
+                            type="button"
+                            className="btn btn-sm btn-outline"
+                            onClick={() => setIsCsvModalOpen(true)}
+                        >
+                            <i className="ti ti-file-upload text-base" />
+                            Importar CSV
+                        </button>
+                        <a
+                            href={`${import.meta.env.VITE_BACKEND_URL}products/export/csv`}
+                            download="inventario_nebadona.csv"
+                            className="btn btn-sm btn-outline btn-success"
+                        >
+                            <i className="ti ti-file-download text-base" />
+                            Exportar CSV
+                        </a>
+                    </div>
+                </div>
+
+                {lowStockCount > 0 && (
+                    <div className="alert alert-warning m-4 py-2 text-sm">
+                        ⚠️ {lowStockCount} variante(s) con 3 unidades o menos de
+                        stock.
+                    </div>
+                )}
+
+                <div className="p-4 border-b border-base-200">
+                    <input
+                        type="text"
+                        placeholder="Buscar por producto, SKU o handle..."
+                        className="input input-bordered input-sm w-full sm:w-72"
+                        value={query}
+                        onChange={(e) => setQuery(e.target.value)}
+                    />
+                </div>
+
+                <div className="overflow-x-auto">
+                    {productsLoading ? (
+                        <div className="flex justify-center py-16">
+                            <span className="loading loading-infinity loading-lg text-primary" />
+                        </div>
+                    ) : filteredRows.length === 0 ? (
+                        <div className="py-16 text-center text-base-content/60">
+                            No hay variantes que coincidan con la búsqueda.
+                        </div>
+                    ) : (
+                        <table className="table table-sm w-full">
+                            <thead className="bg-base-200/50">
+                                <tr>
+                                    <th>Handle</th>
+                                    <th>Producto</th>
+                                    <th>SKU</th>
+                                    <th>Talla</th>
+                                    <th>Color</th>
+                                    <th>Stock</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {filteredRows.map((row, idx) => (
+                                    <tr key={`${row.productId}-${idx}`}>
+                                        <td className="font-mono text-xs">
+                                            {row.handle || '—'}
+                                        </td>
+                                        <td>{row.productName}</td>
+                                        <td className="font-mono text-xs">
+                                            {row.sku}
+                                        </td>
+                                        <td>{row.size}</td>
+                                        <td className="capitalize">
+                                            {row.baseColor}
+                                        </td>
+                                        <td
+                                            className={
+                                                row.stock <= 3
+                                                    ? 'text-error font-bold'
+                                                    : ''
+                                            }
+                                        >
+                                            {row.stock}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    )}
                 </div>
             </section>
 
-            <CatalogManagerModal
-                open={openModal === 'category'}
-                title="Categorias"
-                placeholder="Nueva categoria"
-                draft={categoryDraft}
-                setDraft={setCategoryDraft}
-                onCreate={handleCategoryCreate}
-                items={productCategories}
-                emptyMessage="No hay categorias cargadas."
-                editingId={editingCategoryId}
-                editingName={editingCategoryName}
-                setEditingName={setEditingCategoryName}
-                onStartEditing={startCategoryEditing}
-                onSaveEditing={handleCategoryUpdate}
-                onCancelEditing={cancelCategoryEditing}
-                onRequestDelete={requestCategoryDelete}
-                onClose={() => {
-                    cancelCategoryEditing()
-                    setOpenModal(null)
+            <CsvImportModal
+                open={isCsvModalOpen}
+                onClose={() => setIsCsvModalOpen(false)}
+                onSuccess={() => {
+                    setIsCsvModalOpen(false)
+                    if (fetchProducts) fetchProducts()
                 }}
-            />
-
-            <CatalogManagerModal
-                open={openModal === 'franchise'}
-                title="Franquicias"
-                placeholder="Nueva franquicia"
-                draft={franchiseDraft}
-                setDraft={setFranchiseDraft}
-                onCreate={handleFranchiseCreate}
-                items={franchiseNames}
-                emptyMessage="No hay franquicias cargadas."
-                editingId={editingFranchiseId}
-                editingName={editingFranchiseName}
-                setEditingName={setEditingFranchiseName}
-                onStartEditing={startFranchiseEditing}
-                onSaveEditing={handleFranchiseUpdate}
-                onCancelEditing={cancelFranchiseEditing}
-                onRequestDelete={requestFranchiseDelete}
-                onClose={() => {
-                    cancelFranchiseEditing()
-                    setOpenModal(null)
-                }}
-            />
-
-            <CatalogManagerModal
-                open={openModal === 'theme'}
-                title="Temas"
-                placeholder="Nuevo tema"
-                draft={themeDraft}
-                setDraft={setThemeDraft}
-                onCreate={handleThemeCreate}
-                items={designThemes}
-                emptyMessage="No hay temas cargados."
-                editingId={editingThemeId}
-                editingName={editingThemeName}
-                setEditingName={setEditingThemeName}
-                onStartEditing={startThemeEditing}
-                onSaveEditing={handleThemeUpdate}
-                onCancelEditing={cancelThemeEditing}
-                onRequestDelete={requestThemeDelete}
-                onClose={() => {
-                    cancelThemeEditing()
-                    setOpenModal(null)
-                }}
-            />
-
-            <ConfirmationModal
-                open={deleteConfirmation.open}
-                title="Confirmar eliminación"
-                message={`¿Seguro que deseas eliminar "${deleteConfirmation.name}"?`}
-                onConfirm={handleConfirmDelete}
-                onCancel={closeDeleteConfirmation}
-                confirmLabel="Eliminar"
-                cancelLabel="Cancelar"
-                confirmButtonClass="btn btn-error"
             />
         </div>
     )
 }
 
-export default CatalogSettingsPage
+export default InventoryPage
