@@ -8,7 +8,6 @@ import designThemesRoutes from './routes/designThemesRoutes.js'
 import franchiseNamesRoutes from './routes/franchiseNamesRoutes.js'
 import cartRoutes from './routes/cartRoutes.js'
 import orderRoutes from './routes/orderRoutes.js'
-import webhookRoutes from './routes/webhookRoutes.js'
 import cors from 'cors'
 import cookieParser from 'cookie-parser'
 import rateLimit from 'express-rate-limit'
@@ -68,7 +67,6 @@ app.use('/api/design-themes', designThemesRoutes)
 app.use('/api/franchise-names', franchiseNamesRoutes)
 app.use('/api/cart', cartRoutes)
 app.use('/api/orders', orderRoutes)
-app.use('/api/webhook', webhookRoutes)
 
 app.use((req, res) => {
     res.status(404).json({ message: 'Recurso no encontrado.' })

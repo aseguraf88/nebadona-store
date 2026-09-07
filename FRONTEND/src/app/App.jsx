@@ -13,7 +13,12 @@ import PaymentFailure from '../pages/payment-results/PaymentFailure'
 import PaymentPending from '../pages/payment-results/PaymentPending' */
 import { AdminLayout } from '../widgets/layouts'
 import { AdminHome } from '../pages/admin/home'
-import { ProductsPage } from '../pages/admin/products'
+import {
+    ProductsListPage,
+    ProductFormPage,
+    CatalogSettingsPage,
+} from '../pages/admin/products'
+import { InventoryPage } from '../pages/admin/inventory'
 import { OrdersPage } from '../pages/admin/orders'
 import { CustomersPage } from '../pages/admin/customers'
 import ProtectedRoute from '../app/routes/ProtectedRoute'
@@ -64,7 +69,34 @@ function App() {
                         >
                             <Route index element={<AdminHome />} />
 
-                            <Route path="products" element={<ProductsPage />} />
+                            {/* Antes era una sola ruta con ProductsPage. Ahora
+                                cada pantalla tiene su propia URL en vez de vivir
+                                atrás de un modo interno (activeMode). */}
+                            <Route
+                                path="products"
+                                element={<ProductsListPage />}
+                            />
+                            <Route
+                                path="products/nuevo"
+                                element={<ProductFormPage />}
+                            />
+                            <Route
+                                path="products/:id/editar"
+                                element={<ProductFormPage />}
+                            />
+                            {/* Ojo: NO va anidada bajo /products. Como AdminLayout
+                                marca el link activo con pathname.includes(path),
+                                si esto fuera /products/settings, el sidebar
+                                marcaría "Productos" y "Configuración" activos
+                                a la vez. Por eso es una ruta hermana. */}
+                            <Route
+                                path="catalog-settings"
+                                element={<CatalogSettingsPage />}
+                            />
+                            <Route
+                                path="inventory"
+                                element={<InventoryPage />}
+                            />
 
                             <Route path="orders" element={<OrdersPage />} />
                             <Route

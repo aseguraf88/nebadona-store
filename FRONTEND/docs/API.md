@@ -514,7 +514,7 @@ Errores observados:
 
 ### POST `/orders/create`
 
-Crea una orden pendiente en MongoDB y luego genera una preferencia de pago en Mercado Pago.
+Crea una orden pendiente en MongoDB para el flujo de WhatsApp.
 
 Request JSON:
 
@@ -553,9 +553,7 @@ Respuesta exitosa `201`:
 ```json
 {
   "success": true,
-  "message": "Orden creada exitosamente",
-  "paymentUrl": "https://www.mercadopago.com/...",
-  "preferenceId": "123456789-abcdef"
+  "message": "Orden creada exitosamente"
 }
 ```
 
@@ -565,57 +563,5 @@ Errores observados:
 - `400`: `{ "success": false, "message": "Se requiere email del comprador" }`
 - `500`: `{ "success": false, "message": "Error al crear la orden", "error": "..." }`
 
-## Webhook
-
-### POST `/webhook`
-
-Recibe notificaciones de Mercado Pago para pagos.
-
-Entradas relevantes:
-
-- Body con evento `payment`.
-- Headers de firma cuando la validación está activa, especialmente `x-signature` y `x-request-id`.
-
-Payload de prueba mínimo usado en desarrollo:
-
-```json
-{
-  "type": "payment",
-  "topic": "payment",
-  "data": {
-    "id": "123"
-  }
-}
-```
-
-Comportamiento observado:
-
-- Si el evento no es de tipo `payment`, responde `400`.
-- Si la firma no es válida, responde `401`.
-- En entornos no productivos, después de validar el tipo y la firma, responde `200` sin consultar la API de Mercado Pago.
-- En producción, consulta el pago en Mercado Pago, busca la orden por `external_reference`, actualiza el estado de la orden y descuenta stock si el pago fue aprobado.
-
-Respuesta `200` en desarrollo:
-
-```json
-{
-  "message": "Webhook received (dev mode) — no external processing performed"
-}
-```
-
-Respuesta `200` cuando procesa correctamente en producción:
-
-```json
-{
-  "message": "Webhook de payment procesado correctamente"
-}
-```
-
-Errores observados:
-
-- `400`: `{ "message": "Webhook ignorado - Solo procesamos payments" }`
-- `401`: `{ "error": "No autorizado" }`
-- `400`: `{ "message": "Orden no encontrada" }`
-- `400`: `{ "message": "Stock insuficiente para NOMBRE_PRODUCTO" }`
 
 Nota: este controlador no tiene `try/catch` alrededor del flujo principal de producción. Fallos de red o errores del SDK no tienen una respuesta explícita definida en el archivo actual.

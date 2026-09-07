@@ -118,8 +118,7 @@ Campos raíz:
 - `userId`: `ObjectId -> User`, opcional.
 - `products`: arreglo de items comprados.
 - `totalAmount`: `Number`, requerido, mínimo `0`.
-- `status`: `String`, enum `pending | approved | rejected | cancelled | in_process`, default `pending`.
-- `mercadoPagoData`: objeto con metadatos de pago.
+- `status`: `String`, enum `pending | approved | rejected | cancelled | in_process | whatsapp_pending`, default `whatsapp_pending`.
 - `shippingInfo`: objeto requerido con datos de envío.
 - `createdAt`: `Date`, generado por timestamps.
 - `updatedAt`: `Date`, generado por timestamps.
@@ -131,16 +130,6 @@ Campos raíz:
 - `price`: `Number`, requerido.
 - `quantity`: `Number`, requerido.
 - `imageUrl`: `String`, opcional.
-
-### Order.mercadoPagoData
-
-- `preferenceId`: `String`, opcional.
-- `payerEmail`: `String`, opcional.
-- `paymentId`: `String`, opcional.
-- `paymentStatus`: `String`, enum `pending | approved | rejected | cancelled | in_process`, default `pending`.
-- `transactionAmount`: `Number`, opcional.
-- `paymentMethodId`: `String`, opcional.
-- `paidAt`: `Date`, opcional.
 
 ### Order.shippingInfo
 
@@ -167,12 +156,7 @@ Ejemplo persistido:
     }
   ],
   "totalAmount": 8000,
-  "status": "pending",
-  "mercadoPagoData": {
-    "preferenceId": "123456789-abcdef",
-    "payerEmail": "comprador@correo.com",
-    "paymentStatus": "pending"
-  },
+  "status": "whatsapp_pending",
   "shippingInfo": {
     "firstName": "Ana",
     "lastName": "Pérez",
@@ -193,8 +177,8 @@ Ejemplo persistido:
 
 Observaciones de negocio:
 
-- `createOrder` crea primero una orden `pending` y luego guarda el `preferenceId` de Mercado Pago.
-- Cuando el webhook procesa un pago aprobado, actualiza `status`, rellena `mercadoPagoData` y descuenta stock de cada producto.
+- La orden se genera directamente para el flujo manual de WhatsApp y no depende de una preferencia ni webhook de pago.
+- El estado `whatsapp_pending` refleja que la venta quedó abierta para cerrar pago por transferencia manual.
 - Aunque el esquema permite guardar `name` e `imageUrl` dentro de `products[]`, el controlador actual de creación de órdenes solo persiste `productId`, `quantity` y `price`.
 
 ## Resumen de relaciones

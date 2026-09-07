@@ -65,16 +65,6 @@ const OrderSchema = new mongoose.Schema(
                 zipCode: { type: String, default: '' },
             },
         },
-        // Conservamos Mercado Pago para el futuro
-        mercadoPagoData: {
-            preferenceId: { type: String },
-            payerEmail: { type: String },
-            paymentId: { type: String },
-            paymentStatus: { type: String },
-            transactionAmount: { type: Number },
-            paymentMethodId: { type: String },
-            paidAt: { type: Date },
-        },
     },
     { timestamps: true }
 )
