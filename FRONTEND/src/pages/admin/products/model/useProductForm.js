@@ -239,6 +239,8 @@ export function useProductForm() {
                     baseColor: v.baseColor?.trim().toLowerCase() || null,
                     designColors: Array.isArray(v.designColors)
                         ? v.designColors
+                              .map((c) => c.trim().toLowerCase())
+                              .filter(Boolean)
                         : [],
                     stock: Number(v.stock || 0),
                     price: v.price ? Number(v.price) : null,

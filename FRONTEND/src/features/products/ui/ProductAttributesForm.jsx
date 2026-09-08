@@ -95,6 +95,17 @@ const ProductAttributesForm = ({
         setTemplate((prev) => {
             const newVariants = [...prev.variants]
             newVariants[index] = { ...newVariants[index], [field]: value }
+            // Autogenera el SKU al definir talla o color si la variante no tiene uno
+            if (
+                (field === 'size' || field === 'baseColor') &&
+                !newVariants[index].sku
+            ) {
+                newVariants[index].sku = generateVariantSku(
+                    prev.handle,
+                    newVariants[index].size,
+                    newVariants[index].baseColor,
+                )
+            }
             return { ...prev, variants: newVariants }
         })
     }
@@ -211,7 +222,58 @@ const ProductAttributesForm = ({
                     </div>
                 </section>
 
-                {/* 2. PRECIOS GLOBALES */}
+                {/* 2. MULTIMEDIA */}
+                <section className="card bg-base-100 shadow-sm ring-1 ring-base-200">
+                    <div className="border-b border-base-200 px-6 py-4 flex flex-row items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <i className="ti ti-photo text-base-content/60 text-xl" />
+                            <h3 className="text-sm font-bold uppercase tracking-widest text-base-content/80">
+                                Imágenes
+                            </h3>
+                        </div>
+                        {hasImages && (
+                            <button
+                                onClick={() => setIsImageModalOpen(true)}
+                                className="btn btn-xs btn-outline btn-primary"
+                            >
+                                Editar Galería
+                            </button>
+                        )}
+                    </div>
+                    <div className="card-body p-6">
+                        {!hasImages ? (
+                            <div
+                                onClick={() => setIsImageModalOpen(true)}
+                                className="w-full border-2 border-dashed border-base-300 rounded-xl p-8 flex flex-col items-center cursor-pointer bg-base-200/20 hover:bg-base-200/50"
+                            >
+                                <i className="ti ti-cloud-upload text-4xl text-primary mb-2" />
+                                <span className="font-bold text-base-content">
+                                    Abrir galería
+                                </span>
+                            </div>
+                        ) : (
+                            <div
+                                onClick={() => setIsImageModalOpen(true)}
+                                className="grid grid-cols-3 sm:grid-cols-6 gap-3 cursor-pointer group relative"
+                            >
+                                {template.images.map((img, index) => (
+                                    <div
+                                        key={img.id}
+                                        className="aspect-square rounded-lg border border-base-200 overflow-hidden relative bg-base-200"
+                                    >
+                                        <img
+                                            src={img.src}
+                                            alt={`Prod ${index}`}
+                                            className="w-full h-full object-cover"
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </section>
+
+                {/* 3. PRECIOS GLOBALES */}
                 <section className="card bg-base-200/20 border border-base-200 shadow-sm">
                     <div className="border-b border-base-200 px-6 py-4 flex items-center gap-2">
                         <i className="ti ti-cash text-base-content/60 text-xl" />
@@ -282,7 +344,7 @@ const ProductAttributesForm = ({
                     </div>
                 </section>
 
-                {/* 3. VARIANTES (EL NUEVO CORAZÓN) */}
+                {/* 4. VARIANTES (EL NUEVO CORAZÓN) */}
                 <section className="card bg-base-100 border border-base-200 shadow-sm">
                     <div className="border-b border-base-200 px-6 py-4 flex items-center justify-between">
                         <div className="flex items-center gap-2">
@@ -318,7 +380,7 @@ const ProductAttributesForm = ({
                                             <div className="flex items-center gap-1">
                                                 <input
                                                     type="text"
-                                                    className="input input-xs input-bordered w-full font-mono uppercase"
+                                                    className="input input-sm input-bordered w-full font-mono uppercase"
                                                     value={v.sku}
                                                     onChange={(e) =>
                                                         handleVariantChange(
@@ -396,7 +458,7 @@ const ProductAttributesForm = ({
                                                         v.designColors,
                                                     )
                                                         ? v.designColors.join(
-                                                              ', ',
+                                                              ',',
                                                           )
                                                         : ''
                                                 }
@@ -404,12 +466,7 @@ const ProductAttributesForm = ({
                                                     handleVariantChange(
                                                         idx,
                                                         'designColors',
-                                                        e.target.value
-                                                            .split(',')
-                                                            .map((c) =>
-                                                                c.trim(),
-                                                            )
-                                                            .filter(Boolean),
+                                                        e.target.value.split(','),
                                                     )
                                                 }
                                                 placeholder="Ej. rojo, blanco"
@@ -452,56 +509,6 @@ const ProductAttributesForm = ({
                     </div>
                 </section>
 
-                {/* 4. MULTIMEDIA */}
-                <section className="card bg-base-100 shadow-sm ring-1 ring-base-200">
-                    <div className="border-b border-base-200 px-6 py-4 flex flex-row items-center justify-between">
-                        <div className="flex items-center gap-2">
-                            <i className="ti ti-photo text-base-content/60 text-xl" />
-                            <h3 className="text-sm font-bold uppercase tracking-widest text-base-content/80">
-                                Imágenes
-                            </h3>
-                        </div>
-                        {hasImages && (
-                            <button
-                                onClick={() => setIsImageModalOpen(true)}
-                                className="btn btn-xs btn-outline btn-primary"
-                            >
-                                Editar Galería
-                            </button>
-                        )}
-                    </div>
-                    <div className="card-body p-6">
-                        {!hasImages ? (
-                            <div
-                                onClick={() => setIsImageModalOpen(true)}
-                                className="w-full border-2 border-dashed border-base-300 rounded-xl p-8 flex flex-col items-center cursor-pointer bg-base-200/20 hover:bg-base-200/50"
-                            >
-                                <i className="ti ti-cloud-upload text-4xl text-primary mb-2" />
-                                <span className="font-bold text-base-content">
-                                    Abrir galería
-                                </span>
-                            </div>
-                        ) : (
-                            <div
-                                onClick={() => setIsImageModalOpen(true)}
-                                className="grid grid-cols-3 sm:grid-cols-6 gap-3 cursor-pointer group relative"
-                            >
-                                {template.images.map((img, index) => (
-                                    <div
-                                        key={img.id}
-                                        className="aspect-square rounded-lg border border-base-200 overflow-hidden relative bg-base-200"
-                                    >
-                                        <img
-                                            src={img.src}
-                                            alt={`Prod ${index}`}
-                                            className="w-full h-full object-cover"
-                                        />
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                </section>
             </div>
 
             {/* COLUMNA DERECHA */}
