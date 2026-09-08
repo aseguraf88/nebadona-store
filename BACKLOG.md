@@ -1,63 +1,79 @@
 # Backlog — Nebadona Store
 
-> Última auditoría de código: sept 2026. Método: inventario de hechos (con cita
-> de archivo obligatoria) → comparación contra lista de referencia propia →
-> priorización. Ver sección final para repetir el proceso.
+> Objetivo actual: dejar el dashboard 100% funcional en navegador (PC + mobile)
+> y publicar. La versión app nativa (Capacitor) queda pausada hasta después
+> del lanzamiento — ver decisión y contexto más abajo.
 
-## 🔴 Bloqueante para vender (resolver antes de operar con clientes reales)
+## ✅ Confirmado hecho y probado
 
-- [ ] **Descuento automático de stock al confirmar que una orden fue pagada**
-      Estado confirmado: *no encontrado* en el código. Hoy existe validación de
-      stock disponible al crear el pedido, pero nada resta stock cuando la
-      venta se cierra de verdad. Sin esto, se puede vender el mismo producto
-      dos veces.
-- [ ] **Cerrar el circuito de "marcar orden como pagada" en el panel admin**
-      Estado confirmado: *parcial*. El modelo de órdenes ya tiene estados y
-      `whatsapp_pending`, pero falta confirmar que el flujo de actualización
-      manual (vos marcás "pagado" → la orden cambia de estado) esté completo
-      de punta a punta.
+- [x] MercadoPago eliminado por completo del código
+- [x] Dashboard de productos dividido: listado (tabla), crear, editar,
+      configuración de catálogo (categorías/franquicias/temas)
+- [x] Página de Inventario: importar/exportar CSV + tabla de stock por variante
+- [x] Subida de imágenes directo a Cloudinary (arregla el problema de payload
+      del lado del frontend)
+- [x] Fixes de `ProductAttributesForm`: tamaño de input SKU, autogenerado de
+      SKU, bug de coma en colores de diseño, orden de secciones (imágenes
+      antes de precios)
+- [x] Sidebar: `isActive` corregido, links de Inventario y Configuración
+      agregados
 
-## 🟡 Mejora futura (no bloquea vender, pero suma)
+## 🔴 Bloqueante real antes de vender en serio (verificar YA)
+
+- [ ] **Descuento automático de stock al confirmar una orden pagada** —
+      confirmado pendiente por vos mismo. Este es el riesgo real: sin esto,
+      se puede vender el mismo producto dos veces.
+- [ ] **Circuito de "marcar orden como pagada" en el panel admin** — última
+      auditoría real de código lo marcó *parcial*. Verificar estado actual
+      antes de asumir que está resuelto.
+
+## 🟠 Seguridad — pedido, nunca confirmado que se haya aplicado
+
+- [ ] Límites de payload (2mb) + rate limiting en `BACKEND/src/server.js`
+- [ ] Whitelist de CORS + hardening de JWT (`authMiddleware.js`)
+
+Nota: barato de aplicar, pero no es lo que te va a explotar primero con poco
+tráfico inicial. Prioridad después de los dos puntos rojos de arriba.
+
+## 🟡 Puede esperar sin riesgo real (post-lanzamiento)
 
 - [ ] Alertas de stock bajo
 - [ ] Reportes básicos de qué se vende más
-- [ ] Multiusuario con niveles de acceso (si en algún momento hay más de un vendedor)
+- [ ] Multiusuario con niveles de acceso
 - [ ] Historial de pedidos consultable por cliente
-- [ ] Personalización visible del catálogo (branding/tema propio)
-- [ ] Confirmar alcance real de "gestión de variantes" — la auditoría lo marcó
-      *parcial*: hay stock y atributos, pero no un modelo de variante
-      independiente tan explícito como se pensaba.
+- [ ] Personalización visible del catálogo (branding/tema)
+- [ ] Pasada de responsividad completa (mobile/tablet) en las pantallas del
+      dashboard — prerrequisito para la futura app con Capacitor, no urgente
+      para publicar si el uso diario del dashboard es principalmente en PC
 
-## 📋 Resuelto fuera del código (proceso manual, no requiere programar)
+## 📋 Resuelto fuera del código
 
-- [x] **Boleta electrónica** → Portal MiPyme gratuito del SII. Se emite a mano
-      después de confirmar la transferencia por WhatsApp. No hace falta
-      integración ni API por ahora.
+- [x] Boleta electrónica → Portal MiPyme gratuito del SII, emisión manual
 
 ## ❌ Descartado a propósito
 
-- Integración de pasarela de pago (MercadoPago) — modelo de negocio es 100%
-  WhatsApp + transferencia manual. Código eliminado en sept 2026.
+- Integración de pasarela de pago (MercadoPago)
 
-## ⚠️ Pendiente de verificar a mano (dudas que dejó la última auditoría)
+## 📱 Decisión de alcance (registrada para no repetir la discusión)
 
-- El agente afirmó que existe un endpoint `POST /api/orders/whatsapp` en
-  `BACKEND/src/routes/orderRoutes.js`. Confirmar que el nombre exacto es ese.
-- La fila de "Categorías/franquicias/temas" se marcó `sí` justo después de que
-  una de sus búsquedas internas fallara ("Search failed") sin que el agente lo
-  avisara. Es probable que sea correcta igual (se cruza con código ya revisado
-  en esta conversación), pero no se confirmó dos veces por una vía limpia.
+App móvil nativa (Play Store / App Store, vía Capacitor): pausada hasta
+después de publicar la web. Prerrequisito cuando se retome: la web tiene que
+estar ya responsiva, porque Capacitor envuelve el mismo código web tal cual
+está — no arregla nada visual por sí solo.
 
-## 🔍 Metodología para la próxima auditoría
+## 🔍 Prompt para verificar el estado real antes de publicar
 
-No preguntar "¿cómo va el proyecto?" de una. Usar 3 etapas:
+```
+Necesito confirmar el estado real de 4 cosas antes de publicar. Para cada 
+una, mostrame el archivo y la línea que lo prueba — si no hay evidencia 
+clara, decime "no encontrado", no asumas.
 
-1. **Inventario de hechos** — pedir tabla con columna de archivo obligatoria;
-   "no encontrado" en vez de asumir.
-2. **Comparación** — contra una lista de referencia que doy yo, no una que
-   el agente invente o saque de su propio criterio de "mercado".
-3. **Priorización** — solo sobre los gaps ya confirmados en el paso 2, sin
-   agregar funciones nuevas.
-
-Pedir siempre que avise explícitamente si alguna búsqueda o lectura de archivo
-falló, aunque igual llegue a una conclusión por otra vía.
+1. ¿Existe código que descuente stock de una variante cuando una orden 
+   cambia a estado pagado/confirmado?
+2. ¿Existe un endpoint o función en el admin para marcar una orden como 
+   pagada, y actualiza el estado de la orden de punta a punta?
+3. En BACKEND/src/server.js, ¿cuáles son los límites actuales de 
+   express.json() y express.urlencoded()? ¿Hay rate limiting configurado?
+4. En BACKEND/src/server.js, ¿cómo está configurado cors() actualmente? 
+   ¿Acepta cualquier origen o tiene una whitelist?
+```

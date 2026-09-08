@@ -23,7 +23,9 @@ const generalLimiter = rateLimit({
     max: 200,
     standardHeaders: true,
     legacyHeaders: false,
-    message: { message: 'Demasiadas peticiones. Inténtalo de nuevo más tarde.' },
+    message: {
+        message: 'Demasiadas peticiones. Inténtalo de nuevo más tarde.',
+    },
 })
 
 const authLimiter = rateLimit({
@@ -31,7 +33,10 @@ const authLimiter = rateLimit({
     max: 10,
     standardHeaders: true,
     legacyHeaders: false,
-    message: { message: 'Demasiados intentos de autenticación. Inténtalo de nuevo más tarde.' },
+    message: {
+        message:
+            'Demasiados intentos de autenticación. Inténtalo de nuevo más tarde.',
+    },
 })
 
 app.disable('x-powered-by')
@@ -50,8 +55,8 @@ app.use(
 )
 app.use(cookieParser())
 app.use(generalLimiter)
-app.use(express.json({ limit: '50mb' }))
-app.use(express.urlencoded({ extended: true, limit: '20mb' }))
+app.use(express.json({ limit: '2mb' }))
+app.use(express.urlencoded({ extended: true, limit: '2mb' }))
 app.use((req, res, next) => {
     res.setHeader('X-Content-Type-Options', 'nosniff')
     res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin')
@@ -74,7 +79,9 @@ app.use((req, res) => {
 
 app.use((err, req, res, next) => {
     console.error('Unhandled error:', err)
-    res.status(err.status || 500).json({ message: 'Error interno del servidor.' })
+    res.status(err.status || 500).json({
+        message: 'Error interno del servidor.',
+    })
 })
 
 connectDB()
