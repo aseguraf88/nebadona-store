@@ -1,7 +1,7 @@
 import { Routes, Route } from 'react-router-dom'
 import { Layout } from '../widgets/layouts'
 import { Home } from '../pages/Home'
-//import Register from '../pages/Register'
+import { Register } from '../pages/Register'
 import { Login } from '../pages/login'
 import { UserContextProvider } from '../entities/user'
 import { Toaster } from 'react-hot-toast'
@@ -37,7 +37,7 @@ function App() {
                         <Route element={<Layout />}>
                             <Route path="/" element={<Home />} />
                             <Route path="/shop" element={<ShoppingPage />} />
-                            {/* <Route path="/register" element={<Register />} /> */}
+                            <Route path="/register" element={<Register />} />
                             <Route path="/login" element={<Login />} />
                             <Route path="/checkout" element={<Checkout />} />
                             {/*                             <Route

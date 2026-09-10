@@ -145,7 +145,7 @@ const CartDrawer = () => {
 
                                 return (
                                     <div
-                                        key={item._id}
+                                        key={`${item._id}-${item.sku}`}
                                         className="flex gap-4 group"
                                     >
                                         <div
@@ -176,6 +176,11 @@ const CartDrawer = () => {
                                                     >
                                                         {item.name}
                                                     </h3>
+                                                    {[item.size, item.baseColor].filter(Boolean).join(' · ') && (
+                                                        <p className="mt-0.5 text-xs text-base-content/40 font-medium">
+                                                            {[item.size, item.baseColor].filter(Boolean).join(' · ')}
+                                                        </p>
+                                                    )}
                                                     <p className="mt-1 text-xs text-base-content/60">
                                                         {formatPrice(unitPrice)}{' '}
                                                         c/u
@@ -183,7 +188,7 @@ const CartDrawer = () => {
                                                 </div>
                                                 <button
                                                     onClick={() =>
-                                                        removeFromCart(item._id)
+                                                        removeFromCart(item._id, item.sku)
                                                     }
                                                     disabled={loading}
                                                     className="text-base-content/40 hover:text-error transition-colors p-1"
@@ -199,6 +204,7 @@ const CartDrawer = () => {
                                                         onClick={() =>
                                                             updateQuantity(
                                                                 item._id,
+                                                                item.sku,
                                                                 quantity - 1,
                                                             )
                                                         }
@@ -218,6 +224,7 @@ const CartDrawer = () => {
                                                         onClick={() =>
                                                             updateQuantity(
                                                                 item._id,
+                                                                item.sku,
                                                                 quantity + 1,
                                                             )
                                                         }

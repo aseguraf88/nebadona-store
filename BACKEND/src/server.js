@@ -1,6 +1,6 @@
+import './config/env.js'
 import { connectDB, disconnectDB } from './config/configdb.js'
 import express from 'express'
-import dotenv from 'dotenv'
 import authRoutes from './routes/authRoutes.js'
 import productsRoutes from './routes/productsRoutes.js'
 import productCategoriesRoutes from './routes/productCategoriesRoutes.js'
@@ -11,8 +11,6 @@ import orderRoutes from './routes/orderRoutes.js'
 import cors from 'cors'
 import cookieParser from 'cookie-parser'
 import rateLimit from 'express-rate-limit'
-
-dotenv.config()
 
 const app = express()
 
@@ -43,7 +41,7 @@ app.disable('x-powered-by')
 app.use(
     cors({
         origin: process.env.FRONTEND_URL || 'http://localhost:5173',
-        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+        methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
         allowedHeaders: [
             'Content-Type',
             'Authorization',

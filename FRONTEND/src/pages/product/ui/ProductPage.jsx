@@ -1,7 +1,8 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useCart } from '../../../entities/cart'
 import { useProduct } from '../../../entities/product'
+import VariantSelector from '../../../entities/product/ui/VariantSelector'
 import { ProductSection } from '../../../widgets/catalog'
 
 const ProductPage = () => {
@@ -15,6 +16,19 @@ const ProductPage = () => {
     const [quantity, setQuantity] = useState(1)
     const [selectedImageIndex, setSelectedImageIndex] = useState(0)
     const [isAdded, setIsAdded] = useState(false)
+    const [selectedVariant, setSelectedVariant] = useState(null)
+
+    // Inicializar selectedVariant cuando carga el producto
+    useEffect(() => {
+        if (product?.variants?.length > 0) {
+            setSelectedVariant(product.variants[0])
+        }
+    }, [product])
+
+    const handleVariantSelect = useCallback((variant) => {
+        setSelectedVariant(variant)
+        setQuantity(1)
+    }, [])
 
     // Llamada a la base de datos al montar la página
     useEffect(() => {
@@ -38,10 +52,10 @@ const ProductPage = () => {
     // Funciones del carrito
     const handleDecrement = () => setQuantity((prev) => Math.max(1, prev - 1))
     const handleIncrement = () =>
-        setQuantity((prev) => Math.min(product?.stock || 1, prev + 1))
+        setQuantity((prev) => Math.min(selectedVariant?.stock ?? 1, prev + 1))
 
     const handleAddToCart = async () => {
-        await addToCart(product, quantity)
+        await addToCart(product, quantity, selectedVariant)
         setIsAdded(true)
         setTimeout(() => setIsAdded(false), 1500)
     }
@@ -138,7 +152,7 @@ const ProductPage = () => {
                     {/* ZONA DERECHA: INFO Y COMPRA */}
                     <div className="flex flex-col pt-4">
                         <div className="flex items-center justify-start gap-2 sm:gap-3 text-xs font-bold text-base-content/50 uppercase tracking-widest mb-3">
-                            <span>SKU: {product.sku || 'N/A'}</span>
+                            <span>SKU: {selectedVariant?.sku || 'N/A'}</span>
                             <span className="opacity-40 font-light">|</span>
                             <span className="truncate text-primary">
                                 {product.franchise_name || 'Novedad'}
@@ -154,7 +168,7 @@ const ProductPage = () => {
                                 {new Intl.NumberFormat('es-CL', {
                                     style: 'currency',
                                     currency: 'CLP',
-                                }).format(product.price || 0)}
+                                }).format(selectedVariant?.price ?? product.price ?? 0)}
                             </span>
                             {product.compareAtPrice &&
                                 product.compareAtPrice > product.price && (
@@ -169,16 +183,11 @@ const ProductPage = () => {
 
                         {/* BLOQUE DE COMPRA */}
                         <div className="flex flex-col gap-6">
-                            <div className="flex flex-col gap-2">
-                                <span className="text-xs font-bold text-base-content/70 uppercase tracking-widest">
-                                    Talla
-                                </span>
-                                <div className="flex gap-3">
-                                    <div className="badge badge-outline p-5 rounded-xl font-bold text-base-content border-primary bg-primary/5">
-                                        {product.size || 'Única (36 - 43)'}
-                                    </div>
-                                </div>
-                            </div>
+                            <VariantSelector
+                                variants={product.variants}
+                                selectedVariant={selectedVariant}
+                                onSelect={handleVariantSelect}
+                            />
 
                             <div className="flex flex-col sm:flex-row items-center gap-4 mt-4">
                                 <div className="flex items-center border border-base-300 rounded-2xl h-14 w-full sm:w-36 bg-base-100 overflow-hidden shrink-0">
@@ -193,9 +202,7 @@ const ProductPage = () => {
                                     </span>
                                     <button
                                         onClick={handleIncrement}
-                                        disabled={
-                                            quantity >= (product.stock || 0)
-                                        }
+                                        disabled={quantity >= (selectedVariant?.stock ?? 0)}
                                         className="flex-1 h-full hover:bg-base-200 text-lg font-medium disabled:opacity-30"
                                     >
                                         +
@@ -204,14 +211,14 @@ const ProductPage = () => {
 
                                 <button
                                     onClick={handleAddToCart}
-                                    disabled={product.stock === 0 || isAdded}
+                                    disabled={(selectedVariant?.stock ?? 0) === 0 || isAdded}
                                     className={`btn flex-1 h-14 rounded-2xl text-sm uppercase tracking-widest font-bold border-none transition-all w-full ${
                                         isAdded
                                             ? 'bg-success text-success-content hover:bg-success'
                                             : 'btn-primary shadow-lg hover:shadow-xl'
                                     }`}
                                 >
-                                    {product.stock === 0
+                                    {(selectedVariant?.stock ?? 0) === 0
                                         ? 'Agotado'
                                         : isAdded
                                           ? '✓ Agregado'

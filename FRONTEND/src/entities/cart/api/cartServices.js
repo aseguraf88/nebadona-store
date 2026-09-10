@@ -7,11 +7,12 @@ const API_URL = import.meta.env.VITE_BACKEND_URL + 'cart'
 axios.defaults.withCredentials = true
 
 // Servicio para agregar producto al carrito
-export const addToCartService = async (userId, productId, quantity = 1) => {
+export const addToCartService = async (userId, productId, sku, quantity = 1) => {
     try {
         const response = await axios.post(`${API_URL}/add`, {
             userId,
             productId,
+            sku,
             quantity,
         })
         return response.data
@@ -36,10 +37,11 @@ export const getCartService = async (userId) => {
 }
 
 // Servicio para actualizar la cantidad de un producto en el carrito
-export const updateCartService = async (userId, productId, quantity) => {
+export const updateCartService = async (userId, productId, sku, quantity) => {
     try {
         const response = await axios.put(`${API_URL}/update/${userId}`, {
             productId,
+            sku,
             quantity,
         })
         return response.data
@@ -51,12 +53,12 @@ export const updateCartService = async (userId, productId, quantity) => {
 }
 
 // Servicio para eliminar un producto del carrito
-export const removeFromCartService = async (userId, productId) => {
+export const removeFromCartService = async (userId, productId, sku) => {
     try {
         const response = await axios.delete(
             `${API_URL}/removeProduct/${userId}`,
             {
-                data: { productId },
+                data: { productId, sku },
             },
         )
         return response.data

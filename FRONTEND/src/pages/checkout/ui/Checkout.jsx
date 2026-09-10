@@ -181,6 +181,8 @@ const Checkout = () => {
                 items: cart.map((item) => ({
                     _id: item._id,
                     sku: item.sku || 'SIN-SKU',
+                    size: item.size || '',
+                    baseColor: item.baseColor || '',
                     name: item.name,
                     category:
                         item.product_category || item.category || 'Calcetines',

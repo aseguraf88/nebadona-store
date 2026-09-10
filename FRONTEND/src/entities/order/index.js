@@ -1,3 +1,3 @@
 // src/entities/order/index.js
 
-export { createOrder } from './api/orderServices'
+export { getOrders, updateOrderStatus } from './api/orderServices'

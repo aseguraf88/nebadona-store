@@ -4,7 +4,7 @@ import ProductModel from '../models/ProductModel.js' // Tenemos que validar que 
 export const addToCart = async (req, res) => {
     try {
         const userId = req.user?._id || req.body.userId
-        const { productId, quantity = 1 } = req.body
+        const { productId, sku, quantity = 1 } = req.body
 
         if (!userId) {
             return res.status(400).json({ message: 'El userId es requerido' })
@@ -15,6 +15,10 @@ export const addToCart = async (req, res) => {
             return res
                 .status(400)
                 .json({ message: 'El productId es requerido' })
+        }
+
+        if (!sku) {
+            return res.status(400).json({ message: 'El sku de la variante es requerido' })
         }
 
         if (quantity < 1) {
@@ -30,35 +34,42 @@ export const addToCart = async (req, res) => {
             return res.status(404).json({ message: 'Producto no encontrado' })
         }
 
+        // Buscar la variante exacta por sku y validar stock
+        const variant = product.variants?.find((v) => v.sku === sku)
+        if (!variant) {
+            return res.status(404).json({ message: 'Variante no encontrada' })
+        }
+        if (variant.stock < quantity) {
+            return res.status(400).json({
+                message: `Solo hay ${variant.stock} unidades disponibles`,
+            })
+        }
+
         // Buscar carrito del usuario
         let cart = await CartModel.findOne({ userId })
 
         if (cart) {
-            // Si ya existe el carrito, busca el producto
+            // Dedupe por productId + sku (no solo productId)
             const productIndex = cart.products.findIndex(
-                (p) => p.productId.toString() === productId
+                (p) => p.productId.toString() === productId && p.sku === sku
             )
 
-            // Verificar el stock
-            if (product.stock < quantity) {
-                return res.status(400).json({
-                    message: `Solo hay ${product.stock} de unidades disponibles`,
-                })
-            }
-
-            // QUE HAY COINCIDENCIA
             if (productIndex > -1) {
-                // PRODUCTO YA EXISTE EN CARRITO DEL USUARIO, SOLO ACTUALIZAR LA CANTIDAD
-                cart.products[productIndex].quantity += quantity
+                const newQty = cart.products[productIndex].quantity + quantity
+                if (newQty > variant.stock) {
+                    return res.status(400).json({
+                        message: `Solo hay ${variant.stock} unidades disponibles`,
+                    })
+                }
+                cart.products[productIndex].quantity = newQty
             } else {
-                // NUEVO PRODUCTO AGREGADO AL CARRITO
-                cart.products.push({ productId, quantity })
+                cart.products.push({ productId, sku, quantity })
             }
         } else {
             // Si no existe el carrito
             cart = new CartModel({
                 userId,
-                products: [{ productId, quantity }],
+                products: [{ productId, sku, quantity }],
             })
         }
 
@@ -109,8 +120,8 @@ export const getCart = async (req, res) => {
 export const updateCart = async (req, res) => {
     try {
         const { userId } = req.params
-        const { productId, quantity } = req.body
-        console.log('UPDATE CART', productId, quantity)
+        const { productId, sku, quantity } = req.body
+        console.log('UPDATE CART', productId, sku, quantity)
 
         const cart = await CartModel.findOne({ userId })
 
@@ -119,7 +130,7 @@ export const updateCart = async (req, res) => {
         }
 
         const productIndex = cart.products.findIndex(
-            (p) => p.productId.toString() === productId
+            (p) => p.productId.toString() === productId && p.sku === sku
         )
 
         if (productIndex > -1) {
@@ -131,10 +142,15 @@ export const updateCart = async (req, res) => {
                 })
             }
 
+            const variant = product.variants?.find((v) => v.sku === sku)
+            if (!variant) {
+                return res.status(404).json({ message: 'Variante no encontrada' })
+            }
+
             // Verificar que la cantidad no exceda el stock disponible
-            if (quantity > product.stock) {
+            if (quantity > variant.stock) {
                 return res.status(400).json({
-                    message: `Solo hay ${product.stock} unidades disponibles`,
+                    message: `Solo hay ${variant.stock} unidades disponibles`,
                 })
             }
 
@@ -162,7 +178,7 @@ export const updateCart = async (req, res) => {
 export const removeProductFromCart = async (req, res) => {
     try {
         const { userId } = req.params
-        const { productId } = req.body
+        const { productId, sku } = req.body
 
         // Validar que se proporcionó el producId
         if (!userId) {
@@ -178,7 +194,7 @@ export const removeProductFromCart = async (req, res) => {
 
         // Buscar el indice del producto en el carrito
         const productIndex = cart.products.findIndex(
-            (p) => p.productId.toString() === productId
+            (p) => p.productId.toString() === productId && p.sku === sku
         )
 
         // Verificar si el producto existe en el carrito
@@ -252,7 +268,9 @@ export const getCartTotal = async (req, res) => {
         }
 
         const total = cart.products.reduce((acc, item) => {
-            return acc + (item.productId?.price || 0) * item.quantity
+            const variant = item.productId?.variants?.find((v) => v.sku === item.sku)
+            const price = variant?.price ?? item.productId?.price ?? 0
+            return acc + price * item.quantity
         }, 0)
 
         res.status(200).json({

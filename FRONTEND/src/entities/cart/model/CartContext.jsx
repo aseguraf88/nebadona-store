@@ -64,22 +64,29 @@ export const CartContextProvider = ({ children }) => {
 
                 // Transformar los datos del backend al formato unificado del frontend
                 const cartItems =
-                    response.cart?.products?.map((item) => ({
-                        _id: item.productId._id,
-                        name: item.productId.name,
-                        price: item.productId.price,
-                        imageUrl: item.productId.imageUrl,
-                        description: item.productId.description,
-                        stock: item.productId.stock,
-                        quantity: item.quantity,
-
-                        // 🔥 BLINDAJE DE METADATOS DESDE BACKEND
-                        product_category:
-                            item.productId.product_category ||
-                            item.productId.category ||
-                            'Sin categoría',
-                        sku: item.productId.sku || 'SIN-SKU',
-                    })) || []
+                    response.cart?.products?.map((item) => {
+                        const v = item.productId.variants?.find(
+                            (variant) => variant.sku === item.sku,
+                        )
+                        return {
+                            _id: item.productId._id,
+                            name: item.productId.name,
+                            sku: item.sku,
+                            size: v?.size || '',
+                            baseColor: v?.baseColor || '',
+                            price: v?.price ?? item.productId.price,
+                            stock: v?.stock ?? 0,
+                            imageUrl: item.productId.imageUrl,
+                            description: item.productId.description,
+                            quantity: item.quantity,
+                            // 🔥 BLINDAJE DE METADATOS DESDE BACKEND
+                            product_category:
+                                item.productId.product_category ||
+                                item.productId.category ||
+                                'Sin categoría',
+                            variants: item.productId.variants,
+                        }
+                    }) ?? []
 
                 setCart(cartItems)
             } catch (error) {
@@ -173,12 +180,18 @@ export const CartContextProvider = ({ children }) => {
     // --------------------------------------------------------
     // ACCIONES DEL CARRITO (AÑADIR, QUITAR, ACTUALIZAR, LIMPIAR)
     // --------------------------------------------------------
-    const addToCart = async (product, quantity = 1) => {
+    const addToCart = async (product, quantity = 1, variant = null) => {
+        if (!variant) {
+            toast.error('Selecciona una variante antes de agregar al carrito')
+            return
+        }
+        const sku = variant.sku
+
         if (isAuthenticated()) {
             try {
                 setLoading(true)
                 const userId = getUserId()
-                await addToCartService(userId, product._id, quantity)
+                await addToCartService(userId, product._id, sku, quantity)
                 await loadCart()
             } catch (error) {
                 logError('Error al agregar al carrito:', error)
@@ -192,7 +205,7 @@ export const CartContextProvider = ({ children }) => {
             try {
                 const currentCart = [...cart]
                 const existingIndex = currentCart.findIndex(
-                    (item) => item._id === product._id,
+                    (item) => item._id === product._id && item.sku === sku,
                 )
 
                 // 🔥 BLINDAJE DE METADATOS PARA INVITADOS LOCALES
@@ -200,21 +213,33 @@ export const CartContextProvider = ({ children }) => {
                     product.product_category ||
                     product.category ||
                     'Sin categoría'
-                const resolvedSku = product.sku || 'SIN-SKU'
 
                 const productToSave = {
                     ...product,
                     product_category: resolvedCategory,
-                    sku: resolvedSku,
+                    sku,
+                    size: variant.size || '',
+                    baseColor: variant.baseColor || '',
+                    price: variant.price ?? product.price,
+                    stock: variant.stock,
                     quantity,
                 }
 
                 if (existingIndex > -1) {
-                    currentCart[existingIndex].quantity += quantity
+                    const newQty = currentCart[existingIndex].quantity + quantity
+                    if (newQty > variant.stock) {
+                        toast.error(`Solo hay ${variant.stock} unidades disponibles`)
+                        return
+                    }
+                    currentCart[existingIndex].quantity = newQty
                     currentCart[existingIndex].product_category =
                         resolvedCategory
-                    currentCart[existingIndex].sku = resolvedSku
+                    currentCart[existingIndex].sku = sku
                 } else {
+                    if (quantity > variant.stock) {
+                        toast.error(`Solo hay ${variant.stock} unidades disponibles`)
+                        return
+                    }
                     currentCart.push(productToSave)
                 }
 
@@ -227,12 +252,12 @@ export const CartContextProvider = ({ children }) => {
         }
     }
 
-    const removeFromCart = async (productId) => {
+    const removeFromCart = async (productId, sku) => {
         if (isAuthenticated()) {
             try {
                 setLoading(true)
                 const userId = getUserId()
-                await removeFromCartService(userId, productId)
+                await removeFromCartService(userId, productId, sku)
                 await loadCart()
             } catch (error) {
                 logError('Error al eliminar del carrito:', error)
@@ -245,7 +270,7 @@ export const CartContextProvider = ({ children }) => {
         } else {
             try {
                 const currentCart = cart.filter(
-                    (item) => item._id !== productId,
+                    (item) => !(item._id === productId && item.sku === sku),
                 )
                 setCart(currentCart)
                 saveLocalCart(currentCart)
@@ -256,7 +281,7 @@ export const CartContextProvider = ({ children }) => {
         }
     }
 
-    const updateQuantity = async (productId, newQuantity) => {
+    const updateQuantity = async (productId, sku, newQuantity) => {
         if (newQuantity < 1) {
             toast.error('La cantidad debe ser al menos 1')
             return
@@ -266,7 +291,7 @@ export const CartContextProvider = ({ children }) => {
             try {
                 setLoading(true)
                 const userId = getUserId()
-                await updateCartService(userId, productId, newQuantity)
+                await updateCartService(userId, productId, sku, newQuantity)
                 await loadCart()
             } catch (error) {
                 logError('Error al actualizar cantidad:', error)
@@ -276,8 +301,15 @@ export const CartContextProvider = ({ children }) => {
             }
         } else {
             try {
+                const existing = cart.find(
+                    (item) => item._id === productId && item.sku === sku,
+                )
+                if (existing && newQuantity > existing.stock) {
+                    toast.error(`Solo hay ${existing.stock} unidades disponibles`)
+                    return
+                }
                 const currentCart = cart.map((item) =>
-                    item._id === productId
+                    item._id === productId && item.sku === sku
                         ? { ...item, quantity: newQuantity }
                         : item,
                 )

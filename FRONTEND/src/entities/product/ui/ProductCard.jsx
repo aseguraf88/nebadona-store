@@ -33,11 +33,15 @@ const ProductCard = ({ product }) => {
 
     const currentImage = images[0] || ''
 
-    const handleAddToCart = async (event, quantityFromModal = 1) => {
+    const totalStock = (product.variants || []).reduce((sum, v) => sum + (v.stock || 0), 0)
+
+    const handleAddToCart = async (event, quantityFromModal = 1, variantFromModal = null) => {
         if (event) {
             event.preventDefault()
             event.stopPropagation()
         }
+
+        const variant = variantFromModal ?? product.variants?.[0] ?? null
 
         // 🔥 Payload blindado con los nombres oficiales
         await addToCart(
@@ -48,11 +52,12 @@ const ProductCard = ({ product }) => {
                 imageUrl: currentImage || imageUrl,
                 imageUrls: images,
                 description,
-                stock,
+                variants: product.variants,
                 product_category: product_category || 'Sin categoría',
                 sku: sku || 'SIN-SKU',
             },
             quantityFromModal,
+            variant,
         )
 
         setIsAdded(true)
@@ -149,15 +154,15 @@ const ProductCard = ({ product }) => {
                         {/* 🔥 BOTÓN AGREGAR */}
                         <div className="absolute bottom-3 left-3 right-3 z-20 overflow-hidden rounded-xl">
                             <button
-                                onClick={handleAddToCart}
-                                disabled={stock === 0 || isAdded}
+                                onClick={product.variants?.length > 1 ? handleOpenModal : handleAddToCart}
+                                disabled={totalStock === 0 || isAdded}
                                 className={`w-full py-2.5 flex items-center justify-center backdrop-blur-md transition-all duration-300 rounded-xl shadow-md sm:translate-y-12 sm:opacity-0 sm:group-hover:translate-y-0 sm:group-hover:opacity-100 ${
                                     isAdded
                                         ? 'bg-success text-success-content'
                                         : 'bg-base-100/95 text-base-content active:bg-primary active:text-primary-content sm:hover:bg-primary sm:hover:text-primary-content'
                                 }`}
                             >
-                                {stock === 0 ? (
+                                {totalStock === 0 ? (
                                     <span className="text-[11px] font-bold text-error uppercase tracking-widest">
                                         Agotado
                                     </span>
@@ -173,7 +178,7 @@ const ProductCard = ({ product }) => {
                                         <span className="text-sm leading-none font-normal">
                                             +
                                         </span>{' '}
-                                        Agregar
+                                        {product.variants?.length > 1 ? 'Elegir' : 'Agregar'}
                                     </span>
                                 )}
                             </button>
