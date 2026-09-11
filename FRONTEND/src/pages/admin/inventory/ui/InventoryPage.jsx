@@ -3,7 +3,7 @@ import { useProduct } from '../../../../entities/product'
 import { CsvImportModal } from '../../../../features/products'
 
 const InventoryPage = () => {
-    const { products, productsLoading, fetchProducts } = useProduct()
+    const { products, productsLoading, getProducts } = useProduct()
     const [isCsvModalOpen, setIsCsvModalOpen] = useState(false)
     const [query, setQuery] = useState('')
 
@@ -144,7 +144,7 @@ const InventoryPage = () => {
                 onClose={() => setIsCsvModalOpen(false)}
                 onSuccess={() => {
                     setIsCsvModalOpen(false)
-                    if (fetchProducts) fetchProducts()
+                    if (getProducts) getProducts()
                 }}
             />
         </div>

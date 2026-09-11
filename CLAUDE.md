@@ -64,41 +64,57 @@ Probado end-to-end (invitado, logueado, y checkout con WhatsApp/PDF).
 Ver `BACKLOG.md` para el detalle de esta tarea y el resto del estado
 del proyecto — es la fuente de verdad actualizada, no esta sección.
 
-## ✅ Tarea cerrada: backend del panel de órdenes
+## ✅ Tarea cerrada: panel de órdenes completo (backend + frontend)
 
 `GET /api/orders` y `PATCH /api/orders/:id/status` (`orderControllers.js`,
-`orderRoutes.js`), protegidos con `requireAdmin`. Probado con datos reales:
+`orderRoutes.js`), protegidos con `requireAdmin`, más `OrdersPage.jsx`
+cableado al backend real (tabs por estado, buscador, `<select>` con modal
+de confirmación, fila expandible con sku/talla/color). Probado de punta a
+punta desde la interfaz real, no solo por API:
+
 - Entrar a `approved` descuenta el stock exacto de la variante correcta
   (por `sku`), permite negativo sin bloquear, avisa en `warnings`.
+- Salir de `approved` restaura el stock. Confirmado con datos reales.
 - Repetir el mismo estado no vuelve a descontar (idempotencia confirmada).
-- 403 confirmado para usuario no-admin en los dos endpoints.
-- CORS necesitó sumar `'PATCH'` a `methods` en `server.js` (bug real
-  encontrado al probar, ya corregido).
-- `Checkout.jsx` tenía un bug separado: el payload que arma la orden
-  (`orderPayload.items`) no incluía `size`/`baseColor` aunque el mensaje de
-  WhatsApp y el PDF sí los mostraban bien (caminos de código distintos).
-  Corregido y confirmado con una orden nueva.
+- Usuario no-admin es redirigido al intentar entrar por URL directa.
+- Los cambios de stock se ven en `ProductFormPage` sin refresh forzado.
 
-⚠️ Sin probar todavía: el camino inverso (salir de `approved` restaura el
-stock). Mismo mecanismo que el de entrar, menor riesgo, pero no verificado
-con datos reales.
+Dos bugs reales encontrados y corregidos en el camino:
+- CORS sin `'PATCH'` en `methods` de `server.js` (bloqueaba el fetch antes
+  de llegar al server).
+- `InventoryPage.jsx` llamaba a `fetchProducts` (nunca existió en
+  `ProductContext`, el nombre real es `getProducts`) — el catálogo nunca
+  se refrescaba solo tras importar CSV, en silencio, sin error.
 
-## 🔧 Tarea en curso ahora mismo: cablear `OrdersPage.jsx` al backend real
+**Sin tareas grandes pendientes de lo construido hasta acá** — variantes,
+carrito, y órdenes están cerrados y probados de punta a punta, incluido
+`ProtectedRoute.jsx` (confirmado: chequeo de rol a propósito, funciona
+bien). Ver `BACKLOG.md` para los ítems sueltos de "baja prioridad" y
+"post-lanzamiento" que quedan, ninguno bloqueante.
 
-`OrdersPage.jsx` sigue siendo una maqueta con datos inventados (Juan Pérez,
-María Gómez...), sin ningún fetch real, sin tabs que filtren de verdad.
+## 🔧 Tarea en curso ahora mismo: pasada de responsividad (mobile/tablet)
 
-El reemplazo completo ya está escrito y listo para aplicar (no hay que
-diseñarlo de nuevo): trae órdenes reales vía `getOrders()`, tabs que
-filtran por estado de verdad, buscador por folio/cliente, `<select>` de
-estado por fila que dispara `updateOrderStatus` con modal de confirmación
-(el mensaje avisa si esa transición va a mover stock), y fila expandible
-por orden mostrando sku/talla/color de cada item.
+Único prerrequisito real para publicar. Regla de prueba acordada: achicar
+la ventana del navegador a ~375px (mobile), ~768px (tablet) y desktop
+normal — alcanza para detectar la mayoría de los problemas sin necesitar
+un celular físico.
 
-**Siguiente paso al retomar**: pedirle a Claude Code que muestre el
-contenido actual de `OrdersPage.jsx` (por si cambió), aplicar el
-reemplazo, y probar desde la interfaz real (no más `fetch()` a mano) los 3
-casos ya validados por API: cambiar a pagado y ver el stock bajar en
-`ProductFormPage`, que un usuario no-admin no pueda ver la página, y de
-paso la prueba pendiente del camino inverso (aprobado → cancelado
-restaura stock).
+**Puntos de riesgo ya identificados, sin confirmar todavía si molestan en
+la práctica** (no arreglar preventivamente sin ver el problema real primero
+— confirmar en pantalla, después corregir):
+
+- `ProductAttributesForm.jsx`, tabla de Variantes y Stock — 6 columnas
+  (SKU, Talla, Color, Diseño, Stock, borrar) en `table-sm`, probablemente
+  necesita scroll horizontal en mobile.
+- `ProductsListPage.jsx` — 7 columnas con `overflow-x-auto`, funciona pero
+  no es el patrón más cómodo en mobile.
+- `InventoryPage.jsx` — 6 columnas, mismo patrón que arriba.
+
+Patrón esperable de solución si alguno de estos molesta de verdad: tabla
+en desktop/tablet, lista de tarjetas apiladas en mobile por breakpoint
+(mismo lenguaje que ya usa `ProductList.jsx` del catálogo público con
+`grid-cols-2 md:grid-cols-3 lg:grid-cols-4`) — no diseñar de cero.
+
+Esto es también el prerrequisito de la futura app con Capacitor (pausada
+post-lanzamiento): Capacitor envuelve el mismo código web tal cual está,
+no arregla nada visual por sí solo.
