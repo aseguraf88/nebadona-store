@@ -49,7 +49,7 @@ const MobileMenuDrawer = ({ isOpen, onClose }) => {
 
                     <div className="flex items-center gap-2">
                         <span className="font-extrabold tracking-wider text-base">
-                            NEBADONA
+                            NEBADON
                         </span>
                         <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-primary-content font-bold text-sm">
                             N

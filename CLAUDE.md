@@ -1,4 +1,4 @@
-# Nebadona Store — Contexto para Claude Code
+# Nebadon Store — Contexto para Claude Code
 
 ## Qué es este proyecto
 E-commerce por WhatsApp (modelo tipo Kyte) para un negocio chico en Chile.

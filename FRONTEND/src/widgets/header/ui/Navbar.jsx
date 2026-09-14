@@ -88,7 +88,7 @@ const Navbar = ({ children }) => {
                                 window.scrollTo({ top: 0, behavior: 'smooth' })
                             }
                             className="hidden lg:flex items-center"
-                            aria-label="Nebadona"
+                            aria-label="Nebadon"
                         >
                             <span className="flex h-11 w-11 items-center justify-center rounded-full bg-primary text-primary-content font-bold shadow-sm">
                                 N
@@ -105,7 +105,7 @@ const Navbar = ({ children }) => {
                                 window.scrollTo({ top: 0, behavior: 'smooth' })
                             }
                             className="flex lg:hidden items-center"
-                            aria-label="Nebadona"
+                            aria-label="Nebadon"
                         >
                             <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-content font-bold shadow-sm">
                                 N

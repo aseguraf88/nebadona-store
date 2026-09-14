@@ -1,4 +1,4 @@
-# Backlog — Nebadona Store
+# Backlog — Nebadon Store
 
 > Objetivo actual: dejar el dashboard 100% funcional en navegador (PC + mobile)
 > y publicar. La versión app nativa (Capacitor) queda pausada hasta después

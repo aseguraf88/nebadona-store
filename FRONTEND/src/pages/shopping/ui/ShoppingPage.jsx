@@ -1,9 +1,10 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useProduct } from '../../../entities/product'
 import { ProductList } from '../../../widgets/catalog'
 import { ResultsToolbar } from '../../../widgets/catalog'
 import { ShopSidebar } from '../../../widgets/catalog'
+import { TbFilter } from 'react-icons/tb'
 
 const ShoppingPage = () => {
     const {
@@ -21,7 +22,6 @@ const ShoppingPage = () => {
     // 🔥 ESTADOS PARA LOS FILTROS
     const [selectedFranchises, setSelectedFranchises] = useState([])
     const [selectedTypes, setSelectedTypes] = useState([])
-    const [selectedCategories, setSelectedCategories] = useState([])
 
     // Función universal para marcar/desmarcar filtros
     const toggleFilter = (setState, value) => {
@@ -31,6 +31,17 @@ const ShoppingPage = () => {
                 : [...prev, value],
         )
     }
+
+    const categoryParam = searchParams.get('category')
+    const [selectedCategories, setSelectedCategories] = useState(
+        categoryParam ? [categoryParam] : [],
+    )
+
+    useEffect(() => {
+        if (categoryParam) {
+            setSelectedCategories([categoryParam])
+        }
+    }, [categoryParam])
 
     // 🔥 EXTRAEMOS LOS TIPOS DE CALCETAS DINÁMICAMENTE (Ej: "Tobilleras", "Largas")
     const availableSockTypes = useMemo(() => {
@@ -52,14 +63,6 @@ const ShoppingPage = () => {
     const processedProducts = useMemo(() => {
         let result = [...(products || [])].filter(
             (p) => p.status?.trim().toUpperCase() === 'PUBLISHED',
-        )
-
-        console.log(
-            '🔍 LO QUE LLEGA DE LA BD:',
-            products.map((p) => ({
-                nombre: p.name,
-                estado: p.status,
-            })),
         )
 
         // 1. Motor de búsqueda
@@ -201,7 +204,7 @@ const ShoppingPage = () => {
                         htmlFor="shop-drawer"
                         className="btn btn-outline btn-sm mb-4 lg:hidden w-fit"
                     >
-                        <span className="ti ti-filter"></span> Filtros
+                        <TbFilter /> Filtros
                         {/* Indicador de filtros activos en móvil */}
                         {selectedFranchises.length +
                             selectedTypes.length +

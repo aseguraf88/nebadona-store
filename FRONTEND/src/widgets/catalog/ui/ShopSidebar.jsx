@@ -68,12 +68,12 @@ const ShopSidebar = ({
                                             type="checkbox"
                                             className="checkbox checkbox-sm checkbox-primary rounded-md"
                                             checked={selectedFranchises.includes(
-                                                fran.name,
+                                                fran.name.toLowerCase(),
                                             )}
                                             onChange={() =>
                                                 toggleFilter(
                                                     setSelectedFranchises,
-                                                    fran.name,
+                                                    fran.name.toLowerCase(),
                                                 )
                                             }
                                         />
@@ -136,12 +136,12 @@ const ShopSidebar = ({
                                             type="checkbox"
                                             className="checkbox checkbox-sm checkbox-primary rounded-md"
                                             checked={selectedCategories.includes(
-                                                cat.name,
+                                                cat.name.toLowerCase(),
                                             )}
                                             onChange={() =>
                                                 toggleFilter(
                                                     setSelectedCategories,
-                                                    cat.name,
+                                                    cat.name.toLowerCase(),
                                                 )
                                             }
                                         />

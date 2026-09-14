@@ -6,7 +6,13 @@ import { ConfirmationModal } from '../../../../shared/ui'
 import { useProductForm } from '../model/useProductForm'
 
 const ProductFormPage = () => {
-    const { productCategories, designThemes, franchiseNames } = useProduct()
+    const {
+        productCategories,
+        designThemes,
+        franchiseNames,
+        createDesignTheme,
+        createFranchiseName,
+    } = useProduct()
 
     const {
         isEditMode,
@@ -92,6 +98,8 @@ const ProductFormPage = () => {
                         franchiseNames={franchiseNames}
                         currentProductTypeOptions={currentProductTypeOptions}
                         sizeOptions={SIZE_OPTIONS}
+                        onCreateTheme={createDesignTheme}
+                        onCreateFranchise={createFranchiseName}
                     />
                 </div>
             </section>

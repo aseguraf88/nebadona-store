@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { TbTrendingUp, TbTrendingDown } from 'react-icons/tb'
 
 const AdminHome = () => {
     const stats = {
@@ -63,37 +64,40 @@ const AdminHome = () => {
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
                 {/* COLUMNA IZQUIERDA: Tarjetas de KPI Verticales */}
                 <div className="lg:col-span-1 flex flex-col gap-3">
-                    {kpiCards.map((card, idx) => (
-                        <div
-                            key={idx}
-                            className={`card bg-base-100 border cursor-pointer transition-all ${
-                                card.active
-                                    ? 'border-l-4 border-l-primary border-y-base-200 border-r-base-200 shadow-sm'
-                                    : 'border-base-200 hover:border-base-300'
-                            }`}
-                        >
-                            <div className="card-body p-4">
-                                <span className="text-xs font-bold uppercase tracking-wider text-base-content/50 mb-1">
-                                    {card.title}
-                                </span>
-                                <div className="flex items-end justify-between">
-                                    <span
-                                        className={`text-2xl font-black ${card.active ? 'text-primary' : 'text-base-content'}`}
-                                    >
-                                        {card.value}
+                    {kpiCards.map((card, idx) => {
+                        const TrendIcon = card.isPositive
+                            ? TbTrendingUp
+                            : TbTrendingDown
+                        return (
+                            <div
+                                key={idx}
+                                className={`card bg-base-100 border cursor-pointer transition-all ${
+                                    card.active
+                                        ? 'border-l-4 border-l-primary border-y-base-200 border-r-base-200 shadow-sm'
+                                        : 'border-base-200 hover:border-base-300'
+                                }`}
+                            >
+                                <div className="card-body p-4">
+                                    <span className="text-xs font-bold uppercase tracking-wider text-base-content/50 mb-1">
+                                        {card.title}
                                     </span>
-                                    <span
-                                        className={`text-xs font-bold flex items-center gap-1 ${card.isPositive ? 'text-success' : 'text-error'}`}
-                                    >
-                                        <i
-                                            className={`ti ${card.isPositive ? 'ti-trending-up' : 'ti-trending-down'} text-base`}
-                                        />
-                                        {card.trend}
-                                    </span>
+                                    <div className="flex items-end justify-between">
+                                        <span
+                                            className={`text-2xl font-black ${card.active ? 'text-primary' : 'text-base-content'}`}
+                                        >
+                                            {card.value}
+                                        </span>
+                                        <span
+                                            className={`text-xs font-bold flex items-center gap-1 ${card.isPositive ? 'text-success' : 'text-error'}`}
+                                        >
+                                            <TrendIcon className="text-base" />
+                                            {card.trend}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    ))}
+                        )
+                    })}
                 </div>
 
                 {/* COLUMNA DERECHA: Gráfico y Datos Detallados */}

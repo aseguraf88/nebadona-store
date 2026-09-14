@@ -1,0 +1,8 @@
+[33m758c8ff[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mwhatsapp-commerce[m[33m)[m checkpoint: variantes, carrito, stock y panel de ordenes completos y probados - antes de pasada de responsividad
+[33m5072178[m checkpoint antes de cablear OrdersPage.jsx
+[33m8832e69[m feat: cerrar selector de variantes end-to-end + fix de secretos hardcodeados en env.js
+[33m4e59c2e[m checkpoint: antes de agregar selección de variantes al flujo de compra
+[33m8dd7776[m refactor: dividir ProductsPage en rutas separadas (listado/crear/editar/config), agregar Inventario, arreglar isActive del sidebar, subida de imágenes directa a Cloudinary
+[33mb92cb76[m refactor: dividir ProductsPage en rutas separadas (listado/crear/editar/config), agregar Inventario, arreglar isActive del sidebar, subida de imágenes directa a Cloudinary
+[33me895121[m refactor: dividir ProductsPage en rutas separadas (listado/crear/editar/config), agregar Inventario, arreglar isActive del sidebar, subida de imágenes directa a Cloudinary
+[33m30cdc02[m checkpoint: pasos 1-6 aplicados a mano, antes de AdminLayout y borrado de ProductsPage

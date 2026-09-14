@@ -1,15 +1,25 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import toast from 'react-hot-toast'
 import { AddEntityModal } from '../../products'
 import { ProductImagesModal } from '../../products'
+import { TbFileDescription, TbPhoto, TbCloudUpload, TbCash, TbBox, TbWand, TbPlus } from 'react-icons/tb'
 
 // Helper simple para autogenerar SKU de variante si se desea
-const generateVariantSku = (handle, size, baseColor) => {
+const generateVariantSku = (handle, size, baseColor, existingSkus = []) => {
     if (!handle) return ''
     const sizePart = size ? `-${size.toUpperCase().trim()}` : ''
     const colorPart = baseColor
         ? `-${baseColor.substring(0, 3).toUpperCase().trim()}`
         : ''
-    return `${handle.toUpperCase().trim()}${sizePart}${colorPart}`
+    const base = `${handle.toUpperCase().trim()}${sizePart}${colorPart}`
+
+    if (!existingSkus.includes(base)) return base
+
+    let suffix = 2
+    while (existingSkus.includes(`${base}-${suffix}`)) {
+        suffix += 1
+    }
+    return `${base}-${suffix}`
 }
 
 const ProductAttributesForm = ({
@@ -20,19 +30,23 @@ const ProductAttributesForm = ({
     franchiseNames,
     sizeOptions,
     currentProductTypeOptions, // <-- Añadido aquí para que funcione la lista de Tipos
+    onCreateTheme,
+    onCreateFranchise,
 }) => {
     const [isThemeModalOpen, setIsThemeModalOpen] = useState(false)
     const [isFranchiseModalOpen, setIsFranchiseModalOpen] = useState(false)
     const [isImageModalOpen, setIsImageModalOpen] = useState(false)
     const [dragIndex, setDragIndex] = useState(null)
 
-    const [localThemes, setLocalThemes] = useState([])
-    const [localFranchises, setLocalFranchises] = useState([])
+    const lastVariantRef = useRef(null)
+    const prevVariantsLength = useRef(template.variants.length)
 
     useEffect(() => {
-        if (designThemes) setLocalThemes(designThemes)
-        if (franchiseNames) setLocalFranchises(franchiseNames)
-    }, [designThemes, franchiseNames])
+        if (template.variants.length > prevVariantsLength.current) {
+            lastVariantRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        }
+        prevVariantsLength.current = template.variants.length
+    }, [template.variants.length])
 
     // LÓGICA DE IMÁGENES
     const handleImageUpload = (event) => {
@@ -78,16 +92,22 @@ const ProductAttributesForm = ({
         setDragIndex(null)
     }
 
-    const handleSaveTheme = (newThemeName) => {
-        const newObj = { _id: Date.now().toString(), name: newThemeName }
-        setLocalThemes((prev) => [...prev, newObj])
-        setTemplate((prev) => ({ ...prev, design_theme: newThemeName }))
+    const handleSaveTheme = async (newThemeName) => {
+        const result = await onCreateTheme(newThemeName)
+        if (result?.success) {
+            setTemplate((prev) => ({ ...prev, design_theme: newThemeName }))
+        } else {
+            toast.error(result?.message || 'No se pudo crear el tema.')
+        }
     }
 
-    const handleSaveFranchise = (newFranchiseName) => {
-        const newObj = { _id: Date.now().toString(), name: newFranchiseName }
-        setLocalFranchises((prev) => [...prev, newObj])
-        setTemplate((prev) => ({ ...prev, franchise_name: newFranchiseName }))
+    const handleSaveFranchise = async (newFranchiseName) => {
+        const result = await onCreateFranchise(newFranchiseName)
+        if (result?.success) {
+            setTemplate((prev) => ({ ...prev, franchise_name: newFranchiseName }))
+        } else {
+            toast.error(result?.message || 'No se pudo crear la franquicia.')
+        }
     }
 
     // MANEJO DE VARIANTES
@@ -100,10 +120,15 @@ const ProductAttributesForm = ({
                 (field === 'size' || field === 'baseColor') &&
                 !newVariants[index].sku
             ) {
+                const otherSkus = newVariants
+                    .filter((_, i) => i !== index)
+                    .map((v) => v.sku)
+                    .filter(Boolean)
                 newVariants[index].sku = generateVariantSku(
                     prev.handle,
                     newVariants[index].size,
                     newVariants[index].baseColor,
+                    otherSkus,
                 )
             }
             return { ...prev, variants: newVariants }
@@ -144,7 +169,7 @@ const ProductAttributesForm = ({
                 {/* 1. INFORMACIÓN PRINCIPAL */}
                 <section className="card bg-base-100 shadow-sm ring-1 ring-base-200">
                     <div className="border-b border-base-200 px-6 py-4 flex items-center gap-2">
-                        <i className="ti ti-file-description text-primary text-xl" />
+                        <TbFileDescription className="text-primary text-xl" />
                         <h3 className="text-sm font-bold uppercase tracking-widest text-base-content/80">
                             Información Principal
                         </h3>
@@ -226,7 +251,7 @@ const ProductAttributesForm = ({
                 <section className="card bg-base-100 shadow-sm ring-1 ring-base-200">
                     <div className="border-b border-base-200 px-6 py-4 flex flex-row items-center justify-between">
                         <div className="flex items-center gap-2">
-                            <i className="ti ti-photo text-base-content/60 text-xl" />
+                            <TbPhoto className="text-base-content/60 text-xl" />
                             <h3 className="text-sm font-bold uppercase tracking-widest text-base-content/80">
                                 Imágenes
                             </h3>
@@ -246,7 +271,7 @@ const ProductAttributesForm = ({
                                 onClick={() => setIsImageModalOpen(true)}
                                 className="w-full border-2 border-dashed border-base-300 rounded-xl p-8 flex flex-col items-center cursor-pointer bg-base-200/20 hover:bg-base-200/50"
                             >
-                                <i className="ti ti-cloud-upload text-4xl text-primary mb-2" />
+                                <TbCloudUpload className="text-4xl text-primary mb-2" />
                                 <span className="font-bold text-base-content">
                                     Abrir galería
                                 </span>
@@ -276,7 +301,7 @@ const ProductAttributesForm = ({
                 {/* 3. PRECIOS GLOBALES */}
                 <section className="card bg-base-200/20 border border-base-200 shadow-sm">
                     <div className="border-b border-base-200 px-6 py-4 flex items-center gap-2">
-                        <i className="ti ti-cash text-base-content/60 text-xl" />
+                        <TbCash className="text-base-content/60 text-xl" />
                         <h3 className="text-sm font-bold uppercase tracking-widest text-base-content/80">
                             Precios Globales
                         </h3>
@@ -348,7 +373,7 @@ const ProductAttributesForm = ({
                 <section className="card bg-base-100 border border-base-200 shadow-sm">
                     <div className="border-b border-base-200 px-6 py-4 flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                            <i className="ti ti-box text-base-content/60 text-xl" />
+                            <TbBox className="text-base-content/60 text-xl" />
                             <h3 className="text-sm font-bold uppercase tracking-widest text-base-content/80">
                                 Variantes y Stock
                             </h3>
@@ -361,7 +386,9 @@ const ProductAttributesForm = ({
                             + Agregar Variante
                         </button>
                     </div>
-                    <div className="card-body p-0 overflow-x-auto">
+
+                    {/* TABLA — solo desktop/tablet, sin cambios respecto a la de siempre */}
+                    <div className="card-body p-0 overflow-x-auto hidden md:block">
                         <table className="table table-sm w-full">
                             <thead className="bg-base-200/50">
                                 <tr>
@@ -395,19 +422,19 @@ const ProductAttributesForm = ({
                                                     type="button"
                                                     className="btn btn-xs btn-ghost text-primary"
                                                     title="Autogenerar SKU"
-                                                    onClick={() =>
+                                                    onClick={() => {
+                                                        const otherSkus = template.variants
+                                                            .filter((_, i) => i !== idx)
+                                                            .map((variant) => variant.sku)
+                                                            .filter(Boolean)
                                                         handleVariantChange(
                                                             idx,
                                                             'sku',
-                                                            generateVariantSku(
-                                                                template.handle,
-                                                                v.size,
-                                                                v.baseColor,
-                                                            ),
+                                                            generateVariantSku(template.handle, v.size, v.baseColor, otherSkus),
                                                         )
-                                                    }
+                                                    }}
                                                 >
-                                                    <i className="ti ti-wand" />
+                                                    <TbWand />
                                                 </button>
                                             </div>
                                         </td>
@@ -478,11 +505,11 @@ const ProductAttributesForm = ({
                                                 className="input input-xs input-bordered w-20 font-bold"
                                                 value={v.stock}
                                                 onChange={(e) =>
-                                                    handleVariantChange(
-                                                        idx,
-                                                        'stock',
-                                                        Number(e.target.value),
-                                                    )
+                                                    handleVariantChange(idx, 'stock', e.target.value)
+                                                }
+                                                onFocus={(e) => e.target.select()}
+                                                onBlur={(e) =>
+                                                    handleVariantChange(idx, 'stock', Number(e.target.value) || 0)
                                                 }
                                                 min="0"
                                             />
@@ -506,6 +533,118 @@ const ProductAttributesForm = ({
                                 ))}
                             </tbody>
                         </table>
+                    </div>
+
+                    {/* TARJETAS — solo mobile, una por variante */}
+                    <div className="md:hidden flex flex-col gap-3 p-4">
+                        {template.variants.map((v, idx) => (
+                            <div
+                                key={idx}
+                                ref={idx === template.variants.length - 1 ? lastVariantRef : null}
+                                className="border border-base-200 rounded-xl p-3 flex flex-col gap-3 relative bg-base-100"
+                            >
+                                <button
+                                    type="button"
+                                    className="btn btn-xs btn-circle btn-ghost text-error absolute top-2 right-2"
+                                    onClick={() => removeVariant(idx)}
+                                    disabled={template.variants.length === 1}
+                                >
+                                    ✕
+                                </button>
+
+                                <div className="flex items-center gap-1 pr-8">
+                                    <input
+                                        type="text"
+                                        className="input input-sm input-bordered w-full font-mono uppercase"
+                                        value={v.sku}
+                                        onChange={(e) =>
+                                            handleVariantChange(idx, 'sku', e.target.value.toUpperCase())
+                                        }
+                                        placeholder="SKU"
+                                    />
+                                    <button
+                                        type="button"
+                                        className="btn btn-sm btn-ghost text-primary"
+                                        title="Autogenerar SKU"
+                                        onClick={() => {
+                                            const otherSkus = template.variants
+                                                .filter((_, i) => i !== idx)
+                                                .map((variant) => variant.sku)
+                                                .filter(Boolean)
+                                            handleVariantChange(
+                                                idx,
+                                                'sku',
+                                                generateVariantSku(template.handle, v.size, v.baseColor, otherSkus),
+                                            )
+                                        }}
+                                    >
+                                        <TbWand />
+                                    </button>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-3">
+                                    <label className="form-control w-full">
+                                        <span className="label-text text-xs font-semibold text-base-content/60 mb-1">
+                                            Talla
+                                        </span>
+                                        <select
+                                            className="select select-sm select-bordered w-full"
+                                            value={v.size}
+                                            onChange={(e) => handleVariantChange(idx, 'size', e.target.value)}
+                                        >
+                                            <option value="">N/A</option>
+                                            {sizeOptions?.map((opt) => (
+                                                <option key={opt} value={opt}>{opt}</option>
+                                            ))}
+                                        </select>
+                                    </label>
+                                    <label className="form-control w-full">
+                                        <span className="label-text text-xs font-semibold text-base-content/60 mb-1">
+                                            Color Base
+                                        </span>
+                                        <input
+                                            type="text"
+                                            className="input input-sm input-bordered w-full lowercase"
+                                            value={v.baseColor}
+                                            onChange={(e) => handleVariantChange(idx, 'baseColor', e.target.value)}
+                                            placeholder="Ej. azul"
+                                        />
+                                    </label>
+                                </div>
+
+                                <label className="form-control w-full">
+                                    <span className="label-text text-xs font-semibold text-base-content/60 mb-1">
+                                        Diseño (separar por coma)
+                                    </span>
+                                    <input
+                                        type="text"
+                                        className="input input-sm input-bordered w-full lowercase"
+                                        value={Array.isArray(v.designColors) ? v.designColors.join(',') : ''}
+                                        onChange={(e) =>
+                                            handleVariantChange(idx, 'designColors', e.target.value.split(','))
+                                        }
+                                        placeholder="Ej. rojo, blanco"
+                                    />
+                                </label>
+
+                                <label className="form-control w-full">
+                                    <span className="label-text text-xs font-semibold text-base-content/60 mb-1">
+                                        Stock
+                                    </span>
+                                    <input
+                                        type="number"
+                                        className="input input-sm input-bordered w-full font-bold"
+                                        value={v.stock}
+                                        onChange={(e) => handleVariantChange(idx, 'stock', e.target.value)}
+                                        onFocus={(e) => e.target.select()}
+                                        onBlur={(e) =>
+                                            handleVariantChange(idx, 'stock', Number(e.target.value) || 0)
+                                        }
+                                        min="0"
+                                    />
+                                </label>
+                            </div>
+                        ))}
                     </div>
                 </section>
 
@@ -702,7 +841,7 @@ const ProductAttributesForm = ({
                                         setIsFranchiseModalOpen(true)
                                     }
                                 >
-                                    <i className="ti ti-plus" />
+                                    <TbPlus />
                                 </button>
                             </div>
                             <select
@@ -716,7 +855,7 @@ const ProductAttributesForm = ({
                                 }
                             >
                                 <option value="">Opcional...</option>
-                                {localFranchises.map((item) => (
+                                {franchiseNames.map((item) => (
                                     <option key={item._id} value={item.name}>
                                         {item.name}
                                     </option>
@@ -753,7 +892,7 @@ const ProductAttributesForm = ({
                                     className="btn btn-xs btn-circle btn-ghost text-primary"
                                     onClick={() => setIsThemeModalOpen(true)}
                                 >
-                                    <i className="ti ti-plus" />
+                                    <TbPlus />
                                 </button>
                             </div>
                             <select
@@ -767,7 +906,7 @@ const ProductAttributesForm = ({
                                 }
                             >
                                 <option value="">Opcional...</option>
-                                {localThemes.map((item) => (
+                                {designThemes.map((item) => (
                                     <option key={item._id} value={item.name}>
                                         {item.name}
                                     </option>

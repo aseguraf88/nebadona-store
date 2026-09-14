@@ -1,3 +1,5 @@
+import { TbPhotoUp } from 'react-icons/tb'
+
 const normalizeHexColor = (value = '') => {
     const trimmed = String(value || '').trim()
 
@@ -89,7 +91,7 @@ const ProductPreviewCard = ({
                         />
                     ) : (
                         <div className="flex h-full flex-col items-center justify-center gap-3 text-base-content/70">
-                            <span className="ti ti-photo-up text-3xl" />
+                            <TbPhotoUp className="text-3xl" />
                             <span className="btn btn-sm btn-outline">
                                 Cargar imagenes
                             </span>

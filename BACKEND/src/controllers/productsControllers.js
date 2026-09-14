@@ -82,9 +82,10 @@ export const createProduct = async (req, res) => {
             .json({ message: 'Producto creado exitosamente.', product })
     } catch (error) {
         if (error instanceof ZodError) {
-            return res
-                .status(400)
-                .json(error.issues.map((issue) => ({ message: issue.message })))
+            return res.status(400).json({
+                message: error.issues[0]?.message || 'Datos inválidos.',
+                errors: error.issues.map((issue) => ({ message: issue.message })),
+            })
         }
         if (error?.code === 11000) {
             return res
@@ -105,15 +106,12 @@ export const createProduct = async (req, res) => {
 
 export const updateProduct = async (req, res) => {
     try {
-        console.log('🔴 1. LLEGA DEL FRONTEND:', req.body.status) // ¿El React lo mandó?
         const parsedData = productSchema.partial().parse(req.body)
 
         // 🔥 FUERZA BRUTA INTELIGENTE: Aseguramos que el status viaje sí o sí
         if (req.body.status) {
             parsedData.status = req.body.status
         }
-
-        console.log('🟡 2. DESPUÉS DE ZOD:', parsedData.status) // ¿Zod lo dejó pasar?
 
         if (parsedData.imageUrl || Array.isArray(parsedData.imageUrls)) {
             const resolvedImages = await resolveProductImages({
@@ -130,16 +128,15 @@ export const updateProduct = async (req, res) => {
         }
 
         Object.assign(product, parsedData)
-        console.log('🔵 3. ANTES DE GUARDAR EN BD:', product.status) // ¿Se le inyectó al producto?
         await product.save() // ¡Aquí Mongoose validará y guardará el PUBLISHED con éxito!
-        console.log('🟢 4. DESPUÉS DE GUARDAR EN BD:', product.status) // ¿Mongoose lo aceptó?
 
         return res.status(200).json(product)
     } catch (error) {
         if (error instanceof ZodError) {
-            return res
-                .status(400)
-                .json(error.issues.map((issue) => ({ message: issue.message })))
+            return res.status(400).json({
+                message: error.issues[0]?.message || 'Datos inválidos.',
+                errors: error.issues.map((issue) => ({ message: issue.message })),
+            })
         }
         if (error?.code === 11000) {
             return res
@@ -226,15 +223,18 @@ export const importProductsCsv = async (req, res) => {
             unisex: 'unisex',
         }
 
+        let rowIndex = 1
+
         stream
             .pipe(csv())
             .on('data', (data) => {
+                const currentRow = rowIndex++
                 const handle = (data.Handle || data.handle)
                     ?.trim()
                     .toUpperCase()
                 if (!handle) {
                     errors.push(
-                        `Fila ignorada por falta de Handle: ${JSON.stringify(data)}`
+                        `Fila ${currentRow}: ignorada por falta de Handle`
                     )
                     return
                 }
@@ -262,7 +262,7 @@ export const importProductsCsv = async (req, res) => {
 
                     if (!name || !product_category) {
                         errors.push(
-                            `Falta Nombre o Categoría en producto: ${handle}`
+                            `Fila ${currentRow}: Falta Nombre o Categoría en producto: ${handle}`
                         )
                         return
                     }
@@ -315,7 +315,7 @@ export const importProductsCsv = async (req, res) => {
                         newProduct.price = parseInt(priceStr) || 0
                     } else {
                         errors.push(
-                            `Advertencia: Producto ${handle} no trae precio en el CSV. Si es nuevo, se creará sin precio.`
+                            `Fila ${currentRow}: Advertencia: Producto ${handle} no trae precio en el CSV. Si es nuevo, se creará sin precio.`
                         )
                     }
 
@@ -371,7 +371,7 @@ export const importProductsCsv = async (req, res) => {
                 if (!isDuplicate) {
                     parent.variants.push(newVariant)
                 } else {
-                    errors.push(`Variante duplicada ignorada (SKU: ${sku})`)
+                    errors.push(`Fila ${currentRow}: Variante duplicada ignorada (SKU: ${sku})`)
                 }
             })
             .on('end', async () => {
@@ -413,13 +413,26 @@ export const importProductsCsv = async (req, res) => {
                     return res.status(200).json({
                         message: `Importación exitosa. ${bulkResult.upsertedCount} nuevos productos, ${bulkResult.modifiedCount} actualizados.`,
                         totalParents: groupedProducts.size,
+                        nuevos: bulkResult.upsertedCount,
+                        actualizados: bulkResult.modifiedCount,
                         errors: errors,
                     })
                 } catch (dbError) {
                     console.error('Error en bulkWrite:', dbError)
+
+                    let specificMessage = 'Error de validación o base de datos al guardar.'
+                    const dupKeyMatch = dbError.message?.match(/dup key: \{ (.+?) \}/)
+                    if (dupKeyMatch) {
+                        specificMessage = `SKU o Handle duplicado encontrado: ${dupKeyMatch[1]}. Corrige esa fila en el CSV y vuelve a subirlo.`
+                    }
+
+                    const partial = dbError.result || {}
+
                     return res.status(500).json({
-                        message:
-                            'Error de validación o base de datos al guardar.',
+                        message: specificMessage,
+                        nuevos: partial.upsertedCount || 0,
+                        actualizados: partial.matchedCount || 0,
+                        errors,
                     })
                 }
             })
@@ -512,7 +525,7 @@ export const exportProductsCsv = async (req, res) => {
         res.setHeader('Content-Type', 'text/csv; charset=utf-8')
         res.setHeader(
             'Content-Disposition',
-            'attachment; filename="inventario_nebadona.csv"'
+            'attachment; filename="inventario_nebadon.csv"'
         )
 
         // ¡Se lo enviamos! Añadimos el BOM (ufeff) para que Excel reconozca las tildes y ñ (UTF-8)

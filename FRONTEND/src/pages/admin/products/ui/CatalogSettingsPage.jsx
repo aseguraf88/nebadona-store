@@ -180,7 +180,7 @@ const CatalogSettingsPage = () => {
                     Categorías, Franquicias y Temas
                 </h2>
                 <p className="text-sm text-base-content/60 mb-6">
-                    Gestioná las listas que usa el formulario de productos para
+                    Gestiona las listas que usa el formulario de productos para
                     clasificar el catálogo.
                 </p>
                 <div className="flex flex-wrap gap-3">

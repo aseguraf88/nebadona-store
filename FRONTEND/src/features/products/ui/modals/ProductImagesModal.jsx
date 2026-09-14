@@ -23,7 +23,11 @@ const ProductImagesModal = ({
     }, [open])
 
     const handleApply = () => {
-        toast.success('Imágenes listas en el borrador')
+        if (template.images?.length > 0) {
+            toast.success('Imágenes listas en el borrador')
+        } else {
+            toast('No cargaste ninguna imagen', { icon: 'ℹ️' })
+        }
         onClose()
     }
 

@@ -17,7 +17,7 @@ const imageInputSchema = z.string().refine((value) => {
     } catch {
         return false
     }
-}, 'Invalid image format')
+}, 'Formato de imagen inválido')
 
 export const productSchema = z.object({
     handle: z.string().min(3).max(50).toUpperCase(),
@@ -35,7 +35,7 @@ export const productSchema = z.object({
     compareAtPrice: z.number().min(0).nullable().optional(),
     cost_price: z.number().min(0).nullable().optional(),
 
-    imageUrl: imageInputSchema.optional(),
+    imageUrl: z.union([imageInputSchema, z.literal('')]).optional(),
     imageUrls: z.array(imageInputSchema).max(6).optional(),
     isActive: z.boolean().optional(),
     featured: z.boolean().optional(),

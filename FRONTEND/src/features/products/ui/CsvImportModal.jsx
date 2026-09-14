@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import toast from 'react-hot-toast'
+import { TbFileUpload, TbCloudUpload, TbFileText } from 'react-icons/tb'
 
 export const CsvImportModal = ({ open, onClose, onSuccess }) => {
     const [file, setFile] = useState(null)
@@ -73,6 +74,7 @@ export const CsvImportModal = ({ open, onClose, onSuccess }) => {
                 if (onSuccess) onSuccess()
             } else {
                 toast.error(data.message || 'Error al importar el archivo')
+                setUploadSummary(data)
             }
         } catch (error) {
             console.error('Error importando CSV:', error)
@@ -104,7 +106,7 @@ export const CsvImportModal = ({ open, onClose, onSuccess }) => {
                 </button>
 
                 <h3 className="text-lg font-bold text-base-content flex items-center gap-2 mb-4">
-                    <i className="ti ti-file-upload text-primary text-xl" />
+                    <TbFileUpload className="text-primary text-xl" />
                     Importar Inventario Masivo (.csv)
                 </h3>
 
@@ -121,10 +123,10 @@ export const CsvImportModal = ({ open, onClose, onSuccess }) => {
                             onChange={handleFileChange}
                             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                         />
-                        <i className="ti ti-cloud-upload text-4xl text-primary mb-2 block" />
+                        <TbCloudUpload className="text-4xl text-primary mb-2 block" />
                         {file ? (
                             <div className="text-sm font-semibold text-success flex items-center justify-center gap-1">
-                                <i className="ti ti-file-text" />
+                                <TbFileText />
                                 {file.name}
                             </div>
                         ) : (
@@ -145,8 +147,7 @@ export const CsvImportModal = ({ open, onClose, onSuccess }) => {
                     {uploadSummary && (
                         <div className="p-3 bg-base-200 rounded-lg text-xs space-y-1 border border-base-300">
                             <p className="font-bold text-base-content">
-                                Registros importados:{' '}
-                                {uploadSummary.totalImported || 0}
+                                Nuevos: {uploadSummary.nuevos || 0} · Actualizados: {uploadSummary.actualizados || 0}
                             </p>
                             {uploadSummary.errors?.length > 0 && (
                                 <div className="text-error font-medium">

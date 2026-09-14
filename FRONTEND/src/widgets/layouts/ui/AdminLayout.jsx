@@ -1,5 +1,16 @@
 import { useState } from 'react'
 import { Outlet, Link, useLocation } from 'react-router-dom'
+import {
+    TbMenu2,
+    TbChartBar,
+    TbShoppingBag,
+    TbBox,
+    TbPackages,
+    TbUsers,
+    TbSettings,
+    TbLogout,
+    TbExternalLink,
+} from 'react-icons/tb'
 
 const AdminLayout = () => {
     const [isDrawerOpen, setIsDrawerOpen] = useState(false)
@@ -12,12 +23,12 @@ const AdminLayout = () => {
                 {
                     name: 'Estadísticas',
                     path: '/admin/dashboard',
-                    icon: 'ti ti-chart-bar',
+                    icon: TbChartBar,
                 },
                 {
                     name: 'Órdenes',
                     path: '/admin/dashboard/orders',
-                    icon: 'ti ti-shopping-bag',
+                    icon: TbShoppingBag,
                 },
             ],
         },
@@ -27,22 +38,22 @@ const AdminLayout = () => {
                 {
                     name: 'Productos',
                     path: '/admin/dashboard/products',
-                    icon: 'ti ti-box',
+                    icon: TbBox,
                 },
                 {
                     name: 'Inventario',
                     path: '/admin/dashboard/inventory',
-                    icon: 'ti ti-packages',
+                    icon: TbPackages,
                 },
                 {
                     name: 'Clientes',
                     path: '/admin/dashboard/customers',
-                    icon: 'ti ti-users',
+                    icon: TbUsers,
                 },
                 {
                     name: 'Configuración',
                     path: '/admin/dashboard/products/settings',
-                    icon: 'ti ti-settings',
+                    icon: TbSettings,
                 },
             ],
         },
@@ -88,7 +99,7 @@ const AdminLayout = () => {
                         htmlFor="admin-global-drawer"
                         className="btn btn-square btn-ghost lg:hidden"
                     >
-                        <i className="ti ti-menu-2 text-2xl text-base-content" />
+                        <TbMenu2 className="text-2xl text-base-content" />
                     </label>
 
                     {/* Menú de Usuario (Extremo derecho) */}
@@ -113,13 +124,13 @@ const AdminLayout = () => {
                             >
                                 <li>
                                     <a className="py-3">
-                                        <i className="ti ti-settings text-lg opacity-70" />
+                                        <TbSettings className="text-lg opacity-70" />
                                         Configuración
                                     </a>
                                 </li>
                                 <li>
                                     <a className="py-3 text-error">
-                                        <i className="ti ti-logout text-lg" />
+                                        <TbLogout className="text-lg" />
                                         Cerrar Sesión
                                     </a>
                                 </li>
@@ -148,7 +159,7 @@ const AdminLayout = () => {
                             N
                         </div>
                         <span className="font-bold text-white tracking-wide">
-                            Nebadona
+                            Nebadon
                         </span>
                     </div>
 
@@ -175,8 +186,8 @@ const AdminLayout = () => {
                                                             : 'text-slate-400 hover:bg-slate-800 hover:text-white'
                                                     }`}
                                                 >
-                                                    <i
-                                                        className={`${item.icon} text-xl ${active ? 'text-primary' : 'opacity-70'}`}
+                                                    <item.icon
+                                                        className={`text-xl ${active ? 'text-primary' : 'opacity-70'}`}
                                                     />
                                                     {item.name}
                                                 </Link>
@@ -194,7 +205,7 @@ const AdminLayout = () => {
                             to="/"
                             className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white transition-all"
                         >
-                            <i className="ti ti-external-link text-xl opacity-70" />
+                            <TbExternalLink className="text-xl opacity-70" />
                             Tienda Pública
                         </Link>
                     </div>

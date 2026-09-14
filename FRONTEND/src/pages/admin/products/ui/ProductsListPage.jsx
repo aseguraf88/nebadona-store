@@ -109,89 +109,154 @@ const ProductsListPage = () => {
                     </div>
                 </div>
 
-                <div className="overflow-x-auto">
-                    {productsLoading ? (
-                        <div className="flex justify-center py-16">
-                            <span className="loading loading-infinity loading-lg text-primary" />
-                        </div>
-                    ) : visibleProducts.length === 0 ? (
-                        <div className="py-16 text-center text-base-content/60">
-                            No hay productos que coincidan con la búsqueda.
-                        </div>
-                    ) : (
-                        <table className="table table-sm w-full">
-                            <thead className="bg-base-200/50">
-                                <tr>
-                                    <th></th>
-                                    <th>Nombre</th>
-                                    <th>Categoría</th>
-                                    <th>Precio</th>
-                                    <th>Stock total</th>
-                                    <th>Estado</th>
-                                    <th></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {visibleProducts.map((product) => (
-                                    <tr key={product._id}>
-                                        <td>
-                                            {product.imageUrl ? (
-                                                <img
-                                                    src={product.imageUrl}
-                                                    alt={product.name}
-                                                    className="w-10 h-10 rounded-lg object-cover"
-                                                />
-                                            ) : (
-                                                <div className="w-10 h-10 rounded-lg bg-base-200" />
-                                            )}
-                                        </td>
-                                        <td className="font-semibold">
-                                            {product.name}
-                                        </td>
-                                        <td className="capitalize">
-                                            {product.product_category || '—'}
-                                        </td>
-                                        <td>{formatPrice(product.price)}</td>
-                                        <td>{totalStockOf(product)}</td>
-                                        <td>
-                                            <span
-                                                className={`badge badge-sm ${
-                                                    product.status ===
-                                                    'PUBLISHED'
-                                                        ? 'badge-success'
-                                                        : 'badge-warning'
-                                                }`}
-                                            >
-                                                {product.status === 'PUBLISHED'
-                                                    ? 'Publicado'
-                                                    : 'Borrador'}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <div className="flex gap-2 justify-end">
-                                                <Link
-                                                    to={`/admin/dashboard/products/${product._id}/editar`}
-                                                    className="btn btn-xs btn-outline btn-primary"
-                                                >
-                                                    Editar
-                                                </Link>
-                                                <button
-                                                    type="button"
-                                                    className="btn btn-xs btn-outline btn-error"
-                                                    onClick={() =>
-                                                        setDeleteTarget(product)
-                                                    }
-                                                >
-                                                    Eliminar
-                                                </button>
-                                            </div>
-                                        </td>
+                <>
+                    {/* TABLA — solo desktop/tablet */}
+                    <div className="overflow-x-auto hidden md:block">
+                        {productsLoading ? (
+                            <div className="flex justify-center py-16">
+                                <span className="loading loading-infinity loading-lg text-primary" />
+                            </div>
+                        ) : visibleProducts.length === 0 ? (
+                            <div className="py-16 text-center text-base-content/60">
+                                No hay productos que coincidan con la búsqueda.
+                            </div>
+                        ) : (
+                            <table className="table table-sm w-full">
+                                <thead className="bg-base-200/50">
+                                    <tr>
+                                        <th></th>
+                                        <th>Nombre</th>
+                                        <th>Categoría</th>
+                                        <th>Precio</th>
+                                        <th>Stock total</th>
+                                        <th>Estado</th>
+                                        <th></th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    )}
-                </div>
+                                </thead>
+                                <tbody>
+                                    {visibleProducts.map((product) => (
+                                        <tr key={product._id}>
+                                            <td>
+                                                {product.imageUrl ? (
+                                                    <img
+                                                        src={product.imageUrl}
+                                                        alt={product.name}
+                                                        className="w-10 h-10 rounded-lg object-cover"
+                                                    />
+                                                ) : (
+                                                    <div className="w-10 h-10 rounded-lg bg-base-200" />
+                                                )}
+                                            </td>
+                                            <td className="font-semibold">{product.name}</td>
+                                            <td className="capitalize">
+                                                {product.product_category || '—'}
+                                            </td>
+                                            <td>{formatPrice(product.price)}</td>
+                                            <td>{totalStockOf(product)}</td>
+                                            <td>
+                                                <span
+                                                    className={`badge badge-sm ${
+                                                        product.status === 'PUBLISHED'
+                                                            ? 'badge-success'
+                                                            : 'badge-warning'
+                                                    }`}
+                                                >
+                                                    {product.status === 'PUBLISHED' ? 'Publicado' : 'Borrador'}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <div className="flex gap-2 justify-end">
+                                                    <Link
+                                                        to={`/admin/dashboard/products/${product._id}/editar`}
+                                                        className="btn btn-xs btn-outline btn-primary"
+                                                    >
+                                                        Editar
+                                                    </Link>
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-xs btn-outline btn-error"
+                                                        onClick={() => setDeleteTarget(product)}
+                                                    >
+                                                        Eliminar
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        )}
+                    </div>
+
+                    {/* TARJETAS — solo mobile */}
+                    <div className="md:hidden flex flex-col gap-3 p-4">
+                        {productsLoading ? (
+                            <div className="flex justify-center py-16">
+                                <span className="loading loading-infinity loading-lg text-primary" />
+                            </div>
+                        ) : visibleProducts.length === 0 ? (
+                            <div className="py-16 text-center text-base-content/60">
+                                No hay productos que coincidan con la búsqueda.
+                            </div>
+                        ) : (
+                            visibleProducts.map((product) => (
+                                <div
+                                    key={product._id}
+                                    className="border border-base-200 rounded-xl p-3 flex flex-col gap-3 bg-base-100 relative"
+                                >
+                                    <button
+                                        type="button"
+                                        className="btn btn-xs btn-circle btn-ghost text-error absolute top-2 right-2"
+                                        onClick={() => setDeleteTarget(product)}
+                                    >
+                                        ✕
+                                    </button>
+
+                                    <div className="flex items-center gap-3 pr-8">
+                                        {product.imageUrl ? (
+                                            <img
+                                                src={product.imageUrl}
+                                                alt={product.name}
+                                                className="w-14 h-14 rounded-lg object-cover shrink-0"
+                                            />
+                                        ) : (
+                                            <div className="w-14 h-14 rounded-lg bg-base-200 shrink-0" />
+                                        )}
+                                        <div className="flex-1 min-w-0">
+                                            <p className="font-semibold truncate">{product.name}</p>
+                                            <p className="text-xs text-base-content/60 capitalize">
+                                                {product.product_category || '—'}
+                                            </p>
+                                        </div>
+                                        <span
+                                            className={`badge badge-sm shrink-0 ${
+                                                product.status === 'PUBLISHED'
+                                                    ? 'badge-success'
+                                                    : 'badge-warning'
+                                            }`}
+                                        >
+                                            {product.status === 'PUBLISHED' ? 'Publicado' : 'Borrador'}
+                                        </span>
+                                    </div>
+
+                                    <div className="flex items-center justify-between text-sm border-t border-base-200 pt-2">
+                                        <span className="font-bold">{formatPrice(product.price)}</span>
+                                        <span className="text-base-content/60">
+                                            Stock: {totalStockOf(product)}
+                                        </span>
+                                    </div>
+
+                                    <Link
+                                        to={`/admin/dashboard/products/${product._id}/editar`}
+                                        className="btn btn-sm btn-outline btn-primary w-full"
+                                    >
+                                        Editar
+                                    </Link>
+                                </div>
+                            ))
+                        )}
+                    </div>
+                </>
             </section>
 
             <ConfirmationModal

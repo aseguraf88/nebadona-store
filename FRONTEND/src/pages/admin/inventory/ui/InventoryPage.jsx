@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useProduct } from '../../../../entities/product'
 import { CsvImportModal } from '../../../../features/products'
+import { TbFileUpload, TbFileDownload } from 'react-icons/tb'
 
 const InventoryPage = () => {
     const { products, productsLoading, getProducts } = useProduct()
@@ -19,6 +20,7 @@ const InventoryPage = () => {
                     productId: product._id,
                     productName: product.name,
                     handle: product.handle,
+                    status: product.status,
                     sku: v.sku || '—',
                     size: v.size || '—',
                     baseColor: v.baseColor || '—',
@@ -40,11 +42,13 @@ const InventoryPage = () => {
         )
     }, [variantRows, query])
 
-    const lowStockCount = variantRows.filter((r) => r.stock <= 3).length
+    const lowStockCount = variantRows.filter(
+        (r) => r.stock <= 3 && r.status === 'PUBLISHED',
+    ).length
 
     return (
         <div className="flex w-full flex-col gap-6 pb-12">
-            <section className="card w-full bg-base-100 shadow-xl border border-base-200">
+            <section className="card w-full bg-base-100 shadow-xl border border-base-200 overflow-hidden">
                 <div className="flex flex-col sm:flex-row sm:items-center gap-3 border-b border-base-200 bg-base-200/30 p-4 rounded-t-2xl">
                     <h2 className="text-xl font-black text-base-content">
                         Inventario
@@ -56,24 +60,25 @@ const InventoryPage = () => {
                             className="btn btn-sm btn-outline"
                             onClick={() => setIsCsvModalOpen(true)}
                         >
-                            <i className="ti ti-file-upload text-base" />
+                            <TbFileUpload className="text-base" />
                             Importar CSV
                         </button>
                         <a
                             href={`${import.meta.env.VITE_BACKEND_URL}products/export/csv`}
-                            download="inventario_nebadona.csv"
+                            download="inventario_nebadon.csv"
                             className="btn btn-sm btn-outline btn-success"
                         >
-                            <i className="ti ti-file-download text-base" />
+                            <TbFileDownload className="text-base" />
                             Exportar CSV
                         </a>
                     </div>
                 </div>
 
                 {lowStockCount > 0 && (
-                    <div className="alert alert-warning m-4 py-2 text-sm">
-                        ⚠️ {lowStockCount} variante(s) con 3 unidades o menos de
-                        stock.
+                    <div className="alert alert-warning w-full !grid-cols-1 m-4 py-2 text-sm">
+                        <span className="min-w-0">
+                            ⚠️ {lowStockCount} variante(s) con 3 unidades o menos de stock.
+                        </span>
                     </div>
                 )}
 
@@ -100,7 +105,7 @@ const InventoryPage = () => {
                         <table className="table table-sm w-full">
                             <thead className="bg-base-200/50">
                                 <tr>
-                                    <th>Handle</th>
+                                    <th className="hidden md:table-cell">Handle</th>
                                     <th>Producto</th>
                                     <th>SKU</th>
                                     <th>Talla</th>
@@ -111,7 +116,7 @@ const InventoryPage = () => {
                             <tbody>
                                 {filteredRows.map((row, idx) => (
                                     <tr key={`${row.productId}-${idx}`}>
-                                        <td className="font-mono text-xs">
+                                        <td className="hidden md:table-cell font-mono text-xs">
                                             {row.handle || '—'}
                                         </td>
                                         <td>{row.productName}</td>
@@ -143,7 +148,6 @@ const InventoryPage = () => {
                 open={isCsvModalOpen}
                 onClose={() => setIsCsvModalOpen(false)}
                 onSuccess={() => {
-                    setIsCsvModalOpen(false)
                     if (getProducts) getProducts()
                 }}
             />

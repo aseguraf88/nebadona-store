@@ -5,12 +5,12 @@ const Footer = () => {
     return (
         <footer className="footer footer-center bg-base-200 text-base-content p-10">
             <aside>
-                <Link to="/" className="flex items-center" aria-label="Nebadona">
+                <Link to="/" className="flex items-center" aria-label="Nebadon">
                     <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-content font-bold shadow-sm lg:h-11 lg:w-11">
                         N
                     </span>
                 </Link>
-                <p className="font-semibold">NEBADONA Tienda Oficial</p>
+                <p className="font-semibold">NEBADON Tienda Oficial</p>
                 <p className="text-base-content/80">
                     Estilo urbano con actitud, desde 2020
                 </p>

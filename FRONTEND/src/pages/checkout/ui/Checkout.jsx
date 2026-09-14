@@ -1,17 +1,19 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { useCart } from '../../../entities/cart'
 import { useUser } from '../../../entities/user'
 import toast from 'react-hot-toast'
-import { FiTruck, FiMapPin, FiArrowLeft } from 'react-icons/fi'
+import { FiTruck, FiMapPin, FiArrowLeft, FiCheckCircle } from 'react-icons/fi'
 import { jsPDF } from 'jspdf'
 
 const Checkout = () => {
-    const { cart, total, loading: cartLoading, openModal } = useCart()
+    const { cart, total, loading: cartLoading, openModal, clearCart } = useCart()
     const { userInfo } = useUser()
 
     const [loading, setLoading] = useState(false)
     const [deliveryType, setDeliveryType] = useState(null)
+    const [completedOrder, setCompletedOrder] = useState(null)
 
     const fieldClass = (hasError) =>
         `input input-bordered w-full bg-base-100 ${hasError ? 'input-error' : ''}`
@@ -42,10 +44,53 @@ const Checkout = () => {
         mode: 'onChange',
     })
 
+    const navigate = useNavigate()
+
+    useEffect(() => {
+        if (!cartLoading && !completedOrder && cart.length === 0) {
+            toast.error('Tu carrito está vacío. Agrega productos antes de continuar.')
+            navigate('/shop')
+        }
+    }, [cartLoading, completedOrder, cart.length, navigate])
+
     if (cartLoading) {
         return (
             <div className="flex min-h-screen items-center justify-center bg-base-200">
                 <span className="loading loading-spinner loading-lg text-primary" />
+            </div>
+        )
+    }
+
+    if (completedOrder) {
+        return (
+            <div className="container mx-auto px-4 py-16 sm:py-24 max-w-2xl text-center">
+                <div className="flex justify-center mb-6">
+                    <div className="h-20 w-20 rounded-full bg-success/10 text-success flex items-center justify-center">
+                        <FiCheckCircle size={48} />
+                    </div>
+                </div>
+                <h1 className="text-2xl sm:text-3xl font-extrabold text-base-content mb-3">
+                    ¡Tu orden #ORD-{completedOrder.folio} fue registrada!
+                </h1>
+                <p className="text-base-content/70 mb-8">
+                    Descargamos tu comprobante en PDF y abrimos WhatsApp con el
+                    detalle de tu pedido. Si no se abrió, puedes reabrirlo con
+                    el botón de abajo.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                    <a
+                        href={completedOrder.whatsappUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="btn border-none text-white"
+                        style={{ backgroundColor: '#25D366' }}
+                    >
+                        Reabrir WhatsApp
+                    </a>
+                    <Link to="/shop" className="btn btn-outline">
+                        Seguir comprando
+                    </Link>
+                </div>
             </div>
         )
     }
@@ -266,12 +311,13 @@ const Checkout = () => {
             message += `Hola, acabo de emitir la orden #ORD-${folio} desde la web y descargué mi PDF. Quedo atento(a) a las instrucciones.`
 
             const encodedMessage = encodeURIComponent(message)
-            window.open(
-                `https://wa.me/${phoneNumber}?text=${encodedMessage}`,
-                '_blank',
-            )
+            const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`
+            window.open(whatsappUrl, '_blank')
 
             toast.success(`¡Orden #ORD-${folio} registrada exitosamente!`)
+
+            setCompletedOrder({ folio, whatsappUrl })
+            await clearCart()
         } catch (error) {
             toast.error('Hubo un error al procesar el pedido.')
             console.error(error)
