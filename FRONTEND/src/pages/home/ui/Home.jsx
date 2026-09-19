@@ -30,7 +30,7 @@ const Home = () => {
 
             <div
                 id="catalogo"
-                className="mx-auto max-w-[1200px] w-full px-4 sm:px-6 lg:px-8 scroll-mt-32 pb-12 mt-16"
+                className="mx-auto max-w-[1800px] w-full px-4 sm:px-6 lg:px-8 scroll-mt-32 pb-12 mt-16"
             >
                 {productsLoading ? (
                     <div className="loading loading-infinity" />

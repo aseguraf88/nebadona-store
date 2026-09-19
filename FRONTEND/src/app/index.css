@@ -3,57 +3,69 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: light;
+    color-scheme: light;
 }
 
 body {
-  margin: 0;
-  min-height: 100vh;
-  @apply bg-base-100 text-base-content;
+    margin: 0;
+    min-height: 100vh;
+    @apply bg-base-100 text-base-content;
 }
 
 #root {
-  min-height: 100vh;
+    min-height: 100vh;
 }
 
 @keyframes badgeBounce {
-  0%,
-  100% {
-    transform: scale(1);
-  }
-  30% {
-    transform: scale(1.2);
-  }
-  50% {
-    transform: scale(0.95);
-  }
-  70% {
-    transform: scale(1.08);
-  }
+    0%,
+    100% {
+        transform: scale(1);
+    }
+    30% {
+        transform: scale(1.2);
+    }
+    50% {
+        transform: scale(0.95);
+    }
+    70% {
+        transform: scale(1.08);
+    }
 }
 
 .animate-badge-bounce {
-  animation: badgeBounce 0.4s ease;
+    animation: badgeBounce 0.4s ease;
 }
 
 @keyframes cartFlyItem {
-  0% {
-    transform: translate3d(0, 0, 0) scale(1);
-    opacity: 0.95;
-    border-radius: 1.25rem;
-  }
-  70% {
-    opacity: 0.9;
-  }
-  100% {
-    transform: translate3d(var(--cart-fly-x), var(--cart-fly-y), 0)
-      scale(var(--cart-fly-scale-x), var(--cart-fly-scale-y));
-    opacity: 0;
-    border-radius: 9999px;
-  }
+    0% {
+        transform: translate3d(0, 0, 0) scale(1);
+        opacity: 0.95;
+        border-radius: 1.25rem;
+    }
+    70% {
+        opacity: 0.9;
+    }
+    100% {
+        transform: translate3d(var(--cart-fly-x), var(--cart-fly-y), 0)
+            scale(var(--cart-fly-scale-x), var(--cart-fly-scale-y));
+        opacity: 0;
+        border-radius: 9999px;
+    }
 }
 
 .cart-fly-item {
-  animation: cartFlyItem 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
-  will-change: transform, opacity;
+    animation: cartFlyItem 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    will-change: transform, opacity;
+}
+
+@font-face {
+    font-family: 'Bungee Spice';
+    src: url('/fonts/BungeeSpice-Regular.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+.font-logo {
+    font-family: 'Bungee Spice', sans-serif;
 }

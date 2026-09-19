@@ -4,11 +4,11 @@ const ProductList = ({ products = [] }) => {
     return (
         // grid-cols-2: 2 columnas por defecto (Mobile).
         // md:grid-cols-3: 3 columnas en Tablets.
-        // lg:grid-cols-4: 4 columnas en Computadoras.
-        // gap-x-3 gap-y-8: Separación horizontal pequeña (3) y separación vertical grande (8) para que respiren las filas.
-        // sm:gap-6: En pantallas grandes, separación uniforme de 6.
+        // xl:grid-cols-4: 4 columnas en Computadoras.
+        // gap-x-4 gap-y-10: Separación horizontal pequeña (4) y separación vertical grande (10) para que respiren las filas.
+        // sm:gap-8: En pantallas grandes, separación uniforme de 8.
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-3 gap-y-8 sm:gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-x-4 gap-y-10 sm:gap-8">
             {products.map((product) => (
                 <ProductCard
                     key={product._id || product.name}

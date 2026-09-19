@@ -25,6 +25,7 @@ export const productSchema = z.object({
     description: z.string().max(1000).optional().default(''),
 
     product_category: z.string().min(2).max(100).toLowerCase(),
+    sock_type: z.string().max(100).nullable().optional(),
     gender: z.enum(['men', 'women', 'unisex', 'kids']).default('unisex'),
     material: z.string().max(100).toLowerCase().nullable().optional(),
     franchise_name: z.string().max(100).toLowerCase().nullable().optional(),

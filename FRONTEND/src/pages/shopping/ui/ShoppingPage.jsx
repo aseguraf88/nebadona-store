@@ -1,9 +1,12 @@
 import { useState, useMemo, useEffect } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useProduct } from '../../../entities/product'
-import { ProductList } from '../../../widgets/catalog'
-import { ResultsToolbar } from '../../../widgets/catalog'
-import { ShopSidebar } from '../../../widgets/catalog'
+import {
+    ProductList,
+    ResultsToolbar,
+    ShopSidebarMobile,
+    ShopSidebarDesktop,
+} from '../../../widgets/catalog'
 import { TbFilter } from 'react-icons/tb'
 
 const ShoppingPage = () => {
@@ -161,7 +164,7 @@ const ShoppingPage = () => {
     }
 
     return (
-        <div className="mx-auto max-w-[1200px] w-full px-4 sm:px-6 lg:px-8 py-6">
+        <div className="mx-auto max-w-[1800px] w-full px-4 sm:px-6 lg:px-8 py-6">
             {/* Breadcrumbs Dinámicos */}
             <div className="breadcrumbs text-sm mb-6">
                 <ul>
@@ -190,62 +193,8 @@ const ShoppingPage = () => {
                 </ul>
             </div>
 
-            {/* Estructura Drawer de DaisyUI para el Sidebar */}
-            <div className="drawer lg:drawer-open">
-                <input
-                    id="shop-drawer"
-                    type="checkbox"
-                    className="drawer-toggle"
-                />
-
-                {/* CONTENIDO PRINCIPAL (Lado derecho) */}
-                <div className="drawer-content flex flex-col lg:pl-8">
-                    <label
-                        htmlFor="shop-drawer"
-                        className="btn btn-outline btn-sm mb-4 lg:hidden w-fit"
-                    >
-                        <TbFilter /> Filtros
-                        {/* Indicador de filtros activos en móvil */}
-                        {selectedFranchises.length +
-                            selectedTypes.length +
-                            selectedCategories.length >
-                            0 && (
-                            <div className="badge badge-primary badge-xs ml-1">
-                                {selectedFranchises.length +
-                                    selectedTypes.length +
-                                    selectedCategories.length}
-                            </div>
-                        )}
-                    </label>
-
-                    {searchQuery && (
-                        <div className="mb-6 border-b border-base-200 pb-4">
-                            <h1 className="text-2xl font-bold text-base-content">
-                                Resultados para:{' '}
-                                <span className="text-primary">
-                                    "{searchQuery}"
-                                </span>
-                            </h1>
-                            <p className="text-sm text-base-content/60 mt-1">
-                                Encontramos {processedProducts.length} producto
-                                {processedProducts.length !== 1 ? 's' : ''}
-                            </p>
-                        </div>
-                    )}
-
-                    <div className="flex-1 flex flex-col gap-6">
-                        {processedProducts.length > 0 && (
-                            <ResultsToolbar
-                                totalProducts={processedProducts.length}
-                                onSortChange={setSortOption}
-                            />
-                        )}
-                        {renderContent()}
-                    </div>
-                </div>
-
-                {/* PASAMOS LOS ESTADOS AL SIDEBAR COMO PROPS */}
-                <ShopSidebar
+            <div className="lg:flex lg:gap-8 lg:items-start">
+                <ShopSidebarDesktop
                     franchiseNames={franchiseNames}
                     productCategories={productCategories}
                     availableSockTypes={availableSockTypes}
@@ -257,6 +206,71 @@ const ShoppingPage = () => {
                     setSelectedTypes={setSelectedTypes}
                     setSelectedCategories={setSelectedCategories}
                 />
+
+                <div className="drawer flex-1">
+                    <input
+                        id="shop-drawer"
+                        type="checkbox"
+                        className="drawer-toggle"
+                    />
+
+                    <div className="drawer-content flex flex-col">
+                        <label
+                            htmlFor="shop-drawer"
+                            className="btn btn-outline btn-sm mb-4 lg:hidden w-fit"
+                        >
+                            <TbFilter /> Filtros
+                            {selectedFranchises.length +
+                                selectedTypes.length +
+                                selectedCategories.length >
+                                0 && (
+                                <div className="badge badge-primary badge-xs ml-1">
+                                    {selectedFranchises.length +
+                                        selectedTypes.length +
+                                        selectedCategories.length}
+                                </div>
+                            )}
+                        </label>
+
+                        {searchQuery && (
+                            <div className="mb-6 border-b border-base-200 pb-4">
+                                <h1 className="text-2xl font-bold text-base-content">
+                                    Resultados para:{' '}
+                                    <span className="text-primary">
+                                        "{searchQuery}"
+                                    </span>
+                                </h1>
+                                <p className="text-sm text-base-content/60 mt-1">
+                                    Encontramos {processedProducts.length} producto
+                                    {processedProducts.length !== 1 ? 's' : ''}
+                                </p>
+                            </div>
+                        )}
+
+                        <div className="flex-1 flex flex-col gap-6">
+                            {processedProducts.length > 0 && (
+                                <ResultsToolbar
+                                    totalProducts={processedProducts.length}
+                                    onSortChange={setSortOption}
+                                />
+                            )}
+                            {renderContent()}
+                        </div>
+                    </div>
+
+                    <ShopSidebarMobile
+                        franchiseNames={franchiseNames}
+                        productCategories={productCategories}
+                        availableSockTypes={availableSockTypes}
+                        selectedFranchises={selectedFranchises}
+                        selectedTypes={selectedTypes}
+                        selectedCategories={selectedCategories}
+                        toggleFilter={toggleFilter}
+                        setSelectedFranchises={setSelectedFranchises}
+                        setSelectedTypes={setSelectedTypes}
+                        setSelectedCategories={setSelectedCategories}
+                    />
+                </div>
             </div>
         </div>
     )

@@ -735,18 +735,18 @@ const ProductAttributesForm = ({
                             </div>
                             <select
                                 className="select select-bordered w-full bg-base-100"
-                                value={template.product_category}
+                                value={template.product_category?.toLowerCase() || ''}
                                 onChange={(e) =>
                                     setTemplate((prev) => ({
                                         ...prev,
-                                        product_category: e.target.value,
+                                        product_category: e.target.value.toLowerCase(),
                                         sock_type: '', // Resetea el tipo si cambia la categoría
                                     }))
                                 }
                             >
                                 <option value="">Selecciona...</option>
                                 {productCategories?.map((item) => (
-                                    <option key={item._id} value={item.name}>
+                                    <option key={item._id} value={item.name.toLowerCase()}>
                                         {item.name}
                                     </option>
                                 ))}
@@ -846,17 +846,17 @@ const ProductAttributesForm = ({
                             </div>
                             <select
                                 className="select select-bordered w-full"
-                                value={template.franchise_name}
+                                value={template.franchise_name?.toLowerCase() || ''}
                                 onChange={(e) =>
                                     setTemplate((prev) => ({
                                         ...prev,
-                                        franchise_name: e.target.value,
+                                        franchise_name: e.target.value.toLowerCase(),
                                     }))
                                 }
                             >
                                 <option value="">Opcional...</option>
-                                {franchiseNames.map((item) => (
-                                    <option key={item._id} value={item.name}>
+                                {franchiseNames?.map((item) => (
+                                    <option key={item._id} value={item.name.toLowerCase()}>
                                         {item.name}
                                     </option>
                                 ))}
@@ -897,17 +897,17 @@ const ProductAttributesForm = ({
                             </div>
                             <select
                                 className="select select-bordered w-full"
-                                value={template.design_theme}
+                                value={template.design_theme?.toLowerCase() || ''}
                                 onChange={(e) =>
                                     setTemplate((prev) => ({
                                         ...prev,
-                                        design_theme: e.target.value,
+                                        design_theme: e.target.value.toLowerCase(),
                                     }))
                                 }
                             >
                                 <option value="">Opcional...</option>
-                                {designThemes.map((item) => (
-                                    <option key={item._id} value={item.name}>
+                                {designThemes?.map((item) => (
+                                    <option key={item._id} value={item.name.toLowerCase()}>
                                         {item.name}
                                     </option>
                                 ))}

@@ -75,6 +75,11 @@ const ProductSchema = new Schema(
             lowercase: true,
             index: true,
         },
+        sock_type: {
+            type: String,
+            trim: true,
+            default: null,
+        },
         gender: {
             type: String,
             enum: ['men', 'women', 'unisex', 'kids'],

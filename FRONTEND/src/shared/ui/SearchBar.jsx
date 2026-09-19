@@ -27,7 +27,7 @@ const SearchBar = () => {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Buscar calcetas, franquicias, personajes..."
-                className="input input-bordered w-full rounded-full pl-11 pr-4 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all bg-base-100 shadow-sm"
+                className="input input-bordered w-full rounded-2xl pl-11 pr-4 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all bg-base-100 shadow-sm"
             />
 
             <button

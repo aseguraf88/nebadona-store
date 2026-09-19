@@ -80,7 +80,7 @@ const CartDrawer = () => {
             {/* DRAWER PANEL (El cajón deslizable) */}
             <div
                 // duration-300 = velocidad perfecta. ease-out = frena suavemente al llegar.
-                className={`relative flex flex-col h-[100dvh] w-full max-w-md sm:max-w-sm md:max-w-md bg-base-100 shadow-2xl transform transition-transform duration-300 ease-out ${
+                className={`relative flex flex-col h-[100dvh] w-full max-w-sm sm:max-w-md md:max-w-md bg-base-100 shadow-2xl transform transition-transform duration-300 ease-out ${
                     isModalOpen ? 'translate-x-0' : 'translate-x-full'
                 }`}
             >

@@ -18,6 +18,7 @@ export const EMPTY_TEMPLATE = {
     description:
         'Producto editable desde dashboard. Descripcion base para crear o editar productos sin bloquear el guardado.',
     product_category: '',
+    sock_type: '',
     gender: 'unisex',
     material: '',
     franchise_name: '',
@@ -49,6 +50,7 @@ const normalizeTemplate = (value) => ({
     title: value.title || 'Titulo',
     description: value.description || '',
     product_category: value.product_category || '',
+    sock_type: value.sock_type || '',
     gender: value.gender || 'unisex',
     material: value.material || '',
     franchise_name: value.franchise_name || '',
@@ -75,6 +77,7 @@ const mapProductToTemplate = (product) => ({
     title: product?.name || 'Titulo',
     description: product?.description || EMPTY_TEMPLATE.description,
     product_category: product?.product_category || '',
+    sock_type: product?.sock_type || '',
     gender: product?.gender || 'unisex',
     material: product?.material || '',
     franchise_name: product?.franchise_name || '',
@@ -211,6 +214,7 @@ export function useProductForm() {
                 name: (template.title || 'Titulo').trim(),
                 description: template.description || '',
                 product_category: template.product_category || '',
+                sock_type: template.sock_type || null,
                 gender: template.gender || 'unisex',
                 material: template.material?.trim().toLowerCase() || null,
                 franchise_name:

@@ -90,8 +90,8 @@ const Navbar = ({ children }) => {
                             className="hidden lg:flex items-center"
                             aria-label="Nebadon"
                         >
-                            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-primary text-primary-content font-bold shadow-sm">
-                                N
+                            <span className="font-logo text-5xl text-black leading-none">
+                                NEBADON
                             </span>
                         </Link>
                     </div>
@@ -107,8 +107,8 @@ const Navbar = ({ children }) => {
                             className="flex lg:hidden items-center"
                             aria-label="Nebadon"
                         >
-                            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-content font-bold shadow-sm">
-                                N
+                            <span className="font-logo text-3xl text-black leading-none">
+                                NEBADON
                             </span>
                         </Link>
 

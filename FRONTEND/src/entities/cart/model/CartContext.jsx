@@ -64,32 +64,35 @@ export const CartContextProvider = ({ children }) => {
 
                 // Transformar los datos del backend al formato unificado del frontend
                 const cartItems =
-                    response.cart?.products?.map((item) => {
-                        const v = item.productId.variants?.find(
-                            (variant) => variant.sku === item.sku,
-                        )
-                        return {
-                            _id: item.productId._id,
-                            name: item.productId.name,
-                            sku: item.sku,
-                            size: v?.size || '',
-                            baseColor: v?.baseColor || '',
-                            price: v?.price ?? item.productId.price,
-                            stock: v?.stock ?? 0,
-                            imageUrl: item.productId.imageUrl,
-                            description: item.productId.description,
-                            quantity: item.quantity,
-                            // 🔥 BLINDAJE DE METADATOS DESDE BACKEND
-                            product_category:
-                                item.productId.product_category ||
-                                item.productId.category ||
-                                'Sin categoría',
-                            variants: item.productId.variants,
-                        }
-                    }) ?? []
+                    response.cart?.products
+                        ?.filter((item) => item.productId)
+                        .map((item) => {
+                            const v = item.productId.variants?.find(
+                                (variant) => variant.sku === item.sku,
+                            )
+                            return {
+                                _id: item.productId._id,
+                                name: item.productId.name,
+                                sku: item.sku,
+                                size: v?.size || '',
+                                baseColor: v?.baseColor || '',
+                                price: v?.price ?? item.productId.price,
+                                stock: v?.stock ?? 0,
+                                imageUrl: item.productId.imageUrl,
+                                description: item.productId.description,
+                                quantity: item.quantity,
+                                // 🔥 BLINDAJE DE METADATOS DESDE BACKEND
+                                product_category:
+                                    item.productId.product_category ||
+                                    item.productId.category ||
+                                    'Sin categoría',
+                                variants: item.productId.variants,
+                            }
+                        }) ?? []
 
                 setCart(cartItems)
             } catch (error) {
+                logError('Error al cargar carrito:', error)
                 const localCart = loadLocalCart()
                 setCart(localCart)
             } finally {
@@ -226,9 +229,12 @@ export const CartContextProvider = ({ children }) => {
                 }
 
                 if (existingIndex > -1) {
-                    const newQty = currentCart[existingIndex].quantity + quantity
+                    const newQty =
+                        currentCart[existingIndex].quantity + quantity
                     if (newQty > variant.stock) {
-                        toast.error(`Solo hay ${variant.stock} unidades disponibles`)
+                        toast.error(
+                            `Solo hay ${variant.stock} unidades disponibles`,
+                        )
                         return
                     }
                     currentCart[existingIndex].quantity = newQty
@@ -237,7 +243,9 @@ export const CartContextProvider = ({ children }) => {
                     currentCart[existingIndex].sku = sku
                 } else {
                     if (quantity > variant.stock) {
-                        toast.error(`Solo hay ${variant.stock} unidades disponibles`)
+                        toast.error(
+                            `Solo hay ${variant.stock} unidades disponibles`,
+                        )
                         return
                     }
                     currentCart.push(productToSave)
@@ -305,7 +313,9 @@ export const CartContextProvider = ({ children }) => {
                     (item) => item._id === productId && item.sku === sku,
                 )
                 if (existing && newQuantity > existing.stock) {
-                    toast.error(`Solo hay ${existing.stock} unidades disponibles`)
+                    toast.error(
+                        `Solo hay ${existing.stock} unidades disponibles`,
+                    )
                     return
                 }
                 const currentCart = cart.map((item) =>
