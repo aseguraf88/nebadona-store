@@ -1,7 +1,7 @@
 import { Routes, Route } from 'react-router-dom'
 import { Layout } from '../widgets/layouts'
 import { Home } from '../pages/Home'
-import { Register } from '../pages/Register'
+import { Register } from '../pages/register'
 import { Login } from '../pages/login'
 import { UserContextProvider } from '../entities/user'
 import { Toaster } from 'react-hot-toast'
