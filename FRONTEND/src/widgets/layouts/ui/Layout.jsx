@@ -11,15 +11,13 @@ const Layout = () => {
     return (
         <div className="min-h-screen bg-base-100">
             <header className="sticky top-0 z-50 w-full flex flex-col">
-                <div className="bg-neutral py-2 text-xs md:text-sm font-bold uppercase tracking-widest text-primary-content overflow-hidden flex items-center">
+                <div className="bg-success py-2 text-xs md:text-sm font-bold uppercase tracking-widest text-primary-content overflow-hidden flex items-center">
                     {/* El texto que se mueve */}
                     <div className="animate-marquee whitespace-nowrap inline-block w-full">
-                        🎉 GRAN APERTURA GRAN - ¡Aprovecha nuestros descuentos
-                        de inauguración! 🎉 25% 50% Y HASTA EL 🔥🔥100%🔥🔥 DE
-                        DESCUENTOS EN CALCETAS Y TODOS LOS ACCESORIOS - ANIME -
-                        CARTOONS - VIDEOJUEGOS - PELICULAS - SERIES DE
-                        TELEVISION - DE TODO - ❤️ 🔥 🧦 🔥 🧦 🔥 👣 🎁 🛍️ 🎁 🛍️
-                        ❤️
+                        🎉 GRAN APERTURA GRAN - CATALOGO COMPLETP DE CALCETAS Y
+                        ACCESORIOS - ANIME - CARTOON - VIDEOJUEGOS - PELICULAS -
+                        SERIES DE TELEVISION - DE TODO - ❤️ 🔥 🧦 🔥 🧦 🔥 👣 🎁
+                        🛍️ 🎁 🛍️ ❤️
                     </div>
                 </div>
                 <Navbar>
