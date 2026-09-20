@@ -1,6 +1,6 @@
 import { Routes, Route } from 'react-router-dom'
 import { Layout } from '../widgets/layouts'
-import { Home } from '../pages/Home'
+import { Home } from '../pages/home'
 import { Register } from '../pages/register'
 import { Login } from '../pages/login'
 import { UserContextProvider } from '../entities/user'
