@@ -1,24 +1,46 @@
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { useParams, Link } from 'react-router-dom'
+import toast from 'react-hot-toast'
+import { Share2 } from 'lucide-react'
 import { useCart } from '../../../entities/cart'
 import { useProduct } from '../../../entities/product'
 import VariantSelector from '../../../entities/product/ui/VariantSelector'
 import { ProductSection } from '../../../widgets/catalog'
 
+const MD_MEDIA_QUERY = '(min-width: 1024px)'
+
+const useIsMdUp = () => {
+    const getInitialValue = () => {
+        if (typeof window === 'undefined') return true
+        return window.matchMedia(MD_MEDIA_QUERY).matches
+    }
+    const [isMdUp, setIsMdUp] = useState(getInitialValue)
+
+    useEffect(() => {
+        if (typeof window === 'undefined') return undefined
+        const mediaQuery = window.matchMedia(MD_MEDIA_QUERY)
+        const handleChange = (event) => setIsMdUp(event.matches)
+        setIsMdUp(mediaQuery.matches)
+        mediaQuery.addEventListener('change', handleChange)
+        return () => mediaQuery.removeEventListener('change', handleChange)
+    }, [])
+
+    return isMdUp
+}
+
 const ProductPage = () => {
     const { id } = useParams()
     const { addToCart } = useCart()
+    const isMdUp = useIsMdUp()
+    const mainScrollRef = useRef(null)
 
-    // 🔥 CONEXIÓN A TU CONTEXTO REAL
     const { getProductById, product, productLoading } = useProduct()
 
-    // Estados para la UI
     const [quantity, setQuantity] = useState(1)
     const [selectedImageIndex, setSelectedImageIndex] = useState(0)
     const [isAdded, setIsAdded] = useState(false)
     const [selectedVariant, setSelectedVariant] = useState(null)
 
-    // Inicializar selectedVariant cuando carga el producto
     useEffect(() => {
         if (product?.variants?.length > 0) {
             setSelectedVariant(product.variants[0])
@@ -30,7 +52,6 @@ const ProductPage = () => {
         setQuantity(1)
     }, [])
 
-    // Llamada a la base de datos al montar la página
     useEffect(() => {
         if (id) {
             getProductById(id)
@@ -38,7 +59,6 @@ const ProductPage = () => {
         }
     }, [id, getProductById])
 
-    // Extraer imágenes con seguridad
     const images = useMemo(() => {
         if (!product) return []
         const candidateImages = Array.isArray(product.imageUrls)
@@ -49,7 +69,6 @@ const ProductPage = () => {
         return candidateImages.filter(Boolean)
     }, [product])
 
-    // Funciones del carrito
     const handleDecrement = () => setQuantity((prev) => Math.max(1, prev - 1))
     const handleIncrement = () =>
         setQuantity((prev) => Math.min(selectedVariant?.stock ?? 1, prev + 1))
@@ -60,7 +79,45 @@ const ProductPage = () => {
         setTimeout(() => setIsAdded(false), 1500)
     }
 
-    // ⏳ PANTALLA DE CARGA (Usando tu estado productLoading)
+    // Sincroniza el índice de imagen con el scroll táctil en mobile
+    const handleMainScroll = () => {
+        const el = mainScrollRef.current
+        if (!el) return
+        const index = Math.round(el.scrollLeft / el.clientWidth)
+        setSelectedImageIndex(index)
+    }
+
+    // Miniatura tocada: cambia el índice Y desliza la imagen grande hasta ahí
+    const goToImageMobile = (idx) => {
+        setSelectedImageIndex(idx)
+        const el = mainScrollRef.current
+        if (el) {
+            el.scrollTo({ left: idx * el.clientWidth, behavior: 'smooth' })
+        }
+    }
+
+    const handleShare = async () => {
+        const shareData = {
+            title: product.name,
+            text: `Mira ${product.name} en Nebadon Store`,
+            url: window.location.href,
+        }
+        if (navigator.share) {
+            try {
+                await navigator.share(shareData)
+            } catch {
+                // Usuario canceló el panel de compartir, no hacemos nada
+            }
+        } else {
+            try {
+                await navigator.clipboard.writeText(window.location.href)
+                toast.success('Link copiado al portapapeles')
+            } catch {
+                toast.error('No se pudo copiar el link')
+            }
+        }
+    }
+
     if (productLoading) {
         return (
             <div className="min-h-screen flex items-center justify-center">
@@ -69,7 +126,6 @@ const ProductPage = () => {
         )
     }
 
-    // ❌ PRODUCTO NO ENCONTRADO
     if (!product || !product._id) {
         return (
             <div className="min-h-screen flex flex-col items-center justify-center gap-4">
@@ -84,11 +140,9 @@ const ProductPage = () => {
         )
     }
 
-    // ✅ RENDERIZADO PRINCIPAL
     return (
         <main className="min-h-screen bg-base-100 py-8">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                {/* 1. MÍGAS DE PAN (BREADCRUMBS) */}
                 <div className="text-sm breadcrumbs text-base-content/60 mb-8">
                     <ul>
                         <li>
@@ -103,60 +157,117 @@ const ProductPage = () => {
                     </ul>
                 </div>
 
-                {/* 2. BLOQUE PRINCIPAL */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 mb-20">
-                    {/* ZONA IZQUIERDA: GALERÍA BOUTIQUE (Vertical en Desktop, Horizontal en Móvil) */}
-                    <div className="flex flex-col-reverse lg:flex-row gap-4 lg:gap-6">
-                        {/* MINIATURAS */}
-                        {images.length > 1 && (
-                            <div className="flex lg:flex-col gap-3 lg:gap-4 overflow-x-auto lg:overflow-y-auto pb-2 lg:pb-0 lg:w-24 shrink-0 scrollbar-hide snap-x lg:snap-y">
-                                {images.map((img, idx) => (
-                                    <button
-                                        key={idx}
-                                        type="button"
-                                        onClick={() =>
-                                            setSelectedImageIndex(idx)
-                                        }
-                                        className={`relative aspect-square w-20 lg:w-full shrink-0 snap-start rounded-xl overflow-hidden border-2 transition-all duration-300 ${
-                                            selectedImageIndex === idx
-                                                ? 'border-primary opacity-100 ring-4 ring-primary/10'
-                                                : 'border-transparent opacity-50 hover:opacity-100 hover:border-base-300'
-                                        }`}
-                                    >
-                                        <img
-                                            src={img}
-                                            alt={`Vista ${idx + 1}`}
-                                            className="w-full h-full object-cover"
-                                        />
-                                    </button>
-                                ))}
-                            </div>
-                        )}
+                    {/* ZONA IZQUIERDA: GALERÍA */}
+                    {isMdUp ? (
+                        <div className="flex flex-row gap-6">
+                            {images.length > 1 && (
+                                <div className="flex flex-col gap-4 overflow-y-auto w-24 shrink-0 scrollbar-hide snap-y">
+                                    {images.map((img, idx) => (
+                                        <button
+                                            key={idx}
+                                            type="button"
+                                            onClick={() => setSelectedImageIndex(idx)}
+                                            className={`relative aspect-square w-full shrink-0 snap-start rounded-xl overflow-hidden border-2 transition-all duration-300 ${
+                                                selectedImageIndex === idx
+                                                    ? 'border-primary opacity-100 ring-4 ring-primary/10'
+                                                    : 'border-transparent opacity-50 hover:opacity-100 hover:border-base-300'
+                                            }`}
+                                        >
+                                            <img
+                                                src={img}
+                                                alt={`Vista ${idx + 1}`}
+                                                className="w-full h-full object-cover"
+                                            />
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
 
-                        {/* IMAGEN PRINCIPAL */}
-                        <figure className="aspect-square w-full bg-base-200/50 rounded-3xl overflow-hidden relative flex-1 flex items-center justify-center p-4">
+                            <figure className="aspect-square w-full bg-base-200/50 rounded-3xl overflow-hidden relative flex-1 flex items-center justify-center p-4">
+                                {images.length > 0 ? (
+                                    <img
+                                        src={images[selectedImageIndex]}
+                                        alt={product.name}
+                                        className="w-full h-full object-contain transition-opacity duration-500"
+                                    />
+                                ) : (
+                                    <div className="flex w-full h-full items-center justify-center text-base-content/50">
+                                        Sin imagen
+                                    </div>
+                                )}
+                            </figure>
+                        </div>
+                    ) : (
+                        <div className="flex flex-col-reverse gap-4">
+                            {images.length > 1 && (
+                                <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide snap-x">
+                                    {images.map((img, idx) => (
+                                        <button
+                                            key={idx}
+                                            type="button"
+                                            onClick={() => goToImageMobile(idx)}
+                                            className={`relative aspect-square w-20 shrink-0 snap-start rounded-xl overflow-hidden border-2 transition-all duration-300 ${
+                                                selectedImageIndex === idx
+                                                    ? 'border-primary opacity-100 ring-4 ring-primary/10'
+                                                    : 'border-transparent opacity-50 hover:opacity-100 hover:border-base-300'
+                                            }`}
+                                        >
+                                            <img
+                                                src={img}
+                                                alt={`Vista ${idx + 1}`}
+                                                className="w-full h-full object-cover"
+                                            />
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+
                             {images.length > 0 ? (
-                                <img
-                                    src={images[selectedImageIndex]}
-                                    alt={product.name}
-                                    className="w-full h-full object-contain transition-opacity duration-500"
-                                />
+                                <div
+                                    ref={mainScrollRef}
+                                    onScroll={handleMainScroll}
+                                    className="flex aspect-square w-full bg-base-200/50 rounded-3xl overflow-x-auto snap-x snap-mandatory scrollbar-hide"
+                                >
+                                    {images.map((img, idx) => (
+                                        <div
+                                            key={idx}
+                                            className="w-full shrink-0 snap-start flex items-center justify-center p-4"
+                                        >
+                                            <img
+                                                src={img}
+                                                alt={`${product.name} ${idx + 1}`}
+                                                className="w-full h-full object-contain"
+                                            />
+                                        </div>
+                                    ))}
+                                </div>
                             ) : (
-                                <div className="flex w-full h-full items-center justify-center text-base-content/50">
+                                <div className="aspect-square w-full bg-base-200/50 rounded-3xl flex items-center justify-center text-base-content/50">
                                     Sin imagen
                                 </div>
                             )}
-                        </figure>
-                    </div>
+                        </div>
+                    )}
 
                     {/* ZONA DERECHA: INFO Y COMPRA */}
                     <div className="flex flex-col pt-4">
-                        <div className="flex items-center justify-start gap-2 sm:gap-3 text-xs font-bold text-base-content/50 uppercase tracking-widest mb-3">
-                            <span>SKU: {selectedVariant?.sku || 'N/A'}</span>
-                            <span className="opacity-40 font-light">|</span>
-                            <span className="truncate text-primary">
-                                {product.franchise_name || 'Novedad'}
-                            </span>
+                        <div className="flex items-center justify-between gap-2 mb-3">
+                            <div className="flex items-center gap-2 sm:gap-3 text-xs font-bold text-base-content/50 uppercase tracking-widest">
+                                <span>SKU: {selectedVariant?.sku || 'N/A'}</span>
+                                <span className="opacity-40 font-light">|</span>
+                                <span className="truncate text-primary">
+                                    {product.franchise_name || 'Novedad'}
+                                </span>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={handleShare}
+                                className="btn btn-ghost btn-circle btn-sm text-base-content/60 hover:text-primary shrink-0"
+                                aria-label="Compartir producto"
+                            >
+                                <Share2 className="h-4 w-4" />
+                            </button>
                         </div>
 
                         <h1 className="text-3xl sm:text-4xl lg:text-5xl font-medium text-base-content tracking-tight leading-tight mb-4">
@@ -181,7 +292,6 @@ const ProductPage = () => {
                                 )}
                         </div>
 
-                        {/* BLOQUE DE COMPRA */}
                         <div className="flex flex-col gap-6">
                             <VariantSelector
                                 variants={product.variants}
@@ -226,15 +336,10 @@ const ProductPage = () => {
                                 </button>
                             </div>
                         </div>
-                        {/* 4. ACORDEONES DE INFORMACIÓN (Estilo Boutique) */}
+
                         <div className="mt-8 flex flex-col gap-3 border-t border-base-200 pt-8">
-                            {/* Acordeón 1: Descripción */}
                             <div className="collapse collapse-plus bg-base-100 border border-base-200 rounded-xl">
-                                <input
-                                    type="radio"
-                                    name="product-accordion"
-                                    defaultChecked
-                                />
+                                <input type="radio" name="product-accordion" defaultChecked />
                                 <div className="collapse-title text-sm font-semibold uppercase tracking-wider">
                                     Descripción del Diseño
                                 </div>
@@ -243,23 +348,21 @@ const ProductPage = () => {
                                         {product.description ||
                                             'Un diseño exclusivo creado para destacar. Confeccionadas para máxima comodidad y durabilidad en tu día a día.'}
                                     </p>
-                                    {product.tags &&
-                                        product.tags.length > 0 && (
-                                            <div className="flex flex-wrap gap-2 mt-4">
-                                                {product.tags.map((tag, i) => (
-                                                    <span
-                                                        key={i}
-                                                        className="badge badge-secondary badge-outline text-xs"
-                                                    >
-                                                        #{tag}
-                                                    </span>
-                                                ))}
-                                            </div>
-                                        )}
+                                    {product.tags && product.tags.length > 0 && (
+                                        <div className="flex flex-wrap gap-2 mt-4">
+                                            {product.tags.map((tag, i) => (
+                                                <span
+                                                    key={i}
+                                                    className="badge badge-secondary badge-outline text-xs"
+                                                >
+                                                    #{tag}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
-                            {/* Acordeón 2: Materiales y Cuidados */}
                             <div className="collapse collapse-plus bg-base-100 border border-base-200 rounded-xl">
                                 <input type="radio" name="product-accordion" />
                                 <div className="collapse-title text-sm font-semibold uppercase tracking-wider">
@@ -267,31 +370,18 @@ const ProductPage = () => {
                                 </div>
                                 <div className="collapse-content text-sm text-base-content/80 space-y-2">
                                     <ul className="list-disc list-inside space-y-1">
-                                        <li>
-                                            Algodón peinado premium (suavidad
-                                            garantizada).
-                                        </li>
-                                        <li>
-                                            Talón y puntera reforzados
-                                            anti-desgaste.
-                                        </li>
-                                        <li>
-                                            Banda elástica en el arco para un
-                                            ajuste firme.
-                                        </li>
+                                        <li>Algodón peinado premium (suavidad garantizada).</li>
+                                        <li>Talón y puntera reforzados anti-desgaste.</li>
+                                        <li>Banda elástica en el arco para un ajuste firme.</li>
                                     </ul>
-                                    <p className="mt-3 font-medium text-base-content">
-                                        Cuidados:
-                                    </p>
+                                    <p className="mt-3 font-medium text-base-content">Cuidados:</p>
                                     <p>
-                                        Lavar a máquina con agua fría. No usar
-                                        secadora para mantener vivos los colores
-                                        y evitar encogimiento.
+                                        Lavar a máquina con agua fría. No usar secadora para mantener
+                                        vivos los colores y evitar encogimiento.
                                     </p>
                                 </div>
                             </div>
 
-                            {/* Acordeón 3: Envíos */}
                             <div className="collapse collapse-plus bg-base-100 border border-base-200 rounded-xl">
                                 <input type="radio" name="product-accordion" />
                                 <div className="collapse-title text-sm font-semibold uppercase tracking-wider">
@@ -300,20 +390,14 @@ const ProductPage = () => {
                                 <div className="collapse-content text-sm text-base-content/80 space-y-3">
                                     <p>
                                         📦{' '}
-                                        <strong className="text-base-content">
-                                            Despacho seguro:
-                                        </strong>{' '}
-                                        Preparamos tu pedido con amor y lo
-                                        enviamos a todo Chile.
+                                        <strong className="text-base-content">Despacho seguro:</strong>{' '}
+                                        Preparamos tu pedido con amor y lo enviamos a todo Chile.
                                     </p>
                                     <p>
                                         🔄{' '}
-                                        <strong className="text-base-content">
-                                            Satisfacción:
-                                        </strong>{' '}
-                                        Tienes 30 días para cambios si el
-                                        producto se mantiene en su empaque
-                                        original.
+                                        <strong className="text-base-content">Satisfacción:</strong>{' '}
+                                        Tienes 30 días para cambios si el producto se mantiene en su
+                                        empaque original.
                                     </p>
                                 </div>
                             </div>
@@ -321,12 +405,10 @@ const ProductPage = () => {
                     </div>
                 </div>
 
-                {/* 3. SECCIÓN HATEOAS (Recomendados) */}
                 <div className="mt-24 pt-12 border-t border-base-200">
-                    {/* NOTA: Para hacer esto dinámico en el futuro, podrías pasar products={productosFiltradosPorFranquicia} */}
                     <ProductSection
                         title="Explora más diseños increíbles"
-                        products={[]} // Aquí debes conectar un array de productos
+                        products={[]}
                         verMasHref="/shop"
                     />
                 </div>
