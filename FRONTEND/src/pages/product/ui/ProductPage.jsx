@@ -34,7 +34,7 @@ const ProductPage = () => {
     const isMdUp = useIsMdUp()
     const mainScrollRef = useRef(null)
 
-    const { getProductById, product, productLoading } = useProduct()
+    const { getProductById, product, productLoading, products } = useProduct()
 
     const [quantity, setQuantity] = useState(1)
     const [selectedImageIndex, setSelectedImageIndex] = useState(0)
@@ -68,6 +68,18 @@ const ProductPage = () => {
               : []
         return candidateImages.filter(Boolean)
     }, [product])
+
+    const relatedProducts = useMemo(() => {
+        if (!product || !products) return []
+        return products
+            .filter(
+                (p) =>
+                    p._id !== product._id &&
+                    p.product_category === product.product_category &&
+                    p.status?.trim().toUpperCase() === 'PUBLISHED',
+            )
+            .slice(0, 8)
+    }, [products, product])
 
     const handleDecrement = () => setQuantity((prev) => Math.max(1, prev - 1))
     const handleIncrement = () =>
@@ -405,13 +417,15 @@ const ProductPage = () => {
                     </div>
                 </div>
 
-                <div className="mt-24 pt-12 border-t border-base-200">
-                    <ProductSection
-                        title="Explora más diseños increíbles"
-                        products={[]}
-                        verMasHref="/shop"
-                    />
-                </div>
+                {relatedProducts.length > 0 && (
+                    <div className="mt-24 pt-12 border-t border-base-200">
+                        <ProductSection
+                            title="Explora más diseños increíbles"
+                            products={relatedProducts}
+                            verMasHref="/shop"
+                        />
+                    </div>
+                )}
             </div>
         </main>
     )
