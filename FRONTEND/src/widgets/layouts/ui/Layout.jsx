@@ -14,10 +14,10 @@ const Layout = () => {
                 <div className="bg-success py-2 text-xs md:text-sm font-bold uppercase tracking-widest text-primary-content overflow-hidden flex items-center">
                     {/* El texto que se mueve */}
                     <div className="animate-marquee whitespace-nowrap inline-block w-full">
-                        🎉 GRAN APERTURA GRAN - CATALOGO COMPLETP DE CALCETAS Y
-                        ACCESORIOS - ANIME - CARTOON - VIDEOJUEGOS - PELICULAS -
-                        SERIES DE TELEVISION - DE TODO - ❤️ 🔥 🧦 🔥 🧦 🔥 👣 🎁
-                        🛍️ 🎁 🛍️ ❤️
+                        🎉🎉🎉 GRAN APERTURA GRAN 🎉🎉🎉CATÁLOGO COMPLETO DE
+                        CALCETAS Y ACCESORIOS - ANIME - CARTOON - VIDEOJUEGOS -
+                        PELICULAS - SERIES DE TELEVISION Y MÁS - ❤️ 🔥 🧦 🔥 🧦
+                        🔥 👣 🎁 🛍️ 🎁 🛍️ ❤️
                     </div>
                 </div>
                 <Navbar>
