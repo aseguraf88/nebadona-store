@@ -1,13 +1,18 @@
-import { FaFacebookF, FaInstagram, FaWhatsapp } from 'react-icons/fa'
+import { FaInstagram } from 'react-icons/fa'
 import { Link } from 'react-router-dom'
 
 const Footer = () => {
     return (
         <footer className="footer footer-center bg-base-200 text-base-content p-10">
             <aside>
-                <Link to="/" className="flex items-center" aria-label="Nebadon">
-                    <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-content font-bold shadow-sm lg:h-11 lg:w-11">
-                        N
+                <Link
+                    to="/"
+                    onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                    className="flex items-center"
+                    aria-label="Nebadon"
+                >
+                    <span className="font-logo text-3xl text-black leading-none">
+                        NEBADON
                     </span>
                 </Link>
                 <p className="font-semibold">NEBADON Tienda Oficial</p>
@@ -20,35 +25,18 @@ const Footer = () => {
             </aside>
 
             <nav>
-                <div className="grid grid-flow-col gap-4">
-                    <a
-                        href="https://instagram.com"
-                        target="_blank"
-                        rel="noreferrer"
-                        aria-label="Instagram"
-                        className="btn btn-ghost btn-circle"
-                    >
-                        <FaInstagram className="h-5 w-5" />
-                    </a>
-                    <a
-                        href="https://wa.me"
-                        target="_blank"
-                        rel="noreferrer"
-                        aria-label="WhatsApp"
-                        className="btn btn-ghost btn-circle"
-                    >
-                        <FaWhatsapp className="h-5 w-5" />
-                    </a>
-                    <a
-                        href="https://facebook.com"
-                        target="_blank"
-                        rel="noreferrer"
-                        aria-label="Facebook"
-                        className="btn btn-ghost btn-circle"
-                    >
-                        <FaFacebookF className="h-5 w-5" />
-                    </a>
-                </div>
+                <p className="text-sm font-semibold text-base-content/70">
+                    Síguenos en Instagram
+                </p>
+                <a
+                    href="https://www.instagram.com/nebadon_a/"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="btn btn-ghost btn-sm gap-2 normal-case"
+                >
+                    <FaInstagram className="h-5 w-5" />
+                    @nebadon_a
+                </a>
             </nav>
         </footer>
     )

@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, useLocation } from 'react-router-dom'
 import { Layout } from '../widgets/layouts'
 import { Home } from '../pages/home'
 import { Register } from '../pages/register'
@@ -26,6 +26,8 @@ import { ShoppingPage } from '../pages/shopping'
 import { ProductPage } from '../pages/product'
 import { ScrollToTop } from '../shared/ui'
 function App() {
+    const location = useLocation()
+
     return (
         <UserContextProvider>
             <ProductContextProvider>
@@ -36,7 +38,7 @@ function App() {
                         {/* 🌍 RUTAS PÚBLICAS (Con Navbar, Footer y decoración) */}
                         <Route element={<Layout />}>
                             <Route path="/" element={<Home />} />
-                            <Route path="/shop" element={<ShoppingPage />} />
+                            <Route path="/shop" element={<ShoppingPage key={location.key} />} />
                             <Route path="/register" element={<Register />} />
                             <Route path="/login" element={<Login />} />
                             <Route path="/checkout" element={<Checkout />} />
