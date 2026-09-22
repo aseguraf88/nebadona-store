@@ -472,19 +472,78 @@ const ProductPage = () => {
                             <div className="collapse collapse-plus bg-base-100 border border-base-200 rounded-xl">
                                 <input type="radio" name="product-accordion" />
                                 <div className="collapse-title text-sm font-semibold uppercase tracking-wider">
-                                    Detalles de Envío
+                                    Detalles de Envío y Entregas
                                 </div>
-                                <div className="collapse-content text-sm text-base-content/80 space-y-3">
-                                    <p className="text-warning">
-                                        [PENDIENTE: contenido real de envío — zonas, tiempos, costos]
-                                    </p>
+                                <div className="collapse-content text-sm text-base-content/80 space-y-4">
                                     <p>
-                                        Por el momento, no realizamos cambios ni devoluciones por
-                                        gusto, talla o color — te recomendamos revisar con atención
-                                        la guía de tallas y las fotos antes de comprar. Si tu pedido
-                                        llega con un defecto de fabricación o daño de transporte,
-                                        contactanos dentro de las 48 horas de recibido.
+                                        Para brindarte el mejor servicio y adaptarnos a tu
+                                        disponibilidad, todas las entregas y envíos se coordinan
+                                        directamente por interno (WhatsApp) al momento de confirmar
+                                        tu compra. Contamos con las siguientes modalidades para que
+                                        elijas la que más te acomode:
                                     </p>
+
+                                    <ul className="space-y-3">
+                                        <li>
+                                            📦{' '}
+                                            <strong className="text-base-content">
+                                                Envíos por Agencia (Todo el país):
+                                            </strong>{' '}
+                                            Despachamos a través de Starken, Chilexpress o
+                                            Bluexpress. Los envíos se realizan en modalidad por
+                                            pagar (pagas el envío al recibir) o sumando el costo al
+                                            total de tu pedido, según la agencia.
+                                        </li>
+                                        <li>
+                                            🛵{' '}
+                                            <strong className="text-base-content">
+                                                Envíos Express (Solo Santiago):
+                                            </strong>{' '}
+                                            Si necesitas tu pedido el mismo día o de forma rápida,
+                                            podemos enviarlo a través de aplicaciones de delivery
+                                            como Uber Entregas o DiDi Entregas. El costo dependerá
+                                            de la tarifa de la app en el momento.
+                                        </li>
+                                        <li>
+                                            🤝{' '}
+                                            <strong className="text-base-content">
+                                                Entregas Presenciales:
+                                            </strong>{' '}
+                                            Coordinamos en las estaciones de metro Ciudad del Niño
+                                            (Línea 2) o Mirador (Línea 5), en un horario que nos
+                                            acomode a ambos.
+                                        </li>
+                                        <li>
+                                            🏠{' '}
+                                            <strong className="text-base-content">
+                                                Retiro en Bodega/Domicilio:
+                                            </strong>{' '}
+                                            Si prefieres, puedes venir a retirar tu pedido
+                                            directamente a nuestras instalaciones ubicadas en La
+                                            Granja de manera gratuita, previa coordinación de día y
+                                            hora.
+                                        </li>
+                                    </ul>
+
+                                    <p>
+                                        Una vez que agregues tus productos al carrito y nos
+                                        contactes por WhatsApp, acordaremos juntos el método que
+                                        prefieras.
+                                    </p>
+
+                                    <div className="rounded-xl border border-warning/40 bg-warning/10 p-4">
+                                        <p className="font-bold text-warning-content mb-1">
+                                            ⚠️ IMPORTANTE
+                                        </p>
+                                        <p>
+                                            Por el momento, no realizamos cambios ni devoluciones por
+                                            gusto, talla o color — te recomendamos revisar con
+                                            atención la guía de tallas y las fotos antes de comprar.
+                                            Si tu pedido llega con un defecto de fabricación o daño
+                                            de transporte, contactanos dentro de las 48 horas de
+                                            recibido.
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
