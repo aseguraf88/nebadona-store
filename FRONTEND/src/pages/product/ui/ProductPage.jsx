@@ -7,6 +7,7 @@ import { useProduct } from '../../../entities/product'
 import VariantSelector from '../../../entities/product/ui/VariantSelector'
 import { ProductSection } from '../../../widgets/catalog'
 import { getSizeGuideByCategory } from '../../../entities/product/config/sizeGuides'
+import { getCareGuideByCategory } from '../../../entities/product/config/careGuides'
 
 const MD_MEDIA_QUERY = '(min-width: 1024px)'
 
@@ -84,6 +85,10 @@ const ProductPage = () => {
 
     const sizeGuide = product
         ? getSizeGuideByCategory(product.product_category)
+        : null
+
+    const careGuide = product
+        ? getCareGuideByCategory(product.product_category)
         : null
 
     const handleDecrement = () => setQuantity((prev) => Math.max(1, prev - 1))
@@ -374,6 +379,7 @@ const ProductPage = () => {
                                     type="radio"
                                     name="product-accordion"
                                     defaultChecked
+                                    onClick={(e) => e.target.blur()}
                                 />
                                 <div className="collapse-title text-sm font-semibold uppercase tracking-wider">
                                     Descripción del Producto
@@ -400,7 +406,7 @@ const ProductPage = () => {
                             </div>
 
                             <div className="collapse collapse-plus bg-base-100 border border-base-200 rounded-xl min-w-0">
-                                <input type="radio" name="product-accordion" />
+                                <input type="radio" name="product-accordion" onClick={(e) => e.target.blur()} />
                                 <div className="collapse-title text-sm font-semibold uppercase tracking-wider">
                                     Detalles del Producto y Cuidados
                                 </div>
@@ -411,49 +417,21 @@ const ProductPage = () => {
                                         <li>Banda elástica en el arco para un ajuste firme.</li>
                                     </ul>
 
-                                    <p className="font-semibold text-base-content mt-4 mb-3">Guía de Cuidados</p>
-                                    <div className="overflow-x-auto">
-                                        <table className="table table-sm">
-                                            <thead>
-                                                <tr>
-                                                    <th className="text-xs">Acción</th>
-                                                    <th className="text-xs">Instrucción</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <tr>
-                                                    <td className="font-medium whitespace-nowrap">💧 Lavado</td>
-                                                    <td>
-                                                        Lavar siempre por el revés con agua fría o tibia
-                                                        (máx. 30°C). No usar cloro ni blanqueadores.
-                                                    </td>
-                                                </tr>
-                                                <tr>
-                                                    <td className="font-medium whitespace-nowrap">🌬️ Secado</td>
-                                                    <td>
-                                                        Secar al aire libre, idealmente a la sombra. No
-                                                        usar secadora para evitar encogimiento y proteger
-                                                        los estampados.
-                                                    </td>
-                                                </tr>
-                                                <tr>
-                                                    <td className="font-medium whitespace-nowrap">♨️ Planchado</td>
-                                                    <td>
-                                                        Planchar siempre por el revés a temperatura
-                                                        media. Nunca planchar directamente sobre los
-                                                        estampados. Las calcetas no requieren planchado.
-                                                    </td>
-                                                </tr>
-                                                <tr>
-                                                    <td className="font-medium whitespace-nowrap">🚫 Precauciones</td>
-                                                    <td>
-                                                        No lavar en seco. No retorcer las prendas
-                                                        estampadas al escurrir.
-                                                    </td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                    </div>
+                                    {careGuide && (
+                                        <div className="mt-4">
+                                            <div className="flex items-center gap-3 flex-wrap text-2xl mb-2">
+                                                {careGuide.items.map((item) => (
+                                                    <span key={item.label} title={item.label}>{item.icon}</span>
+                                                ))}
+                                            </div>
+                                            <Link
+                                                to={`/guia-cuidados#${product.product_category}`}
+                                                className="link link-primary text-sm font-semibold"
+                                            >
+                                                Ver guía completa de cuidados →
+                                            </Link>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
@@ -462,6 +440,7 @@ const ProductPage = () => {
                                     <input
                                         type="radio"
                                         name="product-accordion"
+                                        onClick={(e) => e.target.blur()}
                                     />
                                     <div className="collapse-title text-sm font-semibold uppercase tracking-wider">
                                         Tallas y Medidas
@@ -526,93 +505,22 @@ const ProductPage = () => {
                             )}
 
                             <div className="collapse collapse-plus bg-base-100 border border-base-200 rounded-xl">
-                                <input type="radio" name="product-accordion" />
+                                <input type="radio" name="product-accordion" onClick={(e) => e.target.blur()} />
                                 <div className="collapse-title text-sm font-semibold uppercase tracking-wider">
                                     Detalles de Envío y Entregas
                                 </div>
                                 <div className="collapse-content text-sm text-base-content/80 space-y-4">
-                                    <p>
-                                        Para brindarte el mejor servicio y
-                                        adaptarnos a tu disponibilidad, todas
-                                        las entregas y envíos se coordinan
-                                        directamente por interno (WhatsApp) al
-                                        momento de confirmar tu compra. Contamos
-                                        con las siguientes modalidades para que
-                                        elijas la que más te acomode:
-                                    </p>
-
-                                    <ul className="space-y-3">
-                                        <li>
-                                            📦{' '}
-                                            <strong className="text-base-content">
-                                                Envíos por Agencia (Todo el
-                                                país):
-                                            </strong>{' '}
-                                            Despachamos a través de Starken,
-                                            Chilexpress o Bluexpress. Los envíos
-                                            se realizan en modalidad por pagar
-                                            (pagas el envío al recibir) o
-                                            sumando el costo al total de tu
-                                            pedido, según la agencia.
-                                        </li>
-                                        <li>
-                                            🛵{' '}
-                                            <strong className="text-base-content">
-                                                Envíos Express (Solo Santiago):
-                                            </strong>{' '}
-                                            Si necesitas tu pedido el mismo día
-                                            o de forma rápida, podemos enviarlo
-                                            a través de aplicaciones de delivery
-                                            como Uber Entregas o DiDi Entregas.
-                                            El costo dependerá de la tarifa de
-                                            la app en el momento.
-                                        </li>
-                                        <li>
-                                            🤝{' '}
-                                            <strong className="text-base-content">
-                                                Entregas Presenciales:
-                                            </strong>{' '}
-                                            Coordinamos en las estaciones de
-                                            metro Ciudad del Niño (Línea 2) o
-                                            Mirador (Línea 5), en un horario que
-                                            nos acomode a ambos.
-                                        </li>
-                                        <li>
-                                            🏠{' '}
-                                            <strong className="text-base-content">
-                                                Retiro en Bodega/Domicilio:
-                                            </strong>{' '}
-                                            Si prefieres, puedes venir a retirar
-                                            tu pedido directamente a nuestras
-                                            instalaciones ubicadas en La Granja
-                                            de manera gratuita, previa
-                                            coordinación de día y hora.
-                                        </li>
-                                    </ul>
-
-                                    <p>
-                                        Una vez que agregues tus productos al
-                                        carrito y nos contactes por WhatsApp,
-                                        acordaremos juntos el método que
-                                        prefieras.
-                                    </p>
-
-                                    <div className="rounded-xl border border-warning/40 bg-warning/10 p-4">
-                                        <p className="font-bold text-warning-content mb-1">
-                                            ⚠️ IMPORTANTE
-                                        </p>
-                                        <p>
-                                            Por el momento, no realizamos
-                                            cambios ni devoluciones por gusto,
-                                            talla o color — te recomendamos
-                                            revisar con atención la guía de
-                                            tallas y las fotos antes de comprar.
-                                            Si tu pedido llega con un defecto de
-                                            fabricación o daño de transporte,
-                                            contactanos dentro de las 48 horas
-                                            de recibido.
-                                        </p>
+                                    <div className="flex items-center gap-3 flex-wrap text-2xl mb-2">
+                                        <span title="Envíos a todo Chile">📦</span>
+                                        <span title="Express en Santiago">🛵</span>
+                                        <span title="Retiro y entrega presencial">🤝</span>
                                     </div>
+                                    <Link
+                                        to="/envios-y-entregas"
+                                        className="link link-primary text-sm font-semibold"
+                                    >
+                                        Ver detalles de envíos y entregas →
+                                    </Link>
                                 </div>
                             </div>
                         </div>

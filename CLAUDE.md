@@ -44,7 +44,43 @@ manual. MercadoPago fue eliminado del código por completo (no reintroducir).
   en la consola se puede truncar en silencio, sin ningún aviso (confirmado,
   reportado a Anthropic). Para bloques de código largos que el usuario deba
   pasar, preferir que los reciba como archivo para copiar directamente al
-  proyecto, no pedirle que los pegue enteros en la terminal.
+  proyecto, no pedirle que los pegue enteros en la terminal. Cuando un
+  bloque parece cortado a mitad de una etiqueta/atributo (ej. un `<a>` sin
+  su apertura), no asumir el contenido — confirmar con el usuario qué era
+  antes de armar el diff.
+- **Windows no distingue mayúsculas/minúsculas en rutas de archivo, Linux
+  (Vercel) sí.** `npm run dev` local nunca revela un import mal escrito en
+  mayúsculas (ej. `'../pages/Home'` contra la carpeta real `pages/home/`)
+  — solo `npm run build` en un entorno case-sensitive lo revela. Pasó dos
+  veces en el primer deploy (`Register`, `Home`). Si un import falla solo
+  en Vercel y nunca en local, sospechar esto primero.
+- **Patrón recurrente de DaisyUI**: varios de sus componentes (`.collapse-
+  content`, `.drawer-side`, tablas dentro de un `flex`) no se achican por
+  debajo del ancho de su contenido salvo que se les dé `min-w-0` explícito
+  — y a veces hace falta en más de un nivel de anidamiento a la vez (ej.
+  tanto en el `.collapse` exterior como en `.collapse-content` interior).
+  Pasó 3 veces (banner de `InventoryPage.jsx`, sidebar de filtros, tabla
+  de Tallas y Medidas). Si algo se desborda del contenedor en mobile sin
+  causa obvia, sospechar esto antes de inventar otra explicación.
+
+## Sitio en producción
+Desplegado y en vivo — dos dominios con propósitos distintos:
+- `nebadon.cl` / `www.nebadon.cl` — dominio público real, muestra una
+  pantalla de "Próxima apertura" (imagen + link a Instagram), no el sitio
+  completo. Chequeo de `hostname` en `App.jsx`.
+- Dominio de pruebas en Vercel (`nebadona-store-cyan.vercel.app` para el
+  frontend, `nebadona-store.vercel.app` para el backend) — sitio completo
+  funcional, usado para QA con usuarios reales.
+- Arquitectura: `FRONTEND` y `BACKEND` son dos proyectos de Vercel
+  separados, cada uno con su propio `vercel.json` (el del frontend hace
+  el rewrite de SPA `/(.*)` → `/index.html`; el del backend enruta
+  `/api/*` hacia la función serverless en `BACKEND/api/index.js`).
+  `BACKEND/src/app.js` arma la app Express sin escuchar; `server.js` la
+  hace escuchar para desarrollo local; `api/index.js` la expone para
+  Vercel. CORS en `app.js` acepta una lista de orígenes separados por
+  coma vía `FRONTEND_URL`, no un solo dominio.
+- Rama de trabajo real: `whatsapp-commerce` (no `main`, desactualizada).
+  Cada `git push` a esa rama despliega solo a producción.
 
 ## Estado del proyecto
 Ver `BACKLOG.md` en la raíz del repo para la lista completa de pendientes,
@@ -92,29 +128,61 @@ carrito, y órdenes están cerrados y probados de punta a punta, incluido
 bien). Ver `BACKLOG.md` para los ítems sueltos de "baja prioridad" y
 "post-lanzamiento" que quedan, ninguno bloqueante.
 
-## 🔧 Tarea en curso ahora mismo: pasada de responsividad (mobile/tablet)
+## 🔧 Tarea en curso ahora mismo: Materiales del Producto (Fase 2)
 
-Único prerrequisito real para publicar. Regla de prueba acordada: achicar
-la ventana del navegador a ~375px (mobile), ~768px (tablet) y desktop
-normal — alcanza para detectar la mayoría de los problemas sin necesitar
-un celular físico.
+Contexto: la página de producto (`ProductPage.jsx`) tiene un acordeón
+"Detalles del Producto y Cuidados". La parte de Cuidados ya se resolvió
+(movida a `/guia-cuidados`, con resumen corto + link en la ficha). Lo que
+queda son los **3 bullets fijos y genéricos** que hoy están hardcodeados
+ahí ("Algodón peinado premium...", "Talón y puntera reforzados...",
+"Banda elástica...") — pensados solo para calcetas, sin sentido para
+camisas o polerones. Esta fase los reemplaza por **campos reales,
+editables por producto desde el dashboard**.
 
-**Puntos de riesgo ya identificados, sin confirmar todavía si molestan en
-la práctica** (no arreglar preventivamente sin ver el problema real primero
-— confirmar en pantalla, después corregir):
+**Los 4 campos** (decisión ya tomada, no volver a discutir el diseño):
+- **Material Principal** — ya existe como `material` en el schema
+  (`ProductModel.js`, `productSchema.js`), no hace falta campo nuevo.
+- **Tipo de Calce** — campo nuevo (ej. "Oversize", "Regular", "Ajustado").
+- **Especificaciones** — campo nuevo, texto libre (ej. "Cuello redondo,
+  puños elasticados, bolsillo canguro").
+- **Técnica de Decoración** — campo nuevo. Nombrado así a propósito, NO
+  "Estampado" — las calcetas son bordadas, los polerones/camisas
+  estampados; un nombre genérico evita la confusión real que ya causó
+  este mismo error una vez (ver más abajo).
 
-- `ProductAttributesForm.jsx`, tabla de Variantes y Stock — 6 columnas
-  (SKU, Talla, Color, Diseño, Stock, borrar) en `table-sm`, probablemente
-  necesita scroll horizontal en mobile.
-- `ProductsListPage.jsx` — 7 columnas con `overflow-x-auto`, funciona pero
-  no es el patrón más cómodo en mobile.
-- `InventoryPage.jsx` — 6 columnas, mismo patrón que arriba.
+**Lo que falta hacer, en orden:**
+1. Backend: agregar los 3 campos nuevos a `productSchema.js` (Zod) y
+   `ProductModel.js` (Mongoose) — mismo patrón ya usado para `sock_type`
+   (sin `.toLowerCase()`/`lowercase: true` a menos que haya evidencia de
+   que hace falta comparar en minúscula, como sí la tuvieron Categoría/
+   Franquicia/Tema).
+2. Frontend admin: inputs nuevos en `ProductAttributesForm.jsx`, y
+   sumarlos a `useProductForm.js` (`EMPTY_TEMPLATE`, `normalizeTemplate`,
+   `mapProductToTemplate`, el `payload` de `handleConfirmSave`) — los 4
+   lugares que hubo que tocar la vez pasada con `sock_type`, mismo
+   patrón exacto.
+3. `ProductPage.jsx`: reemplazar los 3 bullets fijos por los campos
+   reales del producto (condicional, como `sizeGuide`/`careGuide` — no
+   mostrar el bloque si el producto no tiene esos datos cargados).
 
-Patrón esperable de solución si alguno de estos molesta de verdad: tabla
-en desktop/tablet, lista de tarjetas apiladas en mobile por breakpoint
-(mismo lenguaje que ya usa `ProductList.jsx` del catálogo público con
-`grid-cols-2 md:grid-cols-3 lg:grid-cols-4`) — no diseñar de cero.
+**Error real ya cometido una vez con este mismo tema, no repetir:** al
+escribir la Guía de Cuidados (ahora en `/guia-cuidados`) se usó la
+palabra "estampados" de forma genérica para todo el texto, aunque las
+calcetas son bordadas — lo detectó la dueña del negocio en QA real,
+confundida de por qué se hablaba de estampado en un producto sin
+estampado. Ya corregido ahí, pero sirve de ejemplo de por qué el nombre
+"Técnica de Decoración" (genérico) es la elección correcta acá, y por qué
+cualquier texto nuevo que se escriba debe evitar asumir una sola técnica
+para todas las categorías.
 
-Esto es también el prerrequisito de la futura app con Capacitor (pausada
-post-lanzamiento): Capacitor envuelve el mismo código web tal cual está,
-no arregla nada visual por sí solo.
+## 🟡 Pendiente, pausado a pedido del usuario (no resolver sin que lo pida)
+
+Scroll salta demasiado lejos al abrir un acordeón en `ProductPage.jsx`
+(pasa de la zona de acordeones hasta "Explora más diseños"). Causa:
+`<input type="radio">` nativo recibe foco al tocarlo, el navegador
+intenta centrarlo en pantalla mientras el layout todavía se reacomoda
+(contenido colapsando/expandiendo a la vez). Intento liviano ya probado
+y confirmado insuficiente: `onClick={(e) => e.target.blur()}` en los 4
+radios. Fix de fondo, no aplicado todavía: reemplazar los radios nativos
+por un `useState` controlado en React para los 4 acordeones, eliminando
+la dependencia del foco del navegador. Ver `BACKLOG.md` para el detalle.
