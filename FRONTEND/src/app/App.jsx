@@ -8,6 +8,7 @@ import { Toaster } from 'react-hot-toast'
 import { ProductContextProvider } from '../entities/product'
 import { CartContextProvider } from '../entities/cart'
 import { Checkout } from '../pages/checkout'
+import { ComingSoon } from '../pages/coming-soon'
 /* import PaymentSuccess from '../pages/payment-results/PaymentSuccess'
 import PaymentFailure from '../pages/payment-results/PaymentFailure'
 import PaymentPending from '../pages/payment-results/PaymentPending' */
@@ -25,8 +26,15 @@ import ProtectedRoute from '../app/routes/ProtectedRoute'
 import { ShoppingPage } from '../pages/shopping'
 import { ProductPage } from '../pages/product'
 import { ScrollToTop } from '../shared/ui'
+
+const COMING_SOON_HOSTNAMES = ['nebadon.cl', 'www.nebadon.cl']
+
 function App() {
     const location = useLocation()
+
+    if (COMING_SOON_HOSTNAMES.includes(window.location.hostname)) {
+        return <ComingSoon />
+    }
 
     return (
         <UserContextProvider>

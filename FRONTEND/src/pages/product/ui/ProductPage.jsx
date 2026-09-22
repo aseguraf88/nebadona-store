@@ -6,6 +6,7 @@ import { useCart } from '../../../entities/cart'
 import { useProduct } from '../../../entities/product'
 import VariantSelector from '../../../entities/product/ui/VariantSelector'
 import { ProductSection } from '../../../widgets/catalog'
+import { getSizeGuideByCategory } from '../../../entities/product/config/sizeGuides'
 
 const MD_MEDIA_QUERY = '(min-width: 1024px)'
 
@@ -80,6 +81,8 @@ const ProductPage = () => {
             )
             .slice(0, 8)
     }, [products, product])
+
+    const sizeGuide = product ? getSizeGuideByCategory(product.product_category) : null
 
     const handleDecrement = () => setQuantity((prev) => Math.max(1, prev - 1))
     const handleIncrement = () =>
@@ -179,7 +182,9 @@ const ProductPage = () => {
                                         <button
                                             key={idx}
                                             type="button"
-                                            onClick={() => setSelectedImageIndex(idx)}
+                                            onClick={() =>
+                                                setSelectedImageIndex(idx)
+                                            }
                                             className={`relative aspect-square w-full shrink-0 snap-start rounded-xl overflow-hidden border-2 transition-all duration-300 ${
                                                 selectedImageIndex === idx
                                                     ? 'border-primary opacity-100 ring-4 ring-primary/10'
@@ -266,7 +271,9 @@ const ProductPage = () => {
                     <div className="flex flex-col pt-4">
                         <div className="flex items-center justify-between gap-2 mb-3">
                             <div className="flex items-center gap-2 sm:gap-3 text-xs font-bold text-base-content/50 uppercase tracking-widest">
-                                <span>SKU: {selectedVariant?.sku || 'N/A'}</span>
+                                <span>
+                                    SKU: {selectedVariant?.sku || 'N/A'}
+                                </span>
                                 <span className="opacity-40 font-light">|</span>
                                 <span className="truncate text-primary">
                                     {product.franchise_name || 'Novedad'}
@@ -291,7 +298,11 @@ const ProductPage = () => {
                                 {new Intl.NumberFormat('es-CL', {
                                     style: 'currency',
                                     currency: 'CLP',
-                                }).format(selectedVariant?.price ?? product.price ?? 0)}
+                                }).format(
+                                    selectedVariant?.price ??
+                                        product.price ??
+                                        0,
+                                )}
                             </span>
                             {product.compareAtPrice &&
                                 product.compareAtPrice > product.price && (
@@ -324,7 +335,10 @@ const ProductPage = () => {
                                     </span>
                                     <button
                                         onClick={handleIncrement}
-                                        disabled={quantity >= (selectedVariant?.stock ?? 0)}
+                                        disabled={
+                                            quantity >=
+                                            (selectedVariant?.stock ?? 0)
+                                        }
                                         className="flex-1 h-full hover:bg-base-200 text-lg font-medium disabled:opacity-30"
                                     >
                                         +
@@ -333,7 +347,10 @@ const ProductPage = () => {
 
                                 <button
                                     onClick={handleAddToCart}
-                                    disabled={(selectedVariant?.stock ?? 0) === 0 || isAdded}
+                                    disabled={
+                                        (selectedVariant?.stock ?? 0) === 0 ||
+                                        isAdded
+                                    }
                                     className={`btn flex-1 h-14 rounded-2xl text-sm uppercase tracking-widest font-bold border-none transition-all w-full ${
                                         isAdded
                                             ? 'bg-success text-success-content hover:bg-success'
@@ -351,65 +368,122 @@ const ProductPage = () => {
 
                         <div className="mt-8 flex flex-col gap-3 border-t border-base-200 pt-8">
                             <div className="collapse collapse-plus bg-base-100 border border-base-200 rounded-xl">
-                                <input type="radio" name="product-accordion" defaultChecked />
+                                <input
+                                    type="radio"
+                                    name="product-accordion"
+                                    defaultChecked
+                                />
                                 <div className="collapse-title text-sm font-semibold uppercase tracking-wider">
-                                    Descripción del Diseño
+                                    Descripción del Producto
                                 </div>
                                 <div className="collapse-content text-sm text-base-content/80 leading-relaxed">
                                     <p>
                                         {product.description ||
                                             'Un diseño exclusivo creado para destacar. Confeccionadas para máxima comodidad y durabilidad en tu día a día.'}
                                     </p>
-                                    {product.tags && product.tags.length > 0 && (
-                                        <div className="flex flex-wrap gap-2 mt-4">
-                                            {product.tags.map((tag, i) => (
-                                                <span
-                                                    key={i}
-                                                    className="badge badge-secondary badge-outline text-xs"
-                                                >
-                                                    #{tag}
-                                                </span>
-                                            ))}
-                                        </div>
-                                    )}
+                                    {product.tags &&
+                                        product.tags.length > 0 && (
+                                            <div className="flex flex-wrap gap-2 mt-4">
+                                                {product.tags.map((tag, i) => (
+                                                    <span
+                                                        key={i}
+                                                        className="badge badge-secondary badge-outline text-xs"
+                                                    >
+                                                        #{tag}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        )}
                                 </div>
                             </div>
 
                             <div className="collapse collapse-plus bg-base-100 border border-base-200 rounded-xl">
                                 <input type="radio" name="product-accordion" />
                                 <div className="collapse-title text-sm font-semibold uppercase tracking-wider">
-                                    Materiales y Cuidados
+                                    Detalles del Producto, Materiales y Cuidados
                                 </div>
                                 <div className="collapse-content text-sm text-base-content/80 space-y-2">
                                     <ul className="list-disc list-inside space-y-1">
-                                        <li>Algodón peinado premium (suavidad garantizada).</li>
-                                        <li>Talón y puntera reforzados anti-desgaste.</li>
-                                        <li>Banda elástica en el arco para un ajuste firme.</li>
+                                        <li>
+                                            Algodón peinado premium (suavidad
+                                            garantizada).
+                                        </li>
+                                        <li>
+                                            Talón y puntera reforzados
+                                            anti-desgaste.
+                                        </li>
+                                        <li>
+                                            Banda elástica en el arco para un
+                                            ajuste firme.
+                                        </li>
                                     </ul>
-                                    <p className="mt-3 font-medium text-base-content">Cuidados:</p>
+                                    <p className="mt-3 font-medium text-base-content">
+                                        Cuidados:
+                                    </p>
                                     <p>
-                                        Lavar a máquina con agua fría. No usar secadora para mantener
-                                        vivos los colores y evitar encogimiento.
+                                        Lavar a máquina con agua fría. No usar
+                                        secadora para mantener vivos los colores
+                                        y evitar encogimiento.
                                     </p>
                                 </div>
                             </div>
 
+                            {sizeGuide && (
+                                <div className="collapse collapse-plus bg-base-100 border border-base-200 rounded-xl">
+                                    <input type="radio" name="product-accordion" />
+                                    <div className="collapse-title text-sm font-semibold uppercase tracking-wider">
+                                        Tallas y Medidas
+                                    </div>
+                                    <div className="collapse-content text-sm text-base-content/80">
+                                        <div className="overflow-x-auto">
+                                            <table className="table table-sm">
+                                                <thead>
+                                                    <tr>
+                                                        {sizeGuide.columns.map((col) => (
+                                                            <th key={col} className="text-xs">{col}</th>
+                                                        ))}
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {sizeGuide.rows.map((row, i) => (
+                                                        <tr key={i}>
+                                                            {row.map((cell, j) => (
+                                                                <td key={j}>{cell}</td>
+                                                            ))}
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        {sizeGuide.note && (
+                                            <p className="mt-3 font-semibold text-base-content">
+                                                {sizeGuide.note}
+                                            </p>
+                                        )}
+                                        <p className="mt-3 text-xs text-base-content/60">
+                                            Las medidas pueden tener una variación de 1 a 2 cm debido a
+                                            la confección. Si estás entre dos tallas, te recomendamos
+                                            elegir la más grande para mayor comodidad.
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+
                             <div className="collapse collapse-plus bg-base-100 border border-base-200 rounded-xl">
                                 <input type="radio" name="product-accordion" />
                                 <div className="collapse-title text-sm font-semibold uppercase tracking-wider">
-                                    Envíos y Garantía
+                                    Detalles de Envío
                                 </div>
                                 <div className="collapse-content text-sm text-base-content/80 space-y-3">
-                                    <p>
-                                        📦{' '}
-                                        <strong className="text-base-content">Despacho seguro:</strong>{' '}
-                                        Preparamos tu pedido con amor y lo enviamos a todo Chile.
+                                    <p className="text-warning">
+                                        [PENDIENTE: contenido real de envío — zonas, tiempos, costos]
                                     </p>
                                     <p>
-                                        🔄{' '}
-                                        <strong className="text-base-content">Satisfacción:</strong>{' '}
-                                        Tienes 30 días para cambios si el producto se mantiene en su
-                                        empaque original.
+                                        Por el momento, no realizamos cambios ni devoluciones por
+                                        gusto, talla o color — te recomendamos revisar con atención
+                                        la guía de tallas y las fotos antes de comprar. Si tu pedido
+                                        llega con un defecto de fabricación o daño de transporte,
+                                        contactanos dentro de las 48 horas de recibido.
                                     </p>
                                 </div>
                             </div>

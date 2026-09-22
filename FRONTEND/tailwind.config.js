@@ -16,7 +16,7 @@ export default {
     },
     plugins: [require('daisyui')],
     daisyui: {
-        themes: ['acid'],
+        themes: ['dark'],
         darkTheme: 'dark',
     },
 }

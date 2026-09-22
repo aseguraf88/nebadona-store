@@ -33,9 +33,16 @@ const ProductCard = ({ product }) => {
 
     const currentImage = images[0] || ''
 
-    const totalStock = (product.variants || []).reduce((sum, v) => sum + (v.stock || 0), 0)
+    const totalStock = (product.variants || []).reduce(
+        (sum, v) => sum + (v.stock || 0),
+        0,
+    )
 
-    const handleAddToCart = async (event, quantityFromModal = 1, variantFromModal = null) => {
+    const handleAddToCart = async (
+        event,
+        quantityFromModal = 1,
+        variantFromModal = null,
+    ) => {
         if (event) {
             event.preventDefault()
             event.stopPropagation()
@@ -154,7 +161,11 @@ const ProductCard = ({ product }) => {
                         {/* 🔥 BOTÓN AGREGAR */}
                         <div className="absolute bottom-3 left-3 right-3 z-20 overflow-hidden rounded-xl">
                             <button
-                                onClick={product.variants?.length > 1 ? handleOpenModal : handleAddToCart}
+                                onClick={
+                                    product.variants?.length > 1
+                                        ? handleOpenModal
+                                        : handleAddToCart
+                                }
                                 disabled={totalStock === 0 || isAdded}
                                 className={`w-full py-2.5 flex items-center justify-center backdrop-blur-md transition-all duration-300 rounded-xl shadow-md sm:translate-y-12 sm:opacity-0 sm:group-hover:translate-y-0 sm:group-hover:opacity-100 ${
                                     isAdded
@@ -178,7 +189,9 @@ const ProductCard = ({ product }) => {
                                         <span className="text-sm leading-none font-normal">
                                             +
                                         </span>{' '}
-                                        {product.variants?.length > 1 ? 'Elegir' : 'Agregar'}
+                                        {product.variants?.length > 1
+                                            ? 'Elegir'
+                                            : 'Agregar'}
                                     </span>
                                 )}
                             </button>
@@ -187,7 +200,7 @@ const ProductCard = ({ product }) => {
 
                     {/* BLOQUE INFERIOR DE TEXTO */}
                     <div className="flex flex-col flex-grow items-center text-center p-4 w-full bg-base-100 rounded-b-2xl">
-                        <span className="text-[10px] font-bold text-base-content/40 uppercase tracking-widest leading-none mb-2">
+                        <span className="text-[10px] font-bold text-secondary uppercase tracking-widest leading-none mb-2">
                             {franchise_name || 'Novedad'}
                         </span>
 
