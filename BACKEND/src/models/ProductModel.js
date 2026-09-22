@@ -92,6 +92,22 @@ const ProductSchema = new Schema(
             lowercase: true,
             default: null,
         },
+        fit_type: {
+            type: String,
+            trim: true,
+            default: null,
+        },
+        specifications: {
+            type: String,
+            trim: true,
+            maxlength: 500,
+            default: null,
+        },
+        decoration_technique: {
+            type: String,
+            trim: true,
+            default: null,
+        },
         franchise_name: {
             type: String,
             trim: true,
