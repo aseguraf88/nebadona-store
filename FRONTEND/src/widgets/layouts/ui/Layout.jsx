@@ -11,7 +11,7 @@ const Layout = () => {
     return (
         <div className="min-h-screen bg-base-100">
             <header className="sticky top-0 z-50 w-full flex flex-col">
-                <div className="bg-success py-2 text-xs md:text-sm font-bold uppercase tracking-widest text-primary-content overflow-hidden flex items-center">
+                <div className="bg-error/90 py-2 text-xs md:text-sm font-bold uppercase tracking-widest text-primary-content overflow-hidden flex items-center">
                     {/* El texto que se mueve */}
                     <div className="animate-marquee whitespace-nowrap inline-block w-full">
                         🎉🎉🎉 GRAN APERTURA GRAN 🎉🎉🎉CATÁLOGO COMPLETO DE
