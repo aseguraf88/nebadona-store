@@ -429,22 +429,30 @@ const ProductPage = () => {
                                     </div>
                                     <div className="collapse-content text-sm text-base-content/80 min-w-0">
                                         {productDetails.length > 0 && (
-                                            <div className="overflow-x-auto">
-                                                <table className="table table-sm">
-                                                    <tbody>
-                                                        {productDetails.map((detail) => (
-                                                            <tr key={detail.label}>
-                                                                <td className="font-semibold whitespace-nowrap w-1/3">{detail.label}</td>
-                                                                <td className="text-base-content/80 whitespace-pre-line break-words">{detail.value}</td>
-                                                            </tr>
-                                                        ))}
-                                                    </tbody>
-                                                </table>
-                                            </div>
+                                            <>
+                                                <p className="text-xs uppercase tracking-widest text-primary font-semibold mb-2 px-3">
+                                                    Detalles
+                                                </p>
+                                                <div className="overflow-x-auto">
+                                                    <table className="table table-sm">
+                                                        <tbody>
+                                                            {productDetails.map((detail) => (
+                                                                <tr key={detail.label}>
+                                                                    <td className="font-semibold whitespace-nowrap w-1/3">{detail.label}</td>
+                                                                    <td className="text-base-content/80 whitespace-pre-line break-words">{detail.value}</td>
+                                                                </tr>
+                                                            ))}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </>
                                         )}
 
                                         {careGuide && (
-                                            <div className={productDetails.length > 0 ? 'mt-4' : ''}>
+                                            <div className={productDetails.length > 0 ? 'mt-4 pt-4 border-t border-base-300' : ''}>
+                                                <p className="text-xs uppercase tracking-widest text-primary font-semibold mb-2 px-2">
+                                                    Cuidados
+                                                </p>
                                                 <div className="overflow-x-auto">
                                                     <table className="table table-xs">
                                                         <tbody>
