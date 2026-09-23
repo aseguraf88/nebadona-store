@@ -433,11 +433,11 @@ const ProductPage = () => {
                                                 <p className="text-xs uppercase tracking-widest text-primary font-semibold mb-2 px-3">
                                                     Detalles
                                                 </p>
-                                                <div className="overflow-x-auto">
+                                                <div className="overflow-x-auto rounded-box border border-base-content/10">
                                                     <table className="table table-sm">
                                                         <tbody>
                                                             {productDetails.map((detail) => (
-                                                                <tr key={detail.label}>
+                                                                <tr key={detail.label} className="border-base-content/10">
                                                                     <td className="font-semibold whitespace-nowrap w-1/3">{detail.label}</td>
                                                                     <td className="text-base-content/80 whitespace-pre-line break-words">{detail.value}</td>
                                                                 </tr>
@@ -449,15 +449,15 @@ const ProductPage = () => {
                                         )}
 
                                         {careGuide && (
-                                            <div className={productDetails.length > 0 ? 'mt-4 pt-4 border-t border-base-300' : ''}>
+                                            <div className={productDetails.length > 0 ? 'mt-4 pt-4 border-t border-base-content/10' : ''}>
                                                 <p className="text-xs uppercase tracking-widest text-primary font-semibold mb-2 px-2">
                                                     Cuidados
                                                 </p>
-                                                <div className="overflow-x-auto">
+                                                <div className="overflow-x-auto rounded-box border border-base-content/10">
                                                     <table className="table table-xs">
                                                         <tbody>
                                                             {careGuide.items.map((item) => (
-                                                                <tr key={item.label}>
+                                                                <tr key={item.label} className="border-base-content/10">
                                                                     <td className="w-8">
                                                                         <item.icon
                                                                             className="h-4 w-4 text-primary"

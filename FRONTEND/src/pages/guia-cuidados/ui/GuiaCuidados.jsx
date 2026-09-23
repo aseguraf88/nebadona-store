@@ -23,15 +23,15 @@ const GuiaCuidados = () => {
                 {Object.entries(CARE_GUIDES_BY_CATEGORY).map(([key, guide]) => (
                     <section key={key} id={key} className="scroll-mt-32 mb-14">
                         <h2 className="text-xl font-bold text-base-content mb-1 flex items-center gap-2">
-                            <span>{guide.emoji}</span> {guide.title}
+                            {guide.title}
                         </h2>
                         <p className="text-xs uppercase tracking-widest text-primary font-semibold mb-6">
                             {guide.technique}
                         </p>
-                        <div className="overflow-x-auto">
+                        <div className="overflow-x-auto rounded-box border border-base-content/10">
                             <table className="table table-sm">
                                 <thead>
-                                    <tr>
+                                    <tr className="bg-neutral text-neutral-content">
                                         <th className="text-xs w-12"></th>
                                         <th className="text-xs">Acción</th>
                                         <th className="text-xs">Instrucción</th>
@@ -39,7 +39,7 @@ const GuiaCuidados = () => {
                                 </thead>
                                 <tbody>
                                     {guide.items.map((item) => (
-                                        <tr key={item.label}>
+                                        <tr key={item.label} className="border-base-content/10">
                                             <td>
                                                 <item.icon className="h-5 w-5 text-primary" />
                                             </td>
