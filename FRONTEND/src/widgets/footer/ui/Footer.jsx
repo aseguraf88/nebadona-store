@@ -7,7 +7,9 @@ const Footer = () => {
             <div className="flex flex-col items-center gap-3 max-w-md">
                 <Link
                     to="/"
-                    onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                    onClick={() =>
+                        window.scrollTo({ top: 0, behavior: 'smooth' })
+                    }
                     className="flex items-center"
                     aria-label="Nebadon"
                 >
@@ -16,7 +18,7 @@ const Footer = () => {
                     </span>
                 </Link>
                 <p className="font-semibold">Tienda Oficial</p>
-                <p className="text-base-content/80">Estilo urbano desde 2020</p>
+                <p className="text-base-content/80">Estilo urbano desde 2019</p>
 
                 <div className="divider w-full max-w-xs my-0"></div>
 
@@ -36,10 +38,16 @@ const Footer = () => {
                 <div className="divider w-full max-w-xs my-0"></div>
 
                 <div className="flex gap-4 text-sm">
-                    <Link to="/guia-cuidados" className="link link-hover text-base-content/70">
+                    <Link
+                        to="/guia-cuidados"
+                        className="link link-hover text-base-content/70"
+                    >
                         Guía de Cuidados
                     </Link>
-                    <Link to="/envios-y-entregas" className="link link-hover text-base-content/70">
+                    <Link
+                        to="/envios-y-entregas"
+                        className="link link-hover text-base-content/70"
+                    >
                         Envíos y Entregas
                     </Link>
                 </div>
