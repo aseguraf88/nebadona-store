@@ -495,10 +495,10 @@ const ProductPage = () => {
                                         Tallas y Medidas
                                     </div>
                                     <div className="collapse-content text-sm text-base-content/80 min-w-0">
-                                        <div className="overflow-x-auto">
+                                        <div className="overflow-x-auto rounded-box border border-base-content/10">
                                             <table className="table table-sm">
                                                 <thead>
-                                                    <tr>
+                                                    <tr className="bg-neutral text-neutral-content">
                                                         {sizeGuide.columns.map(
                                                             (col) => (
                                                                 <th
@@ -514,7 +514,7 @@ const ProductPage = () => {
                                                 <tbody>
                                                     {sizeGuide.rows.map(
                                                         (row, i) => (
-                                                            <tr key={i}>
+                                                            <tr key={i} className="border-base-content/10">
                                                                 {row.map(
                                                                     (
                                                                         cell,
@@ -524,6 +524,7 @@ const ProductPage = () => {
                                                                             key={
                                                                                 j
                                                                             }
+                                                                            className={j === 0 ? 'font-semibold' : undefined}
                                                                         >
                                                                             {
                                                                                 cell
