@@ -473,6 +473,7 @@ const ProductPage = () => {
                                                 </div>
                                                 <Link
                                                     to={`/guia-cuidados#${product.product_category}`}
+                                                    state={{ from: 'product' }}
                                                     className="link link-primary text-sm font-semibold mt-2 inline-block"
                                                 >
                                                     Ver guía completa de cuidados →
@@ -565,6 +566,7 @@ const ProductPage = () => {
                                     </div>
                                     <Link
                                         to="/envios-y-entregas"
+                                        state={{ from: 'product' }}
                                         className="link link-primary text-sm font-semibold"
                                     >
                                         Ver detalles de envíos y entregas →

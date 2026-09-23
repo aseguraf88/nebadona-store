@@ -1,7 +1,11 @@
-import { Link } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { CARE_GUIDES_BY_CATEGORY } from '../../../entities/product/config/careGuides'
 
 const GuiaCuidados = () => {
+    const location = useLocation()
+    const navigate = useNavigate()
+    const cameFromProduct = location.state?.from === 'product'
+
     return (
         <main className="min-h-screen bg-base-100 py-8">
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -48,6 +52,16 @@ const GuiaCuidados = () => {
                         </div>
                     </section>
                 ))}
+
+                {cameFromProduct && (
+                    <button
+                        type="button"
+                        onClick={() => navigate(-1)}
+                        className="btn btn-outline"
+                    >
+                        ← Volver al producto
+                    </button>
+                )}
             </div>
         </main>
     )
