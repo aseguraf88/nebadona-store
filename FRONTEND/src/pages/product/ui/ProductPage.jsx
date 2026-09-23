@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import toast from 'react-hot-toast'
-import { Share2 } from 'lucide-react'
+import { Share2, Truck, Zap, Handshake, Warehouse } from 'lucide-react'
 import { useCart } from '../../../entities/cart'
 import { useProduct } from '../../../entities/product'
 import VariantSelector from '../../../entities/product/ui/VariantSelector'
@@ -10,6 +10,13 @@ import { getSizeGuideByCategory } from '../../../entities/product/config/sizeGui
 import { getCareGuideByCategory } from '../../../entities/product/config/careGuides'
 
 const MD_MEDIA_QUERY = '(min-width: 1024px)'
+
+const SHIPPING_METHODS = [
+    { icon: Truck, text: 'Envío por agencia, a todo Chile' },
+    { icon: Zap, text: 'Express en Santiago' },
+    { icon: Handshake, text: 'Entrega presencial coordinada' },
+    { icon: Warehouse, text: 'Retiro en bodega, sin costo' },
+]
 
 const useIsMdUp = () => {
     const getInitialValue = () => {
@@ -554,16 +561,25 @@ const ProductPage = () => {
                                 </div>
                             )}
 
-                            <div className="collapse collapse-plus bg-base-100 border border-base-200 rounded-xl">
+                            <div className="collapse collapse-plus bg-base-100 border border-base-200 rounded-xl min-w-0">
                                 <input type="radio" name="product-accordion" onClick={(e) => e.target.blur()} />
                                 <div className="collapse-title text-sm font-semibold uppercase tracking-wider">
                                     Detalles de Envío y Entregas
                                 </div>
-                                <div className="collapse-content text-sm text-base-content/80 space-y-4">
-                                    <div className="flex items-center gap-3 flex-wrap text-2xl mb-2">
-                                        <span title="Envíos a todo Chile">📦</span>
-                                        <span title="Express en Santiago">🛵</span>
-                                        <span title="Retiro y entrega presencial">🤝</span>
+                                <div className="collapse-content text-sm text-base-content/80 space-y-4 min-w-0">
+                                    <div className="overflow-x-auto rounded-box border border-base-content/10">
+                                        <table className="table table-xs">
+                                            <tbody>
+                                                {SHIPPING_METHODS.map((method) => (
+                                                    <tr key={method.text} className="border-base-content/10">
+                                                        <td className="w-8">
+                                                            <method.icon className="h-4 w-4 text-primary" />
+                                                        </td>
+                                                        <td className="text-base-content/70">{method.text}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
                                     </div>
                                     <Link
                                         to="/envios-y-entregas"
