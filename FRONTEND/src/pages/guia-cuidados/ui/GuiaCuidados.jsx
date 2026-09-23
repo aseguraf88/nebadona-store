@@ -57,7 +57,7 @@ const GuiaCuidados = () => {
                     <button
                         type="button"
                         onClick={() => navigate(-1)}
-                        className="btn btn-outline"
+                        className="btn btn-outline btn-primary"
                     >
                         ← Volver al producto
                     </button>
