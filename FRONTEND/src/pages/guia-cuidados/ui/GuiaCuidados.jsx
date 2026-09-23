@@ -19,24 +19,32 @@ const GuiaCuidados = () => {
                 {Object.entries(CARE_GUIDES_BY_CATEGORY).map(([key, guide]) => (
                     <section key={key} id={key} className="scroll-mt-32 mb-14">
                         <h2 className="text-xl font-bold text-base-content mb-1 flex items-center gap-2">
-                            <span>{guide.icon}</span> {guide.title}
+                            <span>{guide.emoji}</span> {guide.title}
                         </h2>
                         <p className="text-xs uppercase tracking-widest text-primary font-semibold mb-6">
                             {guide.technique}
                         </p>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            {guide.items.map((item) => (
-                                <div
-                                    key={item.label}
-                                    className="flex items-start gap-3 p-4 rounded-xl bg-base-100 border border-base-200"
-                                >
-                                    <span className="text-2xl shrink-0">{item.icon}</span>
-                                    <div>
-                                        <p className="font-semibold text-base-content">{item.label}</p>
-                                        <p className="text-sm text-base-content/70">{item.text}</p>
-                                    </div>
-                                </div>
-                            ))}
+                        <div className="overflow-x-auto">
+                            <table className="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th className="text-xs w-12"></th>
+                                        <th className="text-xs">Acción</th>
+                                        <th className="text-xs">Instrucción</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {guide.items.map((item) => (
+                                        <tr key={item.label}>
+                                            <td>
+                                                <item.icon className="h-5 w-5 text-primary" />
+                                            </td>
+                                            <td className="font-semibold whitespace-nowrap">{item.label}</td>
+                                            <td className="text-base-content/80">{item.text}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
                         </div>
                     </section>
                 ))}

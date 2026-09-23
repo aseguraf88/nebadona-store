@@ -16,16 +16,16 @@ manual. MercadoPago fue eliminado del código por completo (no reintroducir).
 
 ## Reglas de trabajo (no negociables, así trabajamos hasta ahora)
 - Antes de proponer un cambio en un archivo que no leíste en esta sesión,
-  mostralo primero completo. No asumas su contenido ni su schema.
+  muéstralo primero completo. No asumas su contenido ni su schema.
 - No declares un fix "resuelto" hasta que el usuario confirme que lo probó.
-- Mostrá el diff antes de guardar cambios en archivos existentes.
+- Muestra el diff antes de guardar cambios en archivos existentes.
 - No agregues funciones ni cambies de tema sin que se pida explícitamente —
-  nada de scope creep. Si algo parece un próximo paso lógico, mencionalo en
-  una frase y esperá confirmación, no lo implementes solo.
-- Sugerí un commit de checkpoint (`git add . && git commit -m "..."`) antes
-  de aplicar un batch de cambios grande, y recordá que el usuario está en
+  nada de scope creep. Si algo parece un próximo paso lógico, menciónalo en
+  una frase y espera confirmación, no lo implementes solo.
+- Sugiere un commit de checkpoint (`git add . && git commit -m "..."`) antes
+  de aplicar un batch de cambios grande, y recuerda que el usuario está en
   PowerShell de Windows (no asumir sintaxis de bash tipo `2>/dev/null`).
-- Si una búsqueda o lectura falla, decilo explícitamente — no sigas como si
+- Si una búsqueda o lectura falla, dilo explícitamente — no sigas como si
   hubiera funcionado.
 - **Un "guardado" confirmado no es prueba de que se aplicó completo.** Pasó
   una vez: se mostró un diff correcto de 2 funciones nuevas, pero solo se
@@ -47,7 +47,9 @@ manual. MercadoPago fue eliminado del código por completo (no reintroducir).
   proyecto, no pedirle que los pegue enteros en la terminal. Cuando un
   bloque parece cortado a mitad de una etiqueta/atributo (ej. un `<a>` sin
   su apertura), no asumir el contenido — confirmar con el usuario qué era
-  antes de armar el diff.
+  antes de armar el diff. Lo mismo aplica a prompts largos: el usuario los
+  guarda como `.md` en la raíz del repo y pide "Lee <archivo>.md y sigue
+  sus instrucciones"; el archivo se borra antes del commit.
 - **Windows no distingue mayúsculas/minúsculas en rutas de archivo, Linux
   (Vercel) sí.** `npm run dev` local nunca revela un import mal escrito en
   mayúsculas (ej. `'../pages/Home'` contra la carpeta real `pages/home/`)
@@ -62,6 +64,18 @@ manual. MercadoPago fue eliminado del código por completo (no reintroducir).
   Pasó 3 veces (banner de `InventoryPage.jsx`, sidebar de filtros, tabla
   de Tallas y Medidas). Si algo se desborda del contenedor en mobile sin
   causa obvia, sospechar esto antes de inventar otra explicación.
+- **Los `estructura.txt` pueden estar desactualizados.** Pasó con el de
+  `BACKEND/src`: mostraba archivos de MercadoPago ya borrados y no mostraba
+  `app.js` ni `config/env.js`. Antes de confiar en uno, regenerarlo desde
+  la carpeta `src` correspondiente con
+  `tree /F /A | Out-File -Encoding utf8 estructura.txt` — nunca desde la
+  raíz de `BACKEND`/`FRONTEND`, porque `tree` no permite excluir
+  `node_modules`.
+- **Los íconos de `@lucide/lab` son icon nodes, no componentes de React.**
+  Hay que envolverlos con `<Icon iconNode={...} />` de `lucide-react` (en
+  un `.js` sin JSX, con `createElement`; ejemplo real: `IronIcon` en
+  `careGuides.js`). Si se usan directo, `npm run build` no detecta el
+  error: solo falla al renderizar.
 
 ## Sitio en producción
 Desplegado y en vivo — dos dominios con propósitos distintos:
@@ -78,7 +92,8 @@ Desplegado y en vivo — dos dominios con propósitos distintos:
   `BACKEND/src/app.js` arma la app Express sin escuchar; `server.js` la
   hace escuchar para desarrollo local; `api/index.js` la expone para
   Vercel. CORS en `app.js` acepta una lista de orígenes separados por
-  coma vía `FRONTEND_URL`, no un solo dominio.
+  coma vía `FRONTEND_URL`, no un solo dominio. La validación de variables
+  de entorno vive en `BACKEND/src/config/env.js`.
 - Rama de trabajo real: `whatsapp-commerce` (no `main`, desactualizada).
   Cada `git push` a esa rama despliega solo a producción.
 
@@ -128,52 +143,74 @@ carrito, y órdenes están cerrados y probados de punta a punta, incluido
 bien). Ver `BACKLOG.md` para los ítems sueltos de "baja prioridad" y
 "post-lanzamiento" que quedan, ninguno bloqueante.
 
-## 🔧 Tarea en curso ahora mismo: Materiales del Producto (Fase 2)
+## ✅ Tarea cerrada: Materiales del Producto (Fase 2)
 
-Contexto: la página de producto (`ProductPage.jsx`) tiene un acordeón
-"Detalles del Producto y Cuidados". La parte de Cuidados ya se resolvió
-(movida a `/guia-cuidados`, con resumen corto + link en la ficha). Lo que
-queda son los **3 bullets fijos y genéricos** que hoy están hardcodeados
-ahí ("Algodón peinado premium...", "Talón y puntera reforzados...",
-"Banda elástica...") — pensados solo para calcetas, sin sentido para
-camisas o polerones. Esta fase los reemplaza por **campos reales,
-editables por producto desde el dashboard**.
+La ficha de producto (`ProductPage.jsx`) tenía, en el acordeón "Detalles
+del Producto y Cuidados", 3 bullets fijos pensados solo para calcetas
+("Algodón peinado premium...", etc.), sin sentido para camisas o
+polerones. La parte de Cuidados se había resuelto antes (movida a
+`/guia-cuidados`, con resumen corto + link en la ficha). Esta fase
+reemplazó los bullets por **campos reales, editables por producto desde
+el dashboard**. Probado de punta a punta por el usuario (crear, editar,
+borrar un valor, recarga completa, ficha pública).
 
-**Los 4 campos** (decisión ya tomada, no volver a discutir el diseño):
-- **Material Principal** — ya existe como `material` en el schema
-  (`ProductModel.js`, `productSchema.js`), no hace falta campo nuevo.
-- **Tipo de Calce** — campo nuevo (ej. "Oversize", "Regular", "Ajustado").
-- **Especificaciones** — campo nuevo, texto libre (ej. "Cuello redondo,
-  puños elasticados, bolsillo canguro").
-- **Técnica de Decoración** — campo nuevo. Nombrado así a propósito, NO
-  "Estampado" — las calcetas son bordadas, los polerones/camisas
-  estampados; un nombre genérico evita la confusión real que ya causó
-  este mismo error una vez (ver más abajo).
+**Los 4 campos:**
+- **Material** — `material`, ya existía. Se guarda en minúscula
+  (`lowercase: true` en Mongoose, `.toLowerCase()` en Zod y en el payload
+  del formulario). En la ficha se muestra con la primera letra en
+  mayúscula, **solo en la vista** — no se tocó schema ni datos.
+- **Tipo de Calce** — `fit_type` (nuevo).
+- **Técnica de Decoración** — `decoration_technique` (nuevo).
+- **Especificaciones** — `specifications` (nuevo), texto libre, máximo
+  500 caracteres en los tres lugares (Zod, Mongoose y `maxLength` del
+  `<textarea>`). En la ficha respeta los saltos de línea.
 
-**Lo que falta hacer, en orden:**
-1. Backend: agregar los 3 campos nuevos a `productSchema.js` (Zod) y
-   `ProductModel.js` (Mongoose) — mismo patrón ya usado para `sock_type`
-   (sin `.toLowerCase()`/`lowercase: true` a menos que haya evidencia de
-   que hace falta comparar en minúscula, como sí la tuvieron Categoría/
-   Franquicia/Tema).
-2. Frontend admin: inputs nuevos en `ProductAttributesForm.jsx`, y
-   sumarlos a `useProductForm.js` (`EMPTY_TEMPLATE`, `normalizeTemplate`,
-   `mapProductToTemplate`, el `payload` de `handleConfirmSave`) — los 4
-   lugares que hubo que tocar la vez pasada con `sock_type`, mismo
-   patrón exacto.
-3. `ProductPage.jsx`: reemplazar los 3 bullets fijos por los campos
-   reales del producto (condicional, como `sizeGuide`/`careGuide` — no
-   mostrar el bloque si el producto no tiene esos datos cargados).
+Los tres campos nuevos son opcionales (`default: null`) y **no fuerzan
+minúsculas en ningún lado** — se guardan y se muestran tal cual se
+escriben, mismo criterio que `sock_type`. En el formulario son texto
+libre, no `<select>`; pasarlos a opciones fijas más adelante solo
+requiere cambiar dos inputs, sin tocar datos ni backend.
+
+**Archivos tocados:** `productSchema.js`, `ProductModel.js`,
+`useProductForm.js` (los 4 lugares de siempre: `EMPTY_TEMPLATE`,
+`normalizeTemplate`, `mapProductToTemplate`, `payload` de
+`handleConfirmSave`), `ProductAttributesForm.jsx` (inputs debajo de
+Material, en la tarjeta "Organización") y `ProductPage.jsx`. Para los
+cuidados: `careGuides.js`, `GuiaCuidados.jsx`, `package.json` y
+`package-lock.json`.
+
+**Comportamiento en la ficha:** los 4 detalles se muestran como **tabla de
+dos columnas** (etiqueta / valor), en orden fijo (Material, Tipo de Calce,
+Técnica de Decoración, Especificaciones); solo aparecen las filas con
+valor, y la tabla se oculta si los cuatro están vacíos. `whitespace-pre-line`
+y `break-words` van solo en la celda del valor.
+
+Debajo, los cuidados se muestran como **mini tabla ícono + instrucción
+corta** (`item.text`), con `item.label` como nombre accesible del ícono
+(`aria-label` + `role="img"`), más el link "Ver guía completa de
+cuidados". El margen superior de ese bloque es condicional: solo aparece
+si hay tabla de detalles arriba. Solo hay guía de cuidados para las
+categorías de `careGuides.js` (calcetines, camisas, polerones); si un
+producto no tiene ni detalles ni guía de cuidados, el acordeón completo
+no se renderiza.
+
+`/guia-cuidados` pasó de tarjetas a **tabla por categoría** (ícono /
+acción / instrucción).
+
+**Íconos:** `lucide-react` + `@lucide/lab` (dependencia nueva en
+`package.json`). Ver la regla sobre `@lucide/lab` en "Reglas de trabajo".
 
 **Error real ya cometido una vez con este mismo tema, no repetir:** al
-escribir la Guía de Cuidados (ahora en `/guia-cuidados`) se usó la
-palabra "estampados" de forma genérica para todo el texto, aunque las
-calcetas son bordadas — lo detectó la dueña del negocio en QA real,
-confundida de por qué se hablaba de estampado en un producto sin
-estampado. Ya corregido ahí, pero sirve de ejemplo de por qué el nombre
-"Técnica de Decoración" (genérico) es la elección correcta acá, y por qué
-cualquier texto nuevo que se escriba debe evitar asumir una sola técnica
-para todas las categorías.
+escribir la Guía de Cuidados (`/guia-cuidados`) se usó la palabra
+"estampados" de forma genérica para todo el texto, aunque las calcetas
+son bordadas — lo detectó la dueña del negocio en QA real. Por eso el
+campo se llama "Técnica de Decoración" (genérico) y no "Estampado", y
+cualquier texto nuevo debe evitar asumir una sola técnica para todas las
+categorías.
+
+## 🔧 Tarea en curso ahora mismo
+
+Ninguna definida. Ver `BACKLOG.md` para elegir la siguiente.
 
 ## 🟡 Pendiente, pausado a pedido del usuario (no resolver sin que lo pida)
 

@@ -429,30 +429,43 @@ const ProductPage = () => {
                                     </div>
                                     <div className="collapse-content text-sm text-base-content/80 min-w-0">
                                         {productDetails.length > 0 && (
-                                            <ul className="list-disc list-inside space-y-1 break-words">
-                                                {productDetails.map((detail) => (
-                                                    <li key={detail.label}>
-                                                        <span className="font-semibold text-base-content">
-                                                            {detail.label}:
-                                                        </span>{' '}
-                                                        <span className="whitespace-pre-line">
-                                                            {detail.value}
-                                                        </span>
-                                                    </li>
-                                                ))}
-                                            </ul>
+                                            <div className="overflow-x-auto">
+                                                <table className="table table-sm">
+                                                    <tbody>
+                                                        {productDetails.map((detail) => (
+                                                            <tr key={detail.label}>
+                                                                <td className="font-semibold whitespace-nowrap w-1/3">{detail.label}</td>
+                                                                <td className="text-base-content/80 whitespace-pre-line break-words">{detail.value}</td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </table>
+                                            </div>
                                         )}
 
                                         {careGuide && (
                                             <div className={productDetails.length > 0 ? 'mt-4' : ''}>
-                                                <div className="flex items-center gap-3 flex-wrap text-2xl mb-2">
-                                                    {careGuide.items.map((item) => (
-                                                        <span key={item.label} title={item.label}>{item.icon}</span>
-                                                    ))}
+                                                <div className="overflow-x-auto">
+                                                    <table className="table table-xs">
+                                                        <tbody>
+                                                            {careGuide.items.map((item) => (
+                                                                <tr key={item.label}>
+                                                                    <td className="w-8">
+                                                                        <item.icon
+                                                                            className="h-4 w-4 text-primary"
+                                                                            aria-label={item.label}
+                                                                            role="img"
+                                                                        />
+                                                                    </td>
+                                                                    <td className="text-base-content/70">{item.text}</td>
+                                                                </tr>
+                                                            ))}
+                                                        </tbody>
+                                                    </table>
                                                 </div>
                                                 <Link
                                                     to={`/guia-cuidados#${product.product_category}`}
-                                                    className="link link-primary text-sm font-semibold"
+                                                    className="link link-primary text-sm font-semibold mt-2 inline-block"
                                                 >
                                                     Ver guía completa de cuidados →
                                                 </Link>
