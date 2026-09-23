@@ -136,16 +136,24 @@ naturaleza al resto del backlog (que es funcionalidad/bugs). Mencionado
 por el usuario, sin definir todavía:
 
 - [ ] Paleta de colores de la tienda/marca — revisar si la actual
-      transmite lo que se busca para "Nebadona" (hoy usa el tema
-      "autumn" de DaisyUI con violeta como primario, según se vio en el
-      HTML inspeccionado en varias capturas).
+      transmite lo que se busca para "Nebadona". El tema efectivo hoy es
+      `light` de DaisyUI (primario violeta índigo, secundario rosa,
+      acento turquesa): `tailwind.config.js` solo genera `light`, y el
+      `data-theme="autumn"` de `index.html` no tiene ningún CSS asociado,
+      así que no se aplica (confirmado en el CSS compilado; ver sección
+      A.1 del informe de consistencia). El atributo queda sin tocar a
+      propósito, para decidirlo en esta sesión.
 - [ ] Carrusel del Hero (Home) — el usuario lo sintió "poco atractivo".
       Sin diagnóstico específico todavía (¿la imagen, la composición del
       texto, la animación, el CTA?).
 
 **Para preparar esa sesión, conviene tener a mano**: `HeroCarousel.jsx`
 (nunca se vio completo en esta conversación), `tailwind.config.js` o
-donde esté definido el tema de DaisyUI actual, y — si el usuario tiene
+donde esté definido el tema de DaisyUI actual, el informe
+`informe-consistencia-ui-ux.md` (raíz del repo, generado el 2026-09-23:
+auditoría de paleta de color, radio de bordes e íconos/emojis, con los
+hallazgos separados por Tienda pública y Admin y una lista priorizada de
+inconsistencias con esfuerzo estimado), y — si el usuario tiene
 referencias de otras tiendas/apps cuyo estilo le guste — capturas de esas
 como punto de partida, en vez de diseñar a ciegas.
 
