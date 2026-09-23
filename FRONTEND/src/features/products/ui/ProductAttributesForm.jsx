@@ -2,7 +2,15 @@ import { useEffect, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
 import { AddEntityModal } from '../../products'
 import { ProductImagesModal } from '../../products'
-import { TbFileDescription, TbPhoto, TbCloudUpload, TbCash, TbBox, TbWand, TbPlus } from 'react-icons/tb'
+import {
+    TbFileDescription,
+    TbPhoto,
+    TbCloudUpload,
+    TbCash,
+    TbBox,
+    TbWand,
+    TbPlus,
+} from 'react-icons/tb'
 
 // Helper simple para autogenerar SKU de variante si se desea
 const generateVariantSku = (handle, size, baseColor, existingSkus = []) => {
@@ -43,7 +51,10 @@ const ProductAttributesForm = ({
 
     useEffect(() => {
         if (template.variants.length > prevVariantsLength.current) {
-            lastVariantRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+            lastVariantRef.current?.scrollIntoView({
+                behavior: 'smooth',
+                block: 'center',
+            })
         }
         prevVariantsLength.current = template.variants.length
     }, [template.variants.length])
@@ -104,7 +115,10 @@ const ProductAttributesForm = ({
     const handleSaveFranchise = async (newFranchiseName) => {
         const result = await onCreateFranchise(newFranchiseName)
         if (result?.success) {
-            setTemplate((prev) => ({ ...prev, franchise_name: newFranchiseName }))
+            setTemplate((prev) => ({
+                ...prev,
+                franchise_name: newFranchiseName,
+            }))
         } else {
             toast.error(result?.message || 'No se pudo crear la franquicia.')
         }
@@ -423,14 +437,27 @@ const ProductAttributesForm = ({
                                                     className="btn btn-xs btn-ghost text-primary"
                                                     title="Autogenerar SKU"
                                                     onClick={() => {
-                                                        const otherSkus = template.variants
-                                                            .filter((_, i) => i !== idx)
-                                                            .map((variant) => variant.sku)
-                                                            .filter(Boolean)
+                                                        const otherSkus =
+                                                            template.variants
+                                                                .filter(
+                                                                    (_, i) =>
+                                                                        i !==
+                                                                        idx,
+                                                                )
+                                                                .map(
+                                                                    (variant) =>
+                                                                        variant.sku,
+                                                                )
+                                                                .filter(Boolean)
                                                         handleVariantChange(
                                                             idx,
                                                             'sku',
-                                                            generateVariantSku(template.handle, v.size, v.baseColor, otherSkus),
+                                                            generateVariantSku(
+                                                                template.handle,
+                                                                v.size,
+                                                                v.baseColor,
+                                                                otherSkus,
+                                                            ),
                                                         )
                                                     }}
                                                 >
@@ -493,7 +520,9 @@ const ProductAttributesForm = ({
                                                     handleVariantChange(
                                                         idx,
                                                         'designColors',
-                                                        e.target.value.split(','),
+                                                        e.target.value.split(
+                                                            ',',
+                                                        ),
                                                     )
                                                 }
                                                 placeholder="Ej. rojo, blanco"
@@ -505,11 +534,23 @@ const ProductAttributesForm = ({
                                                 className="input input-xs input-bordered w-20 font-bold"
                                                 value={v.stock}
                                                 onChange={(e) =>
-                                                    handleVariantChange(idx, 'stock', e.target.value)
+                                                    handleVariantChange(
+                                                        idx,
+                                                        'stock',
+                                                        e.target.value,
+                                                    )
                                                 }
-                                                onFocus={(e) => e.target.select()}
+                                                onFocus={(e) =>
+                                                    e.target.select()
+                                                }
                                                 onBlur={(e) =>
-                                                    handleVariantChange(idx, 'stock', Number(e.target.value) || 0)
+                                                    handleVariantChange(
+                                                        idx,
+                                                        'stock',
+                                                        Number(
+                                                            e.target.value,
+                                                        ) || 0,
+                                                    )
                                                 }
                                                 min="0"
                                             />
@@ -540,7 +581,11 @@ const ProductAttributesForm = ({
                         {template.variants.map((v, idx) => (
                             <div
                                 key={idx}
-                                ref={idx === template.variants.length - 1 ? lastVariantRef : null}
+                                ref={
+                                    idx === template.variants.length - 1
+                                        ? lastVariantRef
+                                        : null
+                                }
                                 className="border border-base-200 rounded-xl p-3 flex flex-col gap-3 relative bg-base-100"
                             >
                                 <button
@@ -558,7 +603,11 @@ const ProductAttributesForm = ({
                                         className="input input-sm input-bordered w-full font-mono uppercase"
                                         value={v.sku}
                                         onChange={(e) =>
-                                            handleVariantChange(idx, 'sku', e.target.value.toUpperCase())
+                                            handleVariantChange(
+                                                idx,
+                                                'sku',
+                                                e.target.value.toUpperCase(),
+                                            )
                                         }
                                         placeholder="SKU"
                                     />
@@ -574,7 +623,12 @@ const ProductAttributesForm = ({
                                             handleVariantChange(
                                                 idx,
                                                 'sku',
-                                                generateVariantSku(template.handle, v.size, v.baseColor, otherSkus),
+                                                generateVariantSku(
+                                                    template.handle,
+                                                    v.size,
+                                                    v.baseColor,
+                                                    otherSkus,
+                                                ),
                                             )
                                         }}
                                     >
@@ -590,11 +644,19 @@ const ProductAttributesForm = ({
                                         <select
                                             className="select select-sm select-bordered w-full"
                                             value={v.size}
-                                            onChange={(e) => handleVariantChange(idx, 'size', e.target.value)}
+                                            onChange={(e) =>
+                                                handleVariantChange(
+                                                    idx,
+                                                    'size',
+                                                    e.target.value,
+                                                )
+                                            }
                                         >
                                             <option value="">N/A</option>
                                             {sizeOptions?.map((opt) => (
-                                                <option key={opt} value={opt}>{opt}</option>
+                                                <option key={opt} value={opt}>
+                                                    {opt}
+                                                </option>
                                             ))}
                                         </select>
                                     </label>
@@ -606,7 +668,13 @@ const ProductAttributesForm = ({
                                             type="text"
                                             className="input input-sm input-bordered w-full lowercase"
                                             value={v.baseColor}
-                                            onChange={(e) => handleVariantChange(idx, 'baseColor', e.target.value)}
+                                            onChange={(e) =>
+                                                handleVariantChange(
+                                                    idx,
+                                                    'baseColor',
+                                                    e.target.value,
+                                                )
+                                            }
                                             placeholder="Ej. azul"
                                         />
                                     </label>
@@ -619,9 +687,17 @@ const ProductAttributesForm = ({
                                     <input
                                         type="text"
                                         className="input input-sm input-bordered w-full lowercase"
-                                        value={Array.isArray(v.designColors) ? v.designColors.join(',') : ''}
+                                        value={
+                                            Array.isArray(v.designColors)
+                                                ? v.designColors.join(',')
+                                                : ''
+                                        }
                                         onChange={(e) =>
-                                            handleVariantChange(idx, 'designColors', e.target.value.split(','))
+                                            handleVariantChange(
+                                                idx,
+                                                'designColors',
+                                                e.target.value.split(','),
+                                            )
                                         }
                                         placeholder="Ej. rojo, blanco"
                                     />
@@ -635,10 +711,20 @@ const ProductAttributesForm = ({
                                         type="number"
                                         className="input input-sm input-bordered w-full font-bold"
                                         value={v.stock}
-                                        onChange={(e) => handleVariantChange(idx, 'stock', e.target.value)}
+                                        onChange={(e) =>
+                                            handleVariantChange(
+                                                idx,
+                                                'stock',
+                                                e.target.value,
+                                            )
+                                        }
                                         onFocus={(e) => e.target.select()}
                                         onBlur={(e) =>
-                                            handleVariantChange(idx, 'stock', Number(e.target.value) || 0)
+                                            handleVariantChange(
+                                                idx,
+                                                'stock',
+                                                Number(e.target.value) || 0,
+                                            )
                                         }
                                         min="0"
                                     />
@@ -647,7 +733,6 @@ const ProductAttributesForm = ({
                         ))}
                     </div>
                 </section>
-
             </div>
 
             {/* COLUMNA DERECHA */}
@@ -735,18 +820,25 @@ const ProductAttributesForm = ({
                             </div>
                             <select
                                 className="select select-bordered w-full bg-base-100"
-                                value={template.product_category?.toLowerCase() || ''}
+                                value={
+                                    template.product_category?.toLowerCase() ||
+                                    ''
+                                }
                                 onChange={(e) =>
                                     setTemplate((prev) => ({
                                         ...prev,
-                                        product_category: e.target.value.toLowerCase(),
+                                        product_category:
+                                            e.target.value.toLowerCase(),
                                         sock_type: '', // Resetea el tipo si cambia la categoría
                                     }))
                                 }
                             >
                                 <option value="">Selecciona...</option>
                                 {productCategories?.map((item) => (
-                                    <option key={item._id} value={item.name.toLowerCase()}>
+                                    <option
+                                        key={item._id}
+                                        value={item.name.toLowerCase()}
+                                    >
                                         {item.name}
                                     </option>
                                 ))}
@@ -826,7 +918,63 @@ const ProductAttributesForm = ({
                                 }
                             />
                         </label>
-
+                        <label className="form-control w-full">
+                            <div className="label">
+                                <span className="label-text font-semibold">
+                                    Tipo de Calce
+                                </span>
+                            </div>
+                            <input
+                                type="text"
+                                className="input input-bordered w-full"
+                                placeholder="Ej. Regular, Oversize"
+                                value={template.fit_type || ''}
+                                onChange={(e) =>
+                                    setTemplate((prev) => ({
+                                        ...prev,
+                                        fit_type: e.target.value,
+                                    }))
+                                }
+                            />
+                        </label>
+                        <label className="form-control w-full">
+                            <div className="label">
+                                <span className="label-text font-semibold">
+                                    Técnica de Decoración
+                                </span>
+                            </div>
+                            <input
+                                type="text"
+                                className="input input-bordered w-full"
+                                placeholder="Ej. Bordado, Estampado"
+                                value={template.decoration_technique || ''}
+                                onChange={(e) =>
+                                    setTemplate((prev) => ({
+                                        ...prev,
+                                        decoration_technique: e.target.value,
+                                    }))
+                                }
+                            />
+                        </label>
+                        <label className="form-control w-full">
+                            <div className="label">
+                                <span className="label-text font-semibold">
+                                    Especificaciones
+                                </span>
+                            </div>
+                            <textarea
+                                className="textarea textarea-bordered h-20 w-full"
+                                placeholder="Ej. Cuello redondo, puños elasticados, bolsillo canguro"
+                                maxLength={500}
+                                value={template.specifications || ''}
+                                onChange={(e) =>
+                                    setTemplate((prev) => ({
+                                        ...prev,
+                                        specifications: e.target.value,
+                                    }))
+                                }
+                            />
+                        </label>
                         <div className="divider my-0"></div>
 
                         <label className="form-control w-full">
@@ -846,17 +994,23 @@ const ProductAttributesForm = ({
                             </div>
                             <select
                                 className="select select-bordered w-full"
-                                value={template.franchise_name?.toLowerCase() || ''}
+                                value={
+                                    template.franchise_name?.toLowerCase() || ''
+                                }
                                 onChange={(e) =>
                                     setTemplate((prev) => ({
                                         ...prev,
-                                        franchise_name: e.target.value.toLowerCase(),
+                                        franchise_name:
+                                            e.target.value.toLowerCase(),
                                     }))
                                 }
                             >
                                 <option value="">Opcional...</option>
                                 {franchiseNames?.map((item) => (
-                                    <option key={item._id} value={item.name.toLowerCase()}>
+                                    <option
+                                        key={item._id}
+                                        value={item.name.toLowerCase()}
+                                    >
                                         {item.name}
                                     </option>
                                 ))}
@@ -897,17 +1051,23 @@ const ProductAttributesForm = ({
                             </div>
                             <select
                                 className="select select-bordered w-full"
-                                value={template.design_theme?.toLowerCase() || ''}
+                                value={
+                                    template.design_theme?.toLowerCase() || ''
+                                }
                                 onChange={(e) =>
                                     setTemplate((prev) => ({
                                         ...prev,
-                                        design_theme: e.target.value.toLowerCase(),
+                                        design_theme:
+                                            e.target.value.toLowerCase(),
                                     }))
                                 }
                             >
                                 <option value="">Opcional...</option>
                                 {designThemes?.map((item) => (
-                                    <option key={item._id} value={item.name.toLowerCase()}>
+                                    <option
+                                        key={item._id}
+                                        value={item.name.toLowerCase()}
+                                    >
                                         {item.name}
                                     </option>
                                 ))}

@@ -91,6 +91,22 @@ const ProductPage = () => {
         ? getCareGuideByCategory(product.product_category)
         : null
 
+    const materialText = product?.material?.trim()
+    const productDetails = [
+        {
+            label: 'Material',
+            value: materialText
+                ? materialText.charAt(0).toUpperCase() + materialText.slice(1)
+                : '',
+        },
+        { label: 'Tipo de Calce', value: product?.fit_type?.trim() },
+        {
+            label: 'Técnica de Decoración',
+            value: product?.decoration_technique?.trim(),
+        },
+        { label: 'Especificaciones', value: product?.specifications?.trim() },
+    ].filter((detail) => detail.value)
+
     const handleDecrement = () => setQuantity((prev) => Math.max(1, prev - 1))
     const handleIncrement = () =>
         setQuantity((prev) => Math.min(selectedVariant?.stock ?? 1, prev + 1))
@@ -405,35 +421,46 @@ const ProductPage = () => {
                                 </div>
                             </div>
 
-                            <div className="collapse collapse-plus bg-base-100 border border-base-200 rounded-xl min-w-0">
-                                <input type="radio" name="product-accordion" onClick={(e) => e.target.blur()} />
-                                <div className="collapse-title text-sm font-semibold uppercase tracking-wider">
-                                    Detalles del Producto y Cuidados
-                                </div>
-                                <div className="collapse-content text-sm text-base-content/80 min-w-0">
-                                    <ul className="list-disc list-inside space-y-1">
-                                        <li>Algodón peinado premium (suavidad garantizada).</li>
-                                        <li>Talón y puntera reforzados anti-desgaste.</li>
-                                        <li>Banda elástica en el arco para un ajuste firme.</li>
-                                    </ul>
-
-                                    {careGuide && (
-                                        <div className="mt-4">
-                                            <div className="flex items-center gap-3 flex-wrap text-2xl mb-2">
-                                                {careGuide.items.map((item) => (
-                                                    <span key={item.label} title={item.label}>{item.icon}</span>
+                            {(productDetails.length > 0 || careGuide) && (
+                                <div className="collapse collapse-plus bg-base-100 border border-base-200 rounded-xl min-w-0">
+                                    <input type="radio" name="product-accordion" onClick={(e) => e.target.blur()} />
+                                    <div className="collapse-title text-sm font-semibold uppercase tracking-wider">
+                                        Detalles del Producto y Cuidados
+                                    </div>
+                                    <div className="collapse-content text-sm text-base-content/80 min-w-0">
+                                        {productDetails.length > 0 && (
+                                            <ul className="list-disc list-inside space-y-1 break-words">
+                                                {productDetails.map((detail) => (
+                                                    <li key={detail.label}>
+                                                        <span className="font-semibold text-base-content">
+                                                            {detail.label}:
+                                                        </span>{' '}
+                                                        <span className="whitespace-pre-line">
+                                                            {detail.value}
+                                                        </span>
+                                                    </li>
                                                 ))}
+                                            </ul>
+                                        )}
+
+                                        {careGuide && (
+                                            <div className={productDetails.length > 0 ? 'mt-4' : ''}>
+                                                <div className="flex items-center gap-3 flex-wrap text-2xl mb-2">
+                                                    {careGuide.items.map((item) => (
+                                                        <span key={item.label} title={item.label}>{item.icon}</span>
+                                                    ))}
+                                                </div>
+                                                <Link
+                                                    to={`/guia-cuidados#${product.product_category}`}
+                                                    className="link link-primary text-sm font-semibold"
+                                                >
+                                                    Ver guía completa de cuidados →
+                                                </Link>
                                             </div>
-                                            <Link
-                                                to={`/guia-cuidados#${product.product_category}`}
-                                                className="link link-primary text-sm font-semibold"
-                                            >
-                                                Ver guía completa de cuidados →
-                                            </Link>
-                                        </div>
-                                    )}
+                                        )}
+                                    </div>
                                 </div>
-                            </div>
+                            )}
 
                             {sizeGuide && (
                                 <div className="collapse collapse-plus bg-base-100 border border-base-200 rounded-xl min-w-0">
