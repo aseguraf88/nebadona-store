@@ -1,3 +1,5 @@
+import { normalizeCategoryKey } from './productTypeOptions.js'
+
 export const SIZE_GUIDES_BY_CATEGORY = {
     camisas: {
         columns: ['Talla', 'Pecho (cm)', 'Largo total (cm)', 'Ancho de hombros (cm)'],
@@ -31,5 +33,16 @@ export const SIZE_GUIDES_BY_CATEGORY = {
     },
 }
 
-export const getSizeGuideByCategory = (category = '') =>
-    SIZE_GUIDES_BY_CATEGORY[category] || null
+// Sinónimos en singular → clave de la guía (mismos que PRODUCT_TYPES_BY_CATEGORY)
+const CATEGORY_ALIASES = {
+    camisa: 'camisas',
+    calceta: 'calcetines',
+    calcetas: 'calcetines',
+    calcetin: 'calcetines',
+    poleron: 'polerones',
+}
+
+export const getSizeGuideByCategory = (category = '') => {
+    const key = normalizeCategoryKey(category)
+    return SIZE_GUIDES_BY_CATEGORY[CATEGORY_ALIASES[key] || key] || null
+}
