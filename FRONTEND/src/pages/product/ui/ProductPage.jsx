@@ -440,7 +440,7 @@ const ProductPage = () => {
                                                 <p className="text-xs uppercase tracking-widest text-primary font-semibold mb-2 px-3">
                                                     Detalles
                                                 </p>
-                                                <div className="overflow-x-auto rounded-box border border-base-content/10">
+                                                <div className="overflow-x-auto rounded-lg border border-base-content/10">
                                                     <table className="table table-sm">
                                                         <tbody>
                                                             {productDetails.map((detail) => (
@@ -460,7 +460,7 @@ const ProductPage = () => {
                                                 <p className="text-xs uppercase tracking-widest text-primary font-semibold mb-2 px-2">
                                                     Cuidados
                                                 </p>
-                                                <div className="overflow-x-auto rounded-box border border-base-content/10">
+                                                <div className="overflow-x-auto rounded-lg border border-base-content/10">
                                                     <table className="table table-xs">
                                                         <tbody>
                                                             {careGuide.items.map((item) => (
@@ -502,7 +502,7 @@ const ProductPage = () => {
                                         Tallas y Medidas
                                     </div>
                                     <div className="collapse-content text-sm text-base-content/80 min-w-0">
-                                        <div className="overflow-x-auto rounded-box border border-base-content/10">
+                                        <div className="overflow-x-auto rounded-lg border border-base-content/10">
                                             <table className="table table-sm">
                                                 <thead>
                                                     <tr className="bg-neutral text-neutral-content">
@@ -567,7 +567,7 @@ const ProductPage = () => {
                                     Detalles de Envío y Entregas
                                 </div>
                                 <div className="collapse-content text-sm text-base-content/80 space-y-4 min-w-0">
-                                    <div className="overflow-x-auto rounded-box border border-base-content/10">
+                                    <div className="overflow-x-auto rounded-lg border border-base-content/10">
                                         <table className="table table-xs">
                                             <tbody>
                                                 {SHIPPING_METHODS.map((method) => (
