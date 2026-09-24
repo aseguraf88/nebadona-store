@@ -470,7 +470,7 @@ como punto de partida, en vez de diseñar a ciegas.
          `ProductAttributesForm.jsx`. Detalle en `CLAUDE.md`.
       3. "Tallas y medidas" — ya no está bloqueado por falta de datos:
          `sizeGuides.js` tiene medidas para calcetines, camisas y
-         polerones. Quedan tres pendientes:
+         polerones. Quedan cuatro pendientes:
          - **Rangos de calcetines**: no se tocan todavía en
            `sizeGuides.js`. Hay que confirmar con el proveedor cómo
            publica las tallas reales (ej. "39-43", "36-39") antes de
@@ -486,6 +486,15 @@ como punto de partida, en vez de diseñar a ciegas.
            polerones en el dashboard. Cuando se agregue un segundo
            polerón que no lo sea, hará falta un atributo real por
            producto (mismo patrón que `sock_type`) para diferenciarlos.
+         - **Tallas elegibles sin fila en la tabla**: `SIZE_OPTIONS`
+           (`productTypeOptions.js`) permite elegir en el dashboard
+           tallas que la tabla de Tallas y Medidas no cubre — camisas:
+           XS y STD; calcetines: XS, XL, XXL y STD (la tabla solo tiene
+           S/M/L); polerones: XXL (la tabla llega hasta XL). El cliente
+           que elige una de esas no encuentra su talla en la tabla, sin
+           explicación. Bloqueado hasta tener las medidas reales de cada
+           una, y qué significa "STD" en cada categoría (puede ser talla
+           única solo para un tipo de producto, no igual en las tres).
          Sigue conectado con la idea de tallas condicionadas por
          categoría/género (en "puede esperar").
 
