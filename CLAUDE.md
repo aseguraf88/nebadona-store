@@ -76,6 +76,23 @@ manual. MercadoPago fue eliminado del código por completo (no reintroducir).
   un `.js` sin JSX, con `createElement`; ejemplo real: `IronIcon` en
   `careGuides.js`). Si se usan directo, `npm run build` no detecta el
   error: solo falla al renderizar.
+- **Estilo de tabla del sitio (receta única, no reinventarla)**:
+  contenedor `overflow-x-auto` + radio + `border border-base-content/10`
+  (mismo tono que el `divider` del footer), y `border-base-content/10` en
+  cada `<tr>` del cuerpo — reemplaza el separador por defecto de DaisyUI
+  (`base-200`, casi invisible sobre blanco) y gana por orden en el CSS,
+  sin `!important`. Sin `table-zebra` ni separadores verticales por
+  defecto. Encabezado oscuro (`bg-neutral text-neutral-content` en el
+  `<tr>` del `<thead>`) solo si la tabla tiene una fila de encabezado
+  real con texto (`/guia-cuidados`, Tallas y Medidas); las tablas sin
+  encabezado (Detalles, Cuidados y Envíos de la ficha) no lo llevan.
+  Radio según dónde vive la tabla: anidada dentro de un acordeón
+  (`rounded-xl`, 12px) → `rounded-lg` (8px), más chico que su contenedor
+  y además igual a `--rounded-btn` del tema, así que no suma un valor
+  nuevo; suelta, no anidada (`/guia-cuidados`) → `rounded-box` (16px).
+  Aplicado en `ProductPage.jsx` y `GuiaCuidados.jsx`. Si la tabla va
+  dentro de un acordeón, sumar también el `min-w-0` en dos niveles de la
+  regla de DaisyUI de más arriba.
 
 ## Sitio en producción
 Desplegado y en vivo — dos dominios con propósitos distintos:

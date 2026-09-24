@@ -344,6 +344,8 @@ como punto de partida, en vez de diseñar a ciegas.
       intento (poner `max-w-md` directo en el `<footer>`) encogió
       también el fondo por error, corregido en la misma sesión.
       Confirmado en desktop y mobile.
+- [x] Año de fundación en el footer corregido: "Estilo urbano desde
+      2019" (antes decía 2020).
 - [x] **Guía de Cuidados migrada de tarjetas a formato tabla** (era una
       mejora futura: el usuario prefería tabla, y se había construido con
       tarjetas por ser más rápido). `/guia-cuidados` ahora muestra una
@@ -355,6 +357,50 @@ como punto de partida, en vez de diseñar a ciegas.
       + `@lucide/lab` (nuevo; el ícono de plancha, `IronIcon`, viene de
       lab y va envuelto en `Icon iconNode={...}`). Confirmado en el
       navegador, desktop y 375px, con las tres categorías.
+- [x] Acordeón "Detalles del Producto y Cuidados" separado en dos
+      subsecciones: subtítulos "Detalles" y "Cuidados" (mismo estilo que
+      la línea de técnica de `/guia-cuidados`, cada uno visible solo si
+      su bloque existe) y una línea divisoria entre ambos, solo cuando
+      hay detalles arriba (hoy en `border-base-content/10`, el mismo tono
+      que los separadores de tabla). Confirmado en el navegador.
+- [x] **Estilo de tabla unificado en todo el sitio** — una sola receta
+      en `/guia-cuidados`, Detalles y Cuidados de la ficha, Tallas y
+      Medidas, y Envíos: contenedor `overflow-x-auto` con borde
+      `border-base-content/10` (mismo tono que el `divider` del footer),
+      separadores de fila en el mismo tono, sin `table-zebra` ni
+      separadores verticales. Encabezado oscuro (`bg-neutral
+      text-neutral-content`) solo en las tablas con fila de encabezado
+      real (`/guia-cuidados` y Tallas y Medidas); las de la ficha sin
+      encabezado usan el subtítulo "Detalles"/"Cuidados" en su lugar. En
+      Tallas y Medidas la columna Talla va en negrita, igual que la
+      columna de etiquetas de las otras tablas, y el fix de `min-w-0` en
+      dos niveles se conservó. Receta documentada en `CLAUDE.md`.
+      Confirmado en el navegador, desktop y 375px.
+- [x] Emoji de categoría (🧦👕🧥) sacado de los títulos de
+      `/guia-cuidados` — los íconos de la tabla ya cumplen esa función.
+      El campo `emoji` de `careGuides.js` quedó sin uso (se dejó a
+      propósito, pendiente de decidir si se borra).
+- [x] **Mini tabla de envíos en la ficha** — el acordeón "Detalles de
+      Envío y Entregas" reemplazó sus 3 emojis sueltos por una mini tabla
+      con las 4 modalidades reales de `/envios-y-entregas` (agencia,
+      express, presencial, retiro), con íconos de `lucide-react`
+      (`Truck`, `Zap`, `Handshake`, `Warehouse`) y el mismo estilo que la
+      de Cuidados. No existe ícono de moto/scooter en `lucide-react` ni
+      en `@lucide/lab`; se eligió `Zap` para "express". Los textos cortos
+      los definió el usuario — no se agregó ninguna condición de tiempos,
+      costos ni garantía. Confirmado en el navegador.
+- [x] Botón "← Volver al producto" en `/guia-cuidados` y
+      `/envios-y-entregas` — solo aparece al llegar desde la ficha
+      (`state` de React Router en los links de origen, sobrevive a F5) y
+      vuelve con `navigate(-1)`. Pasó a `btn-outline btn-primary`; queda
+      distinto a propósito del "Seguir comprando" del checkout, que sigue
+      sin color.
+- [x] **Radio de las tablas anidadas en acordeones** — las 4 tablas de la
+      ficha usaban `rounded-box` (16px) dentro de acordeones `rounded-xl`
+      (12px): la caja de adentro más redondeada que la de afuera. Pasaron
+      a `rounded-lg` (8px, igual a `--rounded-btn` del tema). La tabla de
+      `/guia-cuidados`, que no está anidada, sigue con `rounded-box`.
+      Confirmado en el navegador.
 - [ ] Scroll automático al abrir un acordeón en `ProductPage.jsx` salta
       demasiado lejos (hasta "Explora más diseños") en vez de quedarse
       en la zona de acordeones — el fix liviano (`onClick={(e) =>
@@ -409,20 +455,28 @@ como punto de partida, en vez de diseñar a ciegas.
       entera se oculta si no hay relacionados, en vez de mostrarse vacía.
       Confirmado con productos reales.
 - [ ] **Página de producto — 3 pendientes reales, de tamaño creciente**:
-      1. Sacar el texto de garantía de 30 días de "Envíos y Garantía"
-         (los productos no se pueden cambiar) — pendiente el contenido
-         real de las opciones de envío que reemplazarían ese texto, el
-         usuario tiene que proveerlo.
-      2. "Materiales y Cuidados" editable desde el admin, como lista
-         estructurada (agregar/quitar puntos, no texto libre) — mismo
-         tamaño de trabajo que `sock_type` hoy (frontend + Zod +
-         Mongoose + formulario), pendiente de ver `ProductAttributesForm.jsx`
-         fresco antes de diseñar el campo.
-      3. "Tallas y medidas" — sistema completo por categoría/género
-         (conecta con la idea ya anotada en "puede esperar" sobre tallas
-         condicionadas). El más grande de los tres — bloqueado hasta que
-         el usuario aporte medidas reales de al menos algunos productos;
-         no se puede diseñar sin esos datos.
+      1. ~~Sacar el texto de garantía de 30 días de "Envíos y Garantía"~~
+         — resuelto: el texto ya no existe en el código (búsqueda en
+         `FRONTEND/src` sin resultados), el acordeón se llama "Detalles de
+         Envío y Entregas" y tiene contenido real (mini tabla con las 4
+         modalidades). Si algún día se quiere publicar una política de
+         cambios o devoluciones, es un tema de negocio aparte, no de
+         código.
+      2. ~~"Materiales y Cuidados" editable desde el admin~~ — resuelto
+         en la Fase 2 de Materiales del Producto, con un diseño distinto
+         al pedido original: en vez de una lista dinámica (agregar/quitar
+         puntos), quedaron 4 campos fijos (`material`, `fit_type`,
+         `decoration_technique`, `specifications`) editables desde
+         `ProductAttributesForm.jsx`. Detalle en `CLAUDE.md`.
+      3. "Tallas y medidas" — ya no está bloqueado por falta de datos:
+         `sizeGuides.js` tiene medidas para calcetines, camisas y
+         polerones. Queda una duda sin confirmar, a investigar en un paso
+         aparte: esas tallas podrían no corresponder con el selector de
+         tallas real del dashboard, y "Oversize" (hoy una nota fija para
+         todos los polerones) podría ser un tipo de producto dentro de
+         polerones y no algo que aplique a todos. Sigue conectado con la
+         idea de tallas condicionadas por categoría/género (en "puede
+         esperar").
 
 - [x] **Carruseles del Home sin deslizamiento táctil en mobile** —
       `ProductCarousel.jsx` nunca tuvo scroll real: armaba "páginas"
@@ -447,8 +501,9 @@ como punto de partida, en vez de diseñar a ciegas.
 
 ## ✅ Verificado con evidencia real (sept 2026) — mejor de lo esperado
 
-- [x] CORS: whitelist de un solo origen vía `FRONTEND_URL`, credentials
-      explícito. Sin acción necesaria.
+- [x] CORS: whitelist de orígenes vía `FRONTEND_URL` — hoy una lista
+      separada por comas (ver "Dominio propio `nebadon.cl`" más arriba),
+      credentials explícito. Sin acción necesaria.
 - [x] Rate limiting: ya implementado con `express-rate-limit` (general
       200/15min, auth 10/15min). Sin acción necesaria.
 

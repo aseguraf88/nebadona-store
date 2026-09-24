@@ -3,6 +3,25 @@
 Fecha: 2026-09-23 · Alcance: `FRONTEND/src` (97 archivos `.js`/`.jsx`/`.css`) ·
 Informe de solo lectura: no se modificó ningún archivo de código.
 
+> **Nota de actualización (2026-09-23, después de los pasos 10 a 14):**
+> este informe es un registro del estado al momento de escribirlo; sus
+> tablas y datos no se modificaron. Desde entonces:
+> - Se resolvió parte del hallazgo de íconos y emojis mezclados (punto 3
+>   de la conclusión): en la ficha, los acordeones de Cuidados y Envíos
+>   usan un solo origen, `lucide-react`, y `/guia-cuidados` ya no tiene
+>   emoji en los títulos. `/envios-y-entregas` sigue con emojis en su
+>   lista de modalidades.
+> - Las tablas de la ficha recibieron un radio en el paso 10
+>   (`rounded-box`, 16px), que quedó más redondeado que el acordeón que
+>   las contiene (`rounded-xl`, 12px); en el paso 14 pasaron a
+>   `rounded-lg` (8px), a propósito. Este caso no existía cuando se
+>   escribió el informe.
+> - El botón "Volver al producto" ahora es `btn-outline btn-primary`.
+> - El resto de los hallazgos sigue sin tocar: radio de los botones del
+>   recorrido de compra, íconos duplicados por función, colores del hero,
+>   de la etiqueta de franquicia y de la marquesina,
+>   `data-theme="autumn"`, íconos y emojis del admin, entre otros.
+
 ---
 
 ## 1. Resumen ejecutivo
