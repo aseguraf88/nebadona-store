@@ -29,7 +29,7 @@ export const SIZE_GUIDES_BY_CATEGORY = {
             ['L', '125 - 130', '73', '60', '60'],
             ['XL', '131 - 136', '75', '62', '61'],
         ],
-        note: 'Corte: Oversize — diseñado para un calce holgado y urbano.',
+        note: null,
     },
 }
 

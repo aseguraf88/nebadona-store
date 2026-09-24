@@ -470,13 +470,24 @@ como punto de partida, en vez de diseñar a ciegas.
          `ProductAttributesForm.jsx`. Detalle en `CLAUDE.md`.
       3. "Tallas y medidas" — ya no está bloqueado por falta de datos:
          `sizeGuides.js` tiene medidas para calcetines, camisas y
-         polerones. Queda una duda sin confirmar, a investigar en un paso
-         aparte: esas tallas podrían no corresponder con el selector de
-         tallas real del dashboard, y "Oversize" (hoy una nota fija para
-         todos los polerones) podría ser un tipo de producto dentro de
-         polerones y no algo que aplique a todos. Sigue conectado con la
-         idea de tallas condicionadas por categoría/género (en "puede
-         esperar").
+         polerones. Quedan tres pendientes:
+         - **Rangos de calcetines**: no se tocan todavía en
+           `sizeGuides.js`. Hay que confirmar con el proveedor cómo
+           publica las tallas reales (ej. "39-43", "36-39") antes de
+           cargarlas; hoy la guía usa S/M/L con otros cortes de calzado.
+         - **Calcetines de bebé y niño**: sin cubrir. Tienen rangos
+           propios, distintos de los de adulto; `sizeGuides.js` no tiene
+           nada para eso. Es una categoría de dato nueva, no un ajuste de
+           la existente.
+         - **"Oversize" en polerones**: se sacó la nota fija de
+           `sizeGuides.js` (`note: null`) como parche temporal — hoy
+           coincidía solo porque el único polerón del catálogo es
+           oversize. "Oversize" no es un tipo seleccionable para
+           polerones en el dashboard. Cuando se agregue un segundo
+           polerón que no lo sea, hará falta un atributo real por
+           producto (mismo patrón que `sock_type`) para diferenciarlos.
+         Sigue conectado con la idea de tallas condicionadas por
+         categoría/género (en "puede esperar").
 
 - [x] **Carruseles del Home sin deslizamiento táctil en mobile** —
       `ProductCarousel.jsx` nunca tuvo scroll real: armaba "páginas"
