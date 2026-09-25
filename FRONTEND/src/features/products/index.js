@@ -1,6 +1,5 @@
 export { default as ProductAttributesForm } from './ui/ProductAttributesForm'
 export { default as ProductCreateForm } from './ui/ProductCreateForm'
-export { default as ProductPreviewCard } from './ui/ProductPreviewCard'
 export { default as AddEntityModal } from './ui/modals/AddEntityModal'
 export { default as CatalogManagerModal } from './ui/modals/CatalogManagerModal'
 export { default as ProductImagesModal } from './ui/modals/ProductImagesModal'

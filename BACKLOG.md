@@ -574,11 +574,13 @@ como punto de partida, en vez de diseñar a ciegas.
         `postcss.config.js`), no desde imports directos en `.jsx`, que es
         lo único que depcheck rastrea bien. **No desinstalar nunca** —
         son la base de todo el sistema de estilos del sitio.
-- [ ] Limpieza menor: `ProductPreviewCard.jsx` es código huérfano —
-      confirmado sin consumidores reales (solo se exporta a sí mismo desde
-      el barrel). Probablemente sobrante de la vista previa que se sacó de
-      la vieja `ProductsPage.jsx` cuando armamos `ProductFormPage.jsx`.
-      Borrar junto con `ProductEditModal.jsx` en la próxima limpieza.
+- [x] ~~Limpieza menor: `ProductPreviewCard.jsx` es código huérfano~~ —
+      resuelto: reconfirmado después de Fase 3 (ningún import fuera de su
+      propio export en `features/products/index.js`; además usaba campos
+      que el formulario ya no tiene, `template.color` y `template.colors`).
+      Borrado junto con su export del barrel. `ProductEditModal.jsx` ya no
+      existía: se había borrado en el commit `e895121` (división de
+      `ProductsPage` en rutas separadas), no quedaba nada que limpiar ahí.
 - [ ] `syncCartWithBackend`: un carrito viejo en `localStorage` de antes de
       este cambio (sin `sku`) va a fallar el sync al loguearse. No
       bloqueante mientras el sitio no esté publicado — revisar antes del
