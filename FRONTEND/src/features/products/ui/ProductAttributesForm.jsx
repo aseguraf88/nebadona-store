@@ -1,34 +1,14 @@
-import { useEffect, useRef, useState } from 'react'
-import toast from 'react-hot-toast'
-import { AddEntityModal } from '../../products'
-import { ProductImagesModal } from '../../products'
-import {
-    TbFileDescription,
-    TbPhoto,
-    TbCloudUpload,
-    TbCash,
-    TbBox,
-    TbWand,
-    TbPlus,
-} from 'react-icons/tb'
-
-// Helper simple para autogenerar SKU de variante si se desea
-const generateVariantSku = (handle, size, baseColor, existingSkus = []) => {
-    if (!handle) return ''
-    const sizePart = size ? `-${size.toUpperCase().trim()}` : ''
-    const colorPart = baseColor
-        ? `-${baseColor.substring(0, 3).toUpperCase().trim()}`
-        : ''
-    const base = `${handle.toUpperCase().trim()}${sizePart}${colorPart}`
-
-    if (!existingSkus.includes(base)) return base
-
-    let suffix = 2
-    while (existingSkus.includes(`${base}-${suffix}`)) {
-        suffix += 1
-    }
-    return `${base}-${suffix}`
-}
+import { TbFileDescription, TbPhoto, TbCash, TbBox } from 'react-icons/tb'
+import { useProductAttributes } from '../model/useProductAttributes'
+import BasicInfoFields from './fields/BasicInfoFields'
+import ClassificationFields from './fields/ClassificationFields'
+import PhysicalAttributesFields from './fields/PhysicalAttributesFields'
+import BrandIdentityFields from './fields/BrandIdentityFields'
+import VariantsFields from './fields/VariantsFields'
+import ImagesFields from './fields/ImagesFields'
+import PricingFields from './fields/PricingFields'
+import VisibilityFields from './fields/VisibilityFields'
+import ProductFormModals from './modals/ProductFormModals'
 
 const ProductAttributesForm = ({
     template,
@@ -41,141 +21,12 @@ const ProductAttributesForm = ({
     onCreateTheme,
     onCreateFranchise,
 }) => {
-    const [isThemeModalOpen, setIsThemeModalOpen] = useState(false)
-    const [isFranchiseModalOpen, setIsFranchiseModalOpen] = useState(false)
-    const [isImageModalOpen, setIsImageModalOpen] = useState(false)
-    const [dragIndex, setDragIndex] = useState(null)
-
-    const lastVariantRef = useRef(null)
-    const prevVariantsLength = useRef(template.variants.length)
-
-    useEffect(() => {
-        if (template.variants.length > prevVariantsLength.current) {
-            lastVariantRef.current?.scrollIntoView({
-                behavior: 'smooth',
-                block: 'center',
-            })
-        }
-        prevVariantsLength.current = template.variants.length
-    }, [template.variants.length])
-
-    // LÓGICA DE IMÁGENES
-    const handleImageUpload = (event) => {
-        const files = Array.from(event.target.files || [])
-        if (!files.length) return
-        setTemplate((prev) => ({
-            ...prev,
-            images: [
-                ...prev.images,
-                ...files
-                    .slice(0, Math.max(0, 6 - prev.images.length))
-                    .map((file) => ({
-                        id: crypto.randomUUID(),
-                        src: URL.createObjectURL(file),
-                        file,
-                        isObjectUrl: true,
-                    })),
-            ],
-        }))
-        event.target.value = ''
-    }
-
-    const handleRemoveImage = (id) => {
-        setTemplate((prev) => {
-            const imageToDelete = prev.images.find((image) => image.id === id)
-            if (imageToDelete?.isObjectUrl)
-                URL.revokeObjectURL(imageToDelete.src)
-            return {
-                ...prev,
-                images: prev.images.filter((image) => image.id !== id),
-            }
-        })
-    }
-
-    const handleDropImage = (dropIndex) => {
-        if (dragIndex === null || dragIndex === dropIndex) return
-        setTemplate((prev) => {
-            const reorderedImages = [...prev.images]
-            const [draggedItem] = reorderedImages.splice(dragIndex, 1)
-            reorderedImages.splice(dropIndex, 0, draggedItem)
-            return { ...prev, images: reorderedImages }
-        })
-        setDragIndex(null)
-    }
-
-    const handleSaveTheme = async (newThemeName) => {
-        const result = await onCreateTheme(newThemeName)
-        if (result?.success) {
-            setTemplate((prev) => ({ ...prev, design_theme: newThemeName }))
-        } else {
-            toast.error(result?.message || 'No se pudo crear el tema.')
-        }
-    }
-
-    const handleSaveFranchise = async (newFranchiseName) => {
-        const result = await onCreateFranchise(newFranchiseName)
-        if (result?.success) {
-            setTemplate((prev) => ({
-                ...prev,
-                franchise_name: newFranchiseName,
-            }))
-        } else {
-            toast.error(result?.message || 'No se pudo crear la franquicia.')
-        }
-    }
-
-    // MANEJO DE VARIANTES
-    const handleVariantChange = (index, field, value) => {
-        setTemplate((prev) => {
-            const newVariants = [...prev.variants]
-            newVariants[index] = { ...newVariants[index], [field]: value }
-            // Autogenera el SKU al definir talla o color si la variante no tiene uno
-            if (
-                (field === 'size' || field === 'baseColor') &&
-                !newVariants[index].sku
-            ) {
-                const otherSkus = newVariants
-                    .filter((_, i) => i !== index)
-                    .map((v) => v.sku)
-                    .filter(Boolean)
-                newVariants[index].sku = generateVariantSku(
-                    prev.handle,
-                    newVariants[index].size,
-                    newVariants[index].baseColor,
-                    otherSkus,
-                )
-            }
-            return { ...prev, variants: newVariants }
-        })
-    }
-
-    const addVariant = () => {
-        setTemplate((prev) => ({
-            ...prev,
-            variants: [
-                ...prev.variants,
-                {
-                    sku: '',
-                    size: '',
-                    baseColor: '',
-                    designColors: [],
-                    stock: 0,
-                    price: '',
-                },
-            ],
-        }))
-    }
-
-    const removeVariant = (index) => {
-        if (template.variants.length === 1) return // Obliga a tener al menos 1
-        setTemplate((prev) => {
-            const newVariants = [...prev.variants]
-            newVariants.splice(index, 1)
-            return { ...prev, variants: newVariants }
-        })
-    }
-
-    const hasImages = template.images && template.images.length > 0
+    const attributes = useProductAttributes({
+        template,
+        setTemplate,
+        onCreateTheme,
+        onCreateFranchise,
+    })
 
     return (
         <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-12">
@@ -189,75 +40,10 @@ const ProductAttributesForm = ({
                         </h3>
                     </div>
                     <div className="card-body gap-5 p-6">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <label className="form-control w-full">
-                                <div className="label">
-                                    <span className="label-text font-semibold text-base-content/80">
-                                        Handle (Cód. Agrupador){' '}
-                                        <span className="text-error">*</span>
-                                    </span>
-                                </div>
-                                <input
-                                    type="text"
-                                    className="input input-bordered w-full bg-base-100/50 uppercase font-mono tracking-widest"
-                                    placeholder="Ej. POL-SPI-01"
-                                    value={template.handle}
-                                    onChange={(e) =>
-                                        setTemplate((prev) => ({
-                                            ...prev,
-                                            handle: e.target.value.toUpperCase(),
-                                        }))
-                                    }
-                                />
-                            </label>
-                            <label className="form-control w-full">
-                                <div className="label">
-                                    <span className="label-text font-semibold text-base-content/80">
-                                        Título del Producto{' '}
-                                        <span className="text-error">*</span>
-                                    </span>
-                                </div>
-                                <input
-                                    type="text"
-                                    className="input input-bordered w-full bg-base-100/50"
-                                    placeholder="Ej. Polera de Goku..."
-                                    value={
-                                        template.title === 'Titulo'
-                                            ? ''
-                                            : template.title
-                                    }
-                                    onChange={(e) =>
-                                        setTemplate((prev) => ({
-                                            ...prev,
-                                            title: e.target.value,
-                                        }))
-                                    }
-                                />
-                            </label>
-                        </div>
-                        <label className="form-control w-full">
-                            <div className="label">
-                                <span className="label-text font-semibold text-base-content/80">
-                                    Descripción
-                                </span>
-                            </div>
-                            <textarea
-                                className="textarea textarea-bordered h-24 bg-base-100/50"
-                                placeholder="Añade detalles, medidas..."
-                                value={
-                                    template.description ===
-                                    'Producto editable desde dashboard. Descripcion base para crear o editar productos sin bloquear el guardado.'
-                                        ? ''
-                                        : template.description
-                                }
-                                onChange={(e) =>
-                                    setTemplate((prev) => ({
-                                        ...prev,
-                                        description: e.target.value,
-                                    }))
-                                }
-                            />
-                        </label>
+                        <BasicInfoFields
+                            template={template}
+                            setTemplate={setTemplate}
+                        />
                     </div>
                 </section>
 
@@ -270,9 +56,11 @@ const ProductAttributesForm = ({
                                 Imágenes
                             </h3>
                         </div>
-                        {hasImages && (
+                        {attributes.hasImages && (
                             <button
-                                onClick={() => setIsImageModalOpen(true)}
+                                onClick={() =>
+                                    attributes.setIsImageModalOpen(true)
+                                }
                                 className="btn btn-xs btn-outline btn-primary"
                             >
                                 Editar Galería
@@ -280,35 +68,13 @@ const ProductAttributesForm = ({
                         )}
                     </div>
                     <div className="card-body p-6">
-                        {!hasImages ? (
-                            <div
-                                onClick={() => setIsImageModalOpen(true)}
-                                className="w-full border-2 border-dashed border-base-300 rounded-xl p-8 flex flex-col items-center cursor-pointer bg-base-200/20 hover:bg-base-200/50"
-                            >
-                                <TbCloudUpload className="text-4xl text-primary mb-2" />
-                                <span className="font-bold text-base-content">
-                                    Abrir galería
-                                </span>
-                            </div>
-                        ) : (
-                            <div
-                                onClick={() => setIsImageModalOpen(true)}
-                                className="grid grid-cols-3 sm:grid-cols-6 gap-3 cursor-pointer group relative"
-                            >
-                                {template.images.map((img, index) => (
-                                    <div
-                                        key={img.id}
-                                        className="aspect-square rounded-lg border border-base-200 overflow-hidden relative bg-base-200"
-                                    >
-                                        <img
-                                            src={img.src}
-                                            alt={`Prod ${index}`}
-                                            className="w-full h-full object-cover"
-                                        />
-                                    </div>
-                                ))}
-                            </div>
-                        )}
+                        <ImagesFields
+                            template={template}
+                            hasImages={attributes.hasImages}
+                            onOpenGallery={() =>
+                                attributes.setIsImageModalOpen(true)
+                            }
+                        />
                     </div>
                 </section>
 
@@ -321,65 +87,10 @@ const ProductAttributesForm = ({
                         </h3>
                     </div>
                     <div className="card-body gap-4 p-6 grid grid-cols-1 sm:grid-cols-3">
-                        <label className="form-control w-full">
-                            <div className="label">
-                                <span className="label-text font-semibold">
-                                    Precio Base ($){' '}
-                                    <span className="text-error">*</span>
-                                </span>
-                            </div>
-                            <input
-                                type="number"
-                                className="input input-bordered w-full font-bold text-base-content"
-                                value={
-                                    template.price === '0000'
-                                        ? ''
-                                        : template.price
-                                }
-                                onChange={(e) =>
-                                    setTemplate((prev) => ({
-                                        ...prev,
-                                        price: e.target.value,
-                                    }))
-                                }
-                            />
-                        </label>
-                        <label className="form-control w-full">
-                            <div className="label">
-                                <span className="label-text font-semibold">
-                                    Precio Oferta ($)
-                                </span>
-                            </div>
-                            <input
-                                type="number"
-                                className="input input-bordered w-full text-error"
-                                value={template.compareAtPrice}
-                                onChange={(e) =>
-                                    setTemplate((prev) => ({
-                                        ...prev,
-                                        compareAtPrice: e.target.value,
-                                    }))
-                                }
-                            />
-                        </label>
-                        <label className="form-control w-full">
-                            <div className="label">
-                                <span className="label-text font-semibold">
-                                    Costo Bodega ($)
-                                </span>
-                            </div>
-                            <input
-                                type="number"
-                                className="input input-bordered w-full text-success"
-                                value={template.cost_price}
-                                onChange={(e) =>
-                                    setTemplate((prev) => ({
-                                        ...prev,
-                                        cost_price: e.target.value,
-                                    }))
-                                }
-                            />
-                        </label>
+                        <PricingFields
+                            template={template}
+                            setTemplate={setTemplate}
+                        />
                     </div>
                 </section>
 
@@ -394,344 +105,21 @@ const ProductAttributesForm = ({
                         </div>
                         <button
                             type="button"
-                            onClick={addVariant}
+                            onClick={attributes.addVariant}
                             className="btn btn-sm btn-primary btn-outline"
                         >
                             + Agregar Variante
                         </button>
                     </div>
 
-                    {/* TABLA — solo desktop/tablet, sin cambios respecto a la de siempre */}
-                    <div className="card-body p-0 overflow-x-auto hidden md:block">
-                        <table className="table table-sm w-full">
-                            <thead className="bg-base-200/50">
-                                <tr>
-                                    <th>SKU</th>
-                                    <th>Talla</th>
-                                    <th>Color Base</th>
-                                    <th>Diseño (Separar por coma)</th>
-                                    <th className="w-20">Stock</th>
-                                    <th className="w-10"></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {template.variants.map((v, idx) => (
-                                    <tr key={idx}>
-                                        <td>
-                                            <div className="flex items-center gap-1">
-                                                <input
-                                                    type="text"
-                                                    className="input input-sm input-bordered w-full font-mono uppercase"
-                                                    value={v.sku}
-                                                    onChange={(e) =>
-                                                        handleVariantChange(
-                                                            idx,
-                                                            'sku',
-                                                            e.target.value.toUpperCase(),
-                                                        )
-                                                    }
-                                                    placeholder="SKU"
-                                                />
-                                                <button
-                                                    type="button"
-                                                    className="btn btn-xs btn-ghost text-primary"
-                                                    title="Autogenerar SKU"
-                                                    onClick={() => {
-                                                        const otherSkus =
-                                                            template.variants
-                                                                .filter(
-                                                                    (_, i) =>
-                                                                        i !==
-                                                                        idx,
-                                                                )
-                                                                .map(
-                                                                    (variant) =>
-                                                                        variant.sku,
-                                                                )
-                                                                .filter(Boolean)
-                                                        handleVariantChange(
-                                                            idx,
-                                                            'sku',
-                                                            generateVariantSku(
-                                                                template.handle,
-                                                                v.size,
-                                                                v.baseColor,
-                                                                otherSkus,
-                                                            ),
-                                                        )
-                                                    }}
-                                                >
-                                                    <TbWand />
-                                                </button>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <select
-                                                className="select select-xs select-bordered w-full"
-                                                value={v.size}
-                                                onChange={(e) =>
-                                                    handleVariantChange(
-                                                        idx,
-                                                        'size',
-                                                        e.target.value,
-                                                    )
-                                                }
-                                            >
-                                                <option value="">N/A</option>
-                                                {sizeOptions?.map((opt) => (
-                                                    <option
-                                                        key={opt}
-                                                        value={opt}
-                                                    >
-                                                        {opt}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        </td>
-                                        <td>
-                                            <input
-                                                type="text"
-                                                className="input input-xs input-bordered w-24 lowercase"
-                                                value={v.baseColor}
-                                                onChange={(e) =>
-                                                    handleVariantChange(
-                                                        idx,
-                                                        'baseColor',
-                                                        e.target.value,
-                                                    )
-                                                }
-                                                placeholder="Ej. azul"
-                                            />
-                                        </td>
-                                        <td>
-                                            <input
-                                                type="text"
-                                                className="input input-xs input-bordered w-full lowercase"
-                                                value={
-                                                    Array.isArray(
-                                                        v.designColors,
-                                                    )
-                                                        ? v.designColors.join(
-                                                              ',',
-                                                          )
-                                                        : ''
-                                                }
-                                                onChange={(e) =>
-                                                    handleVariantChange(
-                                                        idx,
-                                                        'designColors',
-                                                        e.target.value.split(
-                                                            ',',
-                                                        ),
-                                                    )
-                                                }
-                                                placeholder="Ej. rojo, blanco"
-                                            />
-                                        </td>
-                                        <td>
-                                            <input
-                                                type="number"
-                                                className="input input-xs input-bordered w-20 font-bold"
-                                                value={v.stock}
-                                                onChange={(e) =>
-                                                    handleVariantChange(
-                                                        idx,
-                                                        'stock',
-                                                        e.target.value,
-                                                    )
-                                                }
-                                                onFocus={(e) =>
-                                                    e.target.select()
-                                                }
-                                                onBlur={(e) =>
-                                                    handleVariantChange(
-                                                        idx,
-                                                        'stock',
-                                                        Number(
-                                                            e.target.value,
-                                                        ) || 0,
-                                                    )
-                                                }
-                                                min="0"
-                                            />
-                                        </td>
-                                        <td>
-                                            <button
-                                                type="button"
-                                                className="btn btn-xs btn-circle btn-ghost text-error"
-                                                onClick={() =>
-                                                    removeVariant(idx)
-                                                }
-                                                disabled={
-                                                    template.variants.length ===
-                                                    1
-                                                }
-                                            >
-                                                ✕
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    {/* TARJETAS — solo mobile, una por variante */}
-                    <div className="md:hidden flex flex-col gap-3 p-4">
-                        {template.variants.map((v, idx) => (
-                            <div
-                                key={idx}
-                                ref={
-                                    idx === template.variants.length - 1
-                                        ? lastVariantRef
-                                        : null
-                                }
-                                className="border border-base-200 rounded-xl p-3 flex flex-col gap-3 relative bg-base-100"
-                            >
-                                <button
-                                    type="button"
-                                    className="btn btn-xs btn-circle btn-ghost text-error absolute top-2 right-2"
-                                    onClick={() => removeVariant(idx)}
-                                    disabled={template.variants.length === 1}
-                                >
-                                    ✕
-                                </button>
-
-                                <div className="flex items-center gap-1 pr-8">
-                                    <input
-                                        type="text"
-                                        className="input input-sm input-bordered w-full font-mono uppercase"
-                                        value={v.sku}
-                                        onChange={(e) =>
-                                            handleVariantChange(
-                                                idx,
-                                                'sku',
-                                                e.target.value.toUpperCase(),
-                                            )
-                                        }
-                                        placeholder="SKU"
-                                    />
-                                    <button
-                                        type="button"
-                                        className="btn btn-sm btn-ghost text-primary"
-                                        title="Autogenerar SKU"
-                                        onClick={() => {
-                                            const otherSkus = template.variants
-                                                .filter((_, i) => i !== idx)
-                                                .map((variant) => variant.sku)
-                                                .filter(Boolean)
-                                            handleVariantChange(
-                                                idx,
-                                                'sku',
-                                                generateVariantSku(
-                                                    template.handle,
-                                                    v.size,
-                                                    v.baseColor,
-                                                    otherSkus,
-                                                ),
-                                            )
-                                        }}
-                                    >
-                                        <TbWand />
-                                    </button>
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-3">
-                                    <label className="form-control w-full">
-                                        <span className="label-text text-xs font-semibold text-base-content/60 mb-1">
-                                            Talla
-                                        </span>
-                                        <select
-                                            className="select select-sm select-bordered w-full"
-                                            value={v.size}
-                                            onChange={(e) =>
-                                                handleVariantChange(
-                                                    idx,
-                                                    'size',
-                                                    e.target.value,
-                                                )
-                                            }
-                                        >
-                                            <option value="">N/A</option>
-                                            {sizeOptions?.map((opt) => (
-                                                <option key={opt} value={opt}>
-                                                    {opt}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </label>
-                                    <label className="form-control w-full">
-                                        <span className="label-text text-xs font-semibold text-base-content/60 mb-1">
-                                            Color Base
-                                        </span>
-                                        <input
-                                            type="text"
-                                            className="input input-sm input-bordered w-full lowercase"
-                                            value={v.baseColor}
-                                            onChange={(e) =>
-                                                handleVariantChange(
-                                                    idx,
-                                                    'baseColor',
-                                                    e.target.value,
-                                                )
-                                            }
-                                            placeholder="Ej. azul"
-                                        />
-                                    </label>
-                                </div>
-
-                                <label className="form-control w-full">
-                                    <span className="label-text text-xs font-semibold text-base-content/60 mb-1">
-                                        Diseño (separar por coma)
-                                    </span>
-                                    <input
-                                        type="text"
-                                        className="input input-sm input-bordered w-full lowercase"
-                                        value={
-                                            Array.isArray(v.designColors)
-                                                ? v.designColors.join(',')
-                                                : ''
-                                        }
-                                        onChange={(e) =>
-                                            handleVariantChange(
-                                                idx,
-                                                'designColors',
-                                                e.target.value.split(','),
-                                            )
-                                        }
-                                        placeholder="Ej. rojo, blanco"
-                                    />
-                                </label>
-
-                                <label className="form-control w-full">
-                                    <span className="label-text text-xs font-semibold text-base-content/60 mb-1">
-                                        Stock
-                                    </span>
-                                    <input
-                                        type="number"
-                                        className="input input-sm input-bordered w-full font-bold"
-                                        value={v.stock}
-                                        onChange={(e) =>
-                                            handleVariantChange(
-                                                idx,
-                                                'stock',
-                                                e.target.value,
-                                            )
-                                        }
-                                        onFocus={(e) => e.target.select()}
-                                        onBlur={(e) =>
-                                            handleVariantChange(
-                                                idx,
-                                                'stock',
-                                                Number(e.target.value) || 0,
-                                            )
-                                        }
-                                        min="0"
-                                    />
-                                </label>
-                            </div>
-                        ))}
-                    </div>
+                    <VariantsFields
+                        template={template}
+                        sizeOptions={sizeOptions}
+                        handleVariantChange={attributes.handleVariantChange}
+                        removeVariant={attributes.removeVariant}
+                        autoGenerateSku={attributes.autoGenerateSku}
+                        lastVariantRef={attributes.lastVariantRef}
+                    />
                 </section>
             </div>
 
@@ -745,61 +133,10 @@ const ProductAttributesForm = ({
                         </h3>
                     </div>
                     <div className="card-body gap-4 p-6">
-                        <label className="form-control w-full mb-2">
-                            <div className="label">
-                                <span className="label-text font-semibold">
-                                    Estado de Publicación
-                                </span>
-                            </div>
-                            <select
-                                className={`select select-bordered w-full font-bold ${template.status === 'PUBLISHED' ? 'text-success' : 'text-warning'}`}
-                                value={template.status}
-                                onChange={(e) =>
-                                    setTemplate((prev) => ({
-                                        ...prev,
-                                        status: e.target.value,
-                                    }))
-                                }
-                            >
-                                <option value="DRAFT">Borrador (Oculto)</option>
-                                <option value="PUBLISHED">
-                                    Publicado (Visible)
-                                </option>
-                            </select>
-                        </label>
-
-                        <label className="flex cursor-pointer items-center justify-between gap-3 border-t border-base-200 pt-4">
-                            <span className="label-text font-medium text-base-content/80">
-                                Destacado
-                            </span>
-                            <input
-                                type="checkbox"
-                                className="toggle toggle-primary toggle-sm"
-                                checked={Boolean(template.featured)}
-                                onChange={(e) =>
-                                    setTemplate((prev) => ({
-                                        ...prev,
-                                        featured: e.target.checked,
-                                    }))
-                                }
-                            />
-                        </label>
-                        <label className="flex cursor-pointer items-center justify-between gap-3">
-                            <span className="label-text font-medium text-base-content/80">
-                                Popular
-                            </span>
-                            <input
-                                type="checkbox"
-                                className="toggle toggle-primary toggle-sm"
-                                checked={Boolean(template.popular)}
-                                onChange={(e) =>
-                                    setTemplate((prev) => ({
-                                        ...prev,
-                                        popular: e.target.checked,
-                                    }))
-                                }
-                            />
-                        </label>
+                        <VisibilityFields
+                            template={template}
+                            setTemplate={setTemplate}
+                        />
                     </div>
                 </section>
 
@@ -811,315 +148,41 @@ const ProductAttributesForm = ({
                         </h3>
                     </div>
                     <div className="card-body gap-4 p-6">
-                        <label className="form-control w-full">
-                            <div className="label">
-                                <span className="label-text font-semibold">
-                                    Categoría{' '}
-                                    <span className="text-error">*</span>
-                                </span>
-                            </div>
-                            <select
-                                className="select select-bordered w-full bg-base-100"
-                                value={
-                                    template.product_category?.toLowerCase() ||
-                                    ''
-                                }
-                                onChange={(e) =>
-                                    setTemplate((prev) => ({
-                                        ...prev,
-                                        product_category:
-                                            e.target.value.toLowerCase(),
-                                        sock_type: '', // Resetea el tipo si cambia la categoría
-                                    }))
-                                }
-                            >
-                                <option value="">Selecciona...</option>
-                                {productCategories?.map((item) => (
-                                    <option
-                                        key={item._id}
-                                        value={item.name.toLowerCase()}
-                                    >
-                                        {item.name}
-                                    </option>
-                                ))}
-                            </select>
-                        </label>
-
-                        {/* --- AQUÍ VOLVIÓ EL TIPO --- */}
-                        <label className="form-control w-full animate-fadeIn">
-                            <div className="label">
-                                <span className="label-text font-semibold text-base-content/80">
-                                    Tipo
-                                </span>
-                            </div>
-                            <select
-                                className="select select-bordered w-full bg-base-100"
-                                value={template.sock_type}
-                                onChange={(e) =>
-                                    setTemplate((prev) => ({
-                                        ...prev,
-                                        sock_type: e.target.value,
-                                    }))
-                                }
-                                disabled={!template.product_category}
-                            >
-                                <option value="">
-                                    {template.product_category
-                                        ? 'Selecciona tipo...'
-                                        : 'Requiere categoría'}
-                                </option>
-                                {currentProductTypeOptions?.map((option) => (
-                                    <option key={option} value={option}>
-                                        {option}
-                                    </option>
-                                ))}
-                            </select>
-                        </label>
-                        {/* --------------------------- */}
-
-                        <label className="form-control w-full">
-                            <div className="label">
-                                <span className="label-text font-semibold">
-                                    Género
-                                </span>
-                            </div>
-                            <select
-                                className="select select-bordered w-full bg-base-100"
-                                value={template.gender}
-                                onChange={(e) =>
-                                    setTemplate((prev) => ({
-                                        ...prev,
-                                        gender: e.target.value,
-                                    }))
-                                }
-                            >
-                                <option value="unisex">Unisex</option>
-                                <option value="men">Hombre</option>
-                                <option value="women">Mujer</option>
-                                <option value="kids">Niños</option>
-                            </select>
-                        </label>
-                        <label className="form-control w-full">
-                            <div className="label">
-                                <span className="label-text font-semibold">
-                                    Material
-                                </span>
-                            </div>
-                            <input
-                                type="text"
-                                className="input input-bordered w-full"
-                                placeholder="Ej. Algodón"
-                                value={template.material || ''}
-                                onChange={(e) =>
-                                    setTemplate((prev) => ({
-                                        ...prev,
-                                        material: e.target.value,
-                                    }))
-                                }
-                            />
-                        </label>
-                        <label className="form-control w-full">
-                            <div className="label">
-                                <span className="label-text font-semibold">
-                                    Tipo de Calce
-                                </span>
-                            </div>
-                            <input
-                                type="text"
-                                className="input input-bordered w-full"
-                                placeholder="Ej. Regular, Oversize"
-                                value={template.fit_type || ''}
-                                onChange={(e) =>
-                                    setTemplate((prev) => ({
-                                        ...prev,
-                                        fit_type: e.target.value,
-                                    }))
-                                }
-                            />
-                        </label>
-                        <label className="form-control w-full">
-                            <div className="label">
-                                <span className="label-text font-semibold">
-                                    Técnica de Decoración
-                                </span>
-                            </div>
-                            <input
-                                type="text"
-                                className="input input-bordered w-full"
-                                placeholder="Ej. Bordado, Estampado"
-                                value={template.decoration_technique || ''}
-                                onChange={(e) =>
-                                    setTemplate((prev) => ({
-                                        ...prev,
-                                        decoration_technique: e.target.value,
-                                    }))
-                                }
-                            />
-                        </label>
-                        <label className="form-control w-full">
-                            <div className="label">
-                                <span className="label-text font-semibold">
-                                    Especificaciones
-                                </span>
-                            </div>
-                            <textarea
-                                className="textarea textarea-bordered h-20 w-full"
-                                placeholder="Ej. Cuello redondo, puños elasticados, bolsillo canguro"
-                                maxLength={500}
-                                value={template.specifications || ''}
-                                onChange={(e) =>
-                                    setTemplate((prev) => ({
-                                        ...prev,
-                                        specifications: e.target.value,
-                                    }))
-                                }
-                            />
-                        </label>
+                        <ClassificationFields
+                            template={template}
+                            setTemplate={setTemplate}
+                            productCategories={productCategories}
+                            currentProductTypeOptions={
+                                currentProductTypeOptions
+                            }
+                        />
+                        <PhysicalAttributesFields
+                            template={template}
+                            setTemplate={setTemplate}
+                        />
                         <div className="divider my-0"></div>
 
-                        <label className="form-control w-full">
-                            <div className="label w-full flex justify-between items-center pr-1">
-                                <span className="label-text font-semibold">
-                                    Franquicia
-                                </span>
-                                <button
-                                    type="button"
-                                    className="btn btn-xs btn-circle btn-ghost text-primary"
-                                    onClick={() =>
-                                        setIsFranchiseModalOpen(true)
-                                    }
-                                >
-                                    <TbPlus />
-                                </button>
-                            </div>
-                            <select
-                                className="select select-bordered w-full"
-                                value={
-                                    template.franchise_name?.toLowerCase() || ''
-                                }
-                                onChange={(e) =>
-                                    setTemplate((prev) => ({
-                                        ...prev,
-                                        franchise_name:
-                                            e.target.value.toLowerCase(),
-                                    }))
-                                }
-                            >
-                                <option value="">Opcional...</option>
-                                {franchiseNames?.map((item) => (
-                                    <option
-                                        key={item._id}
-                                        value={item.name.toLowerCase()}
-                                    >
-                                        {item.name}
-                                    </option>
-                                ))}
-                            </select>
-                        </label>
-                        <label className="form-control w-full">
-                            <div className="label">
-                                <span className="label-text font-semibold">
-                                    Personaje
-                                </span>
-                            </div>
-                            <input
-                                type="text"
-                                className="input input-bordered w-full"
-                                placeholder="Ej. Goku..."
-                                value={template.character_name || ''}
-                                onChange={(e) =>
-                                    setTemplate((prev) => ({
-                                        ...prev,
-                                        character_name: e.target.value,
-                                    }))
-                                }
-                                disabled={!template.franchise_name}
-                            />
-                        </label>
-                        <label className="form-control w-full">
-                            <div className="label w-full flex justify-between items-center pr-1">
-                                <span className="label-text font-semibold">
-                                    Tema
-                                </span>
-                                <button
-                                    type="button"
-                                    className="btn btn-xs btn-circle btn-ghost text-primary"
-                                    onClick={() => setIsThemeModalOpen(true)}
-                                >
-                                    <TbPlus />
-                                </button>
-                            </div>
-                            <select
-                                className="select select-bordered w-full"
-                                value={
-                                    template.design_theme?.toLowerCase() || ''
-                                }
-                                onChange={(e) =>
-                                    setTemplate((prev) => ({
-                                        ...prev,
-                                        design_theme:
-                                            e.target.value.toLowerCase(),
-                                    }))
-                                }
-                            >
-                                <option value="">Opcional...</option>
-                                {designThemes?.map((item) => (
-                                    <option
-                                        key={item._id}
-                                        value={item.name.toLowerCase()}
-                                    >
-                                        {item.name}
-                                    </option>
-                                ))}
-                            </select>
-                        </label>
-                        <label className="form-control w-full">
-                            <div className="label">
-                                <span className="label-text font-semibold">
-                                    Etiquetas (Tags)
-                                </span>
-                            </div>
-                            <input
-                                type="text"
-                                className="input input-bordered w-full"
-                                placeholder="Ej: anime, regalo..."
-                                value={template.tags}
-                                onChange={(e) =>
-                                    setTemplate((prev) => ({
-                                        ...prev,
-                                        tags: e.target.value,
-                                    }))
-                                }
-                            />
-                        </label>
+                        <BrandIdentityFields
+                            template={template}
+                            setTemplate={setTemplate}
+                            franchiseNames={franchiseNames}
+                            designThemes={designThemes}
+                            onOpenFranchiseModal={() =>
+                                attributes.setIsFranchiseModalOpen(true)
+                            }
+                            onOpenThemeModal={() =>
+                                attributes.setIsThemeModalOpen(true)
+                            }
+                        />
                     </div>
                 </section>
             </div>
 
             {/* MODALES MANTENIDOS INTACTOS */}
-            <AddEntityModal
-                isOpen={isThemeModalOpen}
-                onClose={() => setIsThemeModalOpen(false)}
-                onSave={handleSaveTheme}
-                title="Agregar Tema"
-                placeholder="Ej: Steampunk..."
-            />
-            <AddEntityModal
-                isOpen={isFranchiseModalOpen}
-                onClose={() => setIsFranchiseModalOpen(false)}
-                onSave={handleSaveFranchise}
-                title="Agregar Franquicia"
-                placeholder="Ej: Marvel..."
-            />
-            <ProductImagesModal
-                open={isImageModalOpen}
+            <ProductFormModals
+                attributes={attributes}
                 template={template}
                 setTemplate={setTemplate}
-                setDragIndex={setDragIndex}
-                handleDropImage={handleDropImage}
-                handleImageUpload={handleImageUpload}
-                handleRemoveImage={handleRemoveImage}
-                onClose={() => setIsImageModalOpen(false)}
             />
         </div>
     )
