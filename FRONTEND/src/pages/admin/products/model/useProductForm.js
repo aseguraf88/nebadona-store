@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { useProduct } from '../../../../entities/product'
 import { getProductTypesByCategory } from '../../../../entities/product'
@@ -134,9 +134,16 @@ const mapProductToTemplate = (product) => ({
 export function useProductForm() {
     const { id } = useParams()
     const navigate = useNavigate()
-    const { products, productsLoading, createProduct, updateProduct } =
-        useProduct()
+    const location = useLocation()
+    const {
+        products,
+        productsLoading,
+        productCategories,
+        createProduct,
+        updateProduct,
+    } = useProduct()
     const isEditMode = Boolean(id)
+    const stateCategory = location.state?.product_category
 
     const [template, setTemplate] = useState(EMPTY_TEMPLATE)
     const [savedTemplate, setSavedTemplate] = useState(EMPTY_TEMPLATE)
@@ -146,7 +153,16 @@ export function useProductForm() {
 
     useEffect(() => {
         if (!isEditMode) {
-            setTemplate(EMPTY_TEMPLATE)
+            // Categoría elegida en el modal "Nuevo producto"; se ignora si
+            // no existe entre las categorías reales.
+            const isValidCategory = productCategories.some(
+                (item) => item.name.toLowerCase() === stateCategory,
+            )
+            setTemplate(
+                isValidCategory
+                    ? { ...EMPTY_TEMPLATE, product_category: stateCategory }
+                    : EMPTY_TEMPLATE,
+            )
             setSavedTemplate(EMPTY_TEMPLATE)
             setNotFound(false)
             return
@@ -165,7 +181,14 @@ export function useProductForm() {
         setTemplate(mapped)
         setSavedTemplate(mapped)
         setNotFound(false)
-    }, [id, isEditMode, products, productsLoading])
+    }, [
+        id,
+        isEditMode,
+        products,
+        productsLoading,
+        productCategories,
+        stateCategory,
+    ])
 
     const hasUnsavedChanges =
         JSON.stringify(normalizeTemplate(template)) !==

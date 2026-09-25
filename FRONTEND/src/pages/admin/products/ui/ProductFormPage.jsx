@@ -1,7 +1,10 @@
 import { Link } from 'react-router-dom'
 import { useProduct } from '../../../../entities/product'
 import { SIZE_OPTIONS } from '../../../../entities/product'
-import { ProductAttributesForm } from '../../../../features/products'
+import {
+    ProductAttributesForm,
+    ProductCreateForm,
+} from '../../../../features/products'
 import { ConfirmationModal } from '../../../../shared/ui'
 import { useProductForm } from '../model/useProductForm'
 
@@ -28,6 +31,20 @@ const ProductFormPage = () => {
         currentProductTypeOptions,
         handleConfirmSave,
     } = useProductForm()
+
+    // Mismas props para los dos formularios: edición en dos columnas,
+    // creación en acordeones.
+    const formProps = {
+        template,
+        setTemplate,
+        productCategories,
+        designThemes,
+        franchiseNames,
+        currentProductTypeOptions,
+        sizeOptions: SIZE_OPTIONS,
+        onCreateTheme: createDesignTheme,
+        onCreateFranchise: createFranchiseName,
+    }
 
     if (isLoadingProduct) {
         return (
@@ -90,17 +107,11 @@ const ProductFormPage = () => {
                         </h2>
                     </div>
 
-                    <ProductAttributesForm
-                        template={template}
-                        setTemplate={setTemplate}
-                        productCategories={productCategories}
-                        designThemes={designThemes}
-                        franchiseNames={franchiseNames}
-                        currentProductTypeOptions={currentProductTypeOptions}
-                        sizeOptions={SIZE_OPTIONS}
-                        onCreateTheme={createDesignTheme}
-                        onCreateFranchise={createFranchiseName}
-                    />
+                    {isEditMode ? (
+                        <ProductAttributesForm {...formProps} />
+                    ) : (
+                        <ProductCreateForm {...formProps} />
+                    )}
                 </div>
             </section>
 
