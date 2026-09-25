@@ -603,6 +603,22 @@ como punto de partida, en vez de diseñar a ciegas.
       implícita no se achica). No bloqueante — es un aviso informativo,
       no impide usar el sistema. Retomar con más tiempo si molesta.
 
+## 🟡 Nuevo, encontrado durante Fase 3 (formulario de producto)
+
+- [ ] **Handle sin validar en el frontend**: "Handle (Cód. Agrupador)"
+      lleva asterisco de obligatorio en `ProductAttributesForm.jsx` (vía
+      `BasicInfoFields.jsx`, así que también en `ProductCreateForm.jsx`),
+      pero `isFormValid` en `useProductForm.js` no lo exige — solo pide
+      título, precio y categoría. El backend sí (mínimo 3 caracteres,
+      `productSchema.js`). Hoy el botón Guardar se habilita con Handle
+      vacío o muy corto, y recién el backend lo rechaza.
+- [ ] **Mensajes de error del backend, genéricos**: cuando Zod rechaza el
+      guardado, el mensaje que llega al frontend no dice qué campo falló
+      (ej. "Too small: expected string to have >=3 characters", sin
+      aclarar si es Handle, SKU u otro). Confirmado en una prueba real de
+      Fase 3: el campo que faltaba era Stock, no Handle, y el mensaje no
+      ayudó a encontrarlo rápido.
+
 ## ❓ Pregunta abierta, sin resolver
 
 - Se mencionó una idea sobre que los badges de variante (o los de
