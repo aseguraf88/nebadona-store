@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { useProduct } from '../../../../entities/product'
+import { NewProductCategoryModal } from '../../../../features/products'
 import { ConfirmationModal } from '../../../../shared/ui'
 
 const STATUS_FILTERS = [
@@ -22,17 +23,20 @@ const totalStockOf = (product) =>
         : 0
 
 const ProductsListPage = () => {
+    const navigate = useNavigate()
     const {
         products,
         productsLoading,
         searchQuery,
         setSearchQuery,
         deleteProduct,
+        productCategories,
     } = useProduct()
 
     const [statusFilter, setStatusFilter] = useState('all')
     const [deleteTarget, setDeleteTarget] = useState(null)
     const [isDeleting, setIsDeleting] = useState(false)
+    const [isNewProductModalOpen, setIsNewProductModalOpen] = useState(false)
 
     const visibleProducts = useMemo(() => {
         const query = (searchQuery || '').trim().toLowerCase()
@@ -57,6 +61,12 @@ const ProductsListPage = () => {
         }
     }
 
+    const handleContinueNewProduct = (category) => {
+        navigate('/admin/dashboard/products/nuevo', {
+            state: { product_category: category },
+        })
+    }
+
     return (
         <div className="flex w-full flex-col gap-6 pb-12">
             <section className="card w-full bg-base-100 shadow-xl border border-base-200">
@@ -78,12 +88,13 @@ const ProductsListPage = () => {
                         >
                             📦 Inventario (CSV)
                         </Link>
-                        <Link
-                            to="/admin/dashboard/products/nuevo"
+                        <button
+                            type="button"
                             className="btn btn-sm btn-primary"
+                            onClick={() => setIsNewProductModalOpen(true)}
                         >
                             ➕ Nuevo producto
-                        </Link>
+                        </button>
                     </div>
                 </div>
 
@@ -269,6 +280,13 @@ const ProductsListPage = () => {
                 confirmLabel="Eliminar"
                 cancelLabel="Cancelar"
                 confirmButtonClass="btn btn-error"
+            />
+
+            <NewProductCategoryModal
+                isOpen={isNewProductModalOpen}
+                onClose={() => setIsNewProductModalOpen(false)}
+                categories={productCategories}
+                onContinue={handleContinueNewProduct}
             />
         </div>
     )
