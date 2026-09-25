@@ -24,6 +24,7 @@ export const EMPTY_TEMPLATE = {
     fit_type: '',
     specifications: '',
     decoration_technique: '',
+    size_standard: '',
     franchise_name: '',
     character_name: '',
     design_theme: '',
@@ -59,6 +60,7 @@ const normalizeTemplate = (value) => ({
     fit_type: value.fit_type || '',
     specifications: value.specifications || '',
     decoration_technique: value.decoration_technique || '',
+    size_standard: value.size_standard || '',
     franchise_name: value.franchise_name || '',
     character_name: value.character_name || '',
     design_theme: value.design_theme || '',
@@ -89,6 +91,7 @@ const mapProductToTemplate = (product) => ({
     fit_type: product?.fit_type || '',
     specifications: product?.specifications || '',
     decoration_technique: product?.decoration_technique || '',
+    size_standard: product?.size_standard || '',
     franchise_name: product?.franchise_name || '',
     character_name: product?.character_name || '',
     design_theme: product?.design_theme || '',
@@ -253,6 +256,7 @@ export function useProductForm() {
                 specifications: template.specifications?.trim() || null,
                 decoration_technique:
                     template.decoration_technique?.trim() || null,
+                size_standard: template.size_standard || null,
                 franchise_name:
                     template.franchise_name?.trim().toLowerCase() || null,
                 character_name:

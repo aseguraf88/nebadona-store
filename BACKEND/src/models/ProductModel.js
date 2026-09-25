@@ -108,6 +108,11 @@ const ProductSchema = new Schema(
             trim: true,
             default: null,
         },
+        size_standard: {
+            type: String,
+            enum: ['bebe', 'nino', 'mujer', 'hombre', 'unisex', 'unisex_amplio', 'plus'],
+            default: null,
+        },
         franchise_name: {
             type: String,
             trim: true,

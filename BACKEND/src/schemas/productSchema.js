@@ -31,6 +31,10 @@ export const productSchema = z.object({
     fit_type: z.string().max(100).nullable().optional(),
     specifications: z.string().max(500).nullable().optional(),
     decoration_technique: z.string().max(100).nullable().optional(),
+    size_standard: z
+        .enum(['bebe', 'nino', 'mujer', 'hombre', 'unisex', 'unisex_amplio', 'plus'])
+        .nullable()
+        .optional(),
     franchise_name: z.string().max(100).toLowerCase().nullable().optional(),
     character_name: z.string().max(100).toLowerCase().nullable().optional(),
     design_theme: z.string().max(100).toLowerCase().nullable().optional(),
