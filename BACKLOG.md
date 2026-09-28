@@ -317,6 +317,9 @@ como punto de partida, en vez de diseñar a ciegas.
       candidatos a renombrarse `CareGuide.jsx`/`ShippingInfo.jsx` o
       similar. Ninguno de los dos afecta el funcionamiento ni las rutas
       públicas (`/guia-cuidados`, que sí conviene mantener en español).
+      La tercera página de este tipo, la Guía de Tallas (Fase 4, paso 34),
+      ya se creó con la convención correcta (`pages/size-guide/ui/SizeGuide.jsx`,
+      ruta `/guia-tallas` en español): quedan 2 de 3 por renombrar.
 
 - [ ] Limpieza chica, sin apuro: la lista de sinónimos de "calcetines"
       (`calceta`, `calcetas`, `calcetin`, `calcetines`) tiene su fuente en

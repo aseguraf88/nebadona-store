@@ -37,12 +37,18 @@ const Footer = () => {
 
                 <div className="divider w-full max-w-xs my-0"></div>
 
-                <div className="flex gap-4 text-sm">
+                <div className="flex flex-wrap justify-center gap-x-4 gap-y-2 text-sm">
                     <Link
                         to="/guia-cuidados"
                         className="link link-hover text-base-content/70"
                     >
                         Guía de Cuidados
+                    </Link>
+                    <Link
+                        to="/guia-tallas"
+                        className="link link-hover text-base-content/70"
+                    >
+                        Guía de Tallas
                     </Link>
                     <Link
                         to="/envios-y-entregas"

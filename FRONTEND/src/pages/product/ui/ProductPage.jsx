@@ -3,11 +3,12 @@ import { useParams, Link } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { Share2, Truck, Zap, Handshake, Warehouse } from 'lucide-react'
 import { useCart } from '../../../entities/cart'
-import { useProduct } from '../../../entities/product'
+import { useProduct, isSockCategory } from '../../../entities/product'
 import VariantSelector from '../../../entities/product/ui/VariantSelector'
 import { ProductSection } from '../../../widgets/catalog'
 import { getSizeGuideByCategory } from '../../../entities/product/config/sizeGuides'
 import { getCareGuideByCategory } from '../../../entities/product/config/careGuides'
+import { getSizeStandardById } from '../../../entities/product/config/sizeStandardOptions'
 
 const MD_MEDIA_QUERY = '(min-width: 1024px)'
 
@@ -93,6 +94,35 @@ const ProductPage = () => {
     const sizeGuide = product
         ? getSizeGuideByCategory(product.product_category)
         : null
+
+    // Estándar de talla del producto (solo calcetines). Bebé, niño y Talla
+    // Única muestran el de ESTE producto en vez de la tabla genérica;
+    // 'internacional' y sin estándar siguen con la tabla de siempre.
+    const sockStandard =
+        product && isSockCategory(product.product_category)
+            ? getSizeStandardById(product.size_standard)
+            : null
+    const isCustomRange = sockStandard?.id === 'personalizado'
+    const standardSummary =
+        sockStandard && sockStandard.id !== 'internacional'
+            ? [
+                  {
+                      label: 'Estándar',
+                      value: isCustomRange ? 'Talla Única' : sockStandard.label,
+                  },
+                  {
+                      label: 'Talla de calzado (EU)',
+                      value: isCustomRange
+                          ? product.size_range_min && product.size_range_max
+                              ? `${product.size_range_min} - ${product.size_range_max}`
+                              : ''
+                          : sockStandard.euRange,
+                  },
+              ].filter((row) => row.value)
+            : null
+    // Ancla de la Guía de Tallas según el grupo del estándar
+    const sizeGuideAnchor =
+        { babies: 'bebes', kids: 'ninos' }[sockStandard?.gender] || 'adultos'
 
     const careGuide = product
         ? getCareGuideByCategory(product.product_category)
@@ -502,61 +532,87 @@ const ProductPage = () => {
                                         Tallas y Medidas
                                     </div>
                                     <div className="collapse-content text-sm text-base-content/80 min-w-0">
-                                        <div className="overflow-x-auto rounded-lg border border-base-content/10">
-                                            <table className="table table-sm">
-                                                <thead>
-                                                    <tr className="bg-neutral text-neutral-content">
-                                                        {sizeGuide.columns.map(
-                                                            (col) => (
-                                                                <th
-                                                                    key={col}
-                                                                    className="text-xs"
-                                                                >
-                                                                    {col}
-                                                                </th>
-                                                            ),
-                                                        )}
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    {sizeGuide.rows.map(
-                                                        (row, i) => (
-                                                            <tr key={i} className="border-base-content/10">
-                                                                {row.map(
-                                                                    (
-                                                                        cell,
-                                                                        j,
-                                                                    ) => (
-                                                                        <td
-                                                                            key={
-                                                                                j
-                                                                            }
-                                                                            className={j === 0 ? 'font-semibold' : undefined}
+                                        {standardSummary ? (
+                                            <div className="overflow-x-auto rounded-lg border border-base-content/10">
+                                                <table className="table table-sm">
+                                                    <tbody>
+                                                        {standardSummary.map((row) => (
+                                                            <tr key={row.label} className="border-base-content/10">
+                                                                <td className="font-semibold whitespace-nowrap w-1/3">{row.label}</td>
+                                                                <td className="text-base-content/80">{row.value}</td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        ) : (
+                                            <>
+                                                <div className="overflow-x-auto rounded-lg border border-base-content/10">
+                                                    <table className="table table-sm">
+                                                        <thead>
+                                                            <tr className="bg-neutral text-neutral-content">
+                                                                {sizeGuide.columns.map(
+                                                                    (col) => (
+                                                                        <th
+                                                                            key={col}
+                                                                            className="text-xs"
                                                                         >
-                                                                            {
-                                                                                cell
-                                                                            }
-                                                                        </td>
+                                                                            {col}
+                                                                        </th>
                                                                     ),
                                                                 )}
                                                             </tr>
-                                                        ),
-                                                    )}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                        {sizeGuide.note && (
-                                            <p className="mt-3 font-semibold text-base-content">
-                                                {sizeGuide.note}
-                                            </p>
+                                                        </thead>
+                                                        <tbody>
+                                                            {sizeGuide.rows.map(
+                                                                (row, i) => (
+                                                                    <tr key={i} className="border-base-content/10">
+                                                                        {row.map(
+                                                                            (
+                                                                                cell,
+                                                                                j,
+                                                                            ) => (
+                                                                                <td
+                                                                                    key={
+                                                                                        j
+                                                                                    }
+                                                                                    className={j === 0 ? 'font-semibold' : undefined}
+                                                                                >
+                                                                                    {
+                                                                                        cell
+                                                                                    }
+                                                                                </td>
+                                                                            ),
+                                                                        )}
+                                                                    </tr>
+                                                                ),
+                                                            )}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                                {sizeGuide.note && (
+                                                    <p className="mt-3 font-semibold text-base-content">
+                                                        {sizeGuide.note}
+                                                    </p>
+                                                )}
+                                                <p className="mt-3 text-xs text-base-content/60">
+                                                    Las medidas pueden tener una
+                                                    variación de 1 a 2 cm debido a la
+                                                    confección. Si estás entre dos
+                                                    tallas, te recomendamos elegir la
+                                                    más grande para mayor comodidad.
+                                                </p>
+                                            </>
                                         )}
-                                        <p className="mt-3 text-xs text-base-content/60">
-                                            Las medidas pueden tener una
-                                            variación de 1 a 2 cm debido a la
-                                            confección. Si estás entre dos
-                                            tallas, te recomendamos elegir la
-                                            más grande para mayor comodidad.
-                                        </p>
+                                        {sockStandard && (
+                                            <Link
+                                                to={`/guia-tallas#${sizeGuideAnchor}`}
+                                                state={{ from: 'product' }}
+                                                className="link link-primary text-sm font-semibold mt-3 inline-block"
+                                            >
+                                                Ver guía de tallas completa →
+                                            </Link>
+                                        )}
                                     </div>
                                 </div>
                             )}

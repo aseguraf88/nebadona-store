@@ -11,6 +11,7 @@ import { Checkout } from '../pages/checkout'
 import { ComingSoon } from '../pages/coming-soon'
 import { GuiaCuidados } from '../pages/guia-cuidados'
 import { EnviosYEntregas } from '../pages/envios-y-entregas'
+import { SizeGuide } from '../pages/size-guide'
 /* import PaymentSuccess from '../pages/payment-results/PaymentSuccess'
 import PaymentFailure from '../pages/payment-results/PaymentFailure'
 import PaymentPending from '../pages/payment-results/PaymentPending' */
@@ -54,6 +55,7 @@ function App() {
                             <Route path="/checkout" element={<Checkout />} />
                             <Route path="/guia-cuidados" element={<GuiaCuidados />} />
                             <Route path="/envios-y-entregas" element={<EnviosYEntregas />} />
+                            <Route path="/guia-tallas" element={<SizeGuide />} />
                             {/*                             <Route
                                 path="/payment/success"
                                 element={<PaymentSuccess />}
