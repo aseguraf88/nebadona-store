@@ -25,6 +25,8 @@ export const EMPTY_TEMPLATE = {
     specifications: '',
     decoration_technique: '',
     size_standard: '',
+    size_range_min: '',
+    size_range_max: '',
     franchise_name: '',
     character_name: '',
     design_theme: '',
@@ -61,6 +63,8 @@ const normalizeTemplate = (value) => ({
     specifications: value.specifications || '',
     decoration_technique: value.decoration_technique || '',
     size_standard: value.size_standard || '',
+    size_range_min: value.size_range_min || '',
+    size_range_max: value.size_range_max || '',
     franchise_name: value.franchise_name || '',
     character_name: value.character_name || '',
     design_theme: value.design_theme || '',
@@ -92,6 +96,12 @@ const mapProductToTemplate = (product) => ({
     specifications: product?.specifications || '',
     decoration_technique: product?.decoration_technique || '',
     size_standard: product?.size_standard || '',
+    size_range_min: product?.size_range_min
+        ? String(product.size_range_min)
+        : '',
+    size_range_max: product?.size_range_max
+        ? String(product.size_range_max)
+        : '',
     franchise_name: product?.franchise_name || '',
     character_name: product?.character_name || '',
     design_theme: product?.design_theme || '',
@@ -243,6 +253,14 @@ export function useProductForm() {
                     : Number(template.compareAtPrice)
             const parsedCostPrice =
                 template.cost_price === '' ? null : Number(template.cost_price)
+            const parsedSizeRangeMin =
+                template.size_range_min === ''
+                    ? null
+                    : Number(template.size_range_min)
+            const parsedSizeRangeMax =
+                template.size_range_max === ''
+                    ? null
+                    : Number(template.size_range_max)
 
             const payload = {
                 handle: template.handle?.trim().toUpperCase() || '',
@@ -257,6 +275,12 @@ export function useProductForm() {
                 decoration_technique:
                     template.decoration_technique?.trim() || null,
                 size_standard: template.size_standard || null,
+                size_range_min: Number.isNaN(parsedSizeRangeMin)
+                    ? null
+                    : parsedSizeRangeMin,
+                size_range_max: Number.isNaN(parsedSizeRangeMax)
+                    ? null
+                    : parsedSizeRangeMax,
                 franchise_name:
                     template.franchise_name?.trim().toLowerCase() || null,
                 character_name:

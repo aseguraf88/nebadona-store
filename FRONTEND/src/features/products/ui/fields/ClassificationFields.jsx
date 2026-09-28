@@ -24,6 +24,9 @@ const ClassificationFields = ({
                         product_category:
                             e.target.value.toLowerCase(),
                         sock_type: '', // Resetea el tipo si cambia la categoría
+                        size_standard: '', // El Estándar y su rango dependen de la categoría
+                        size_range_min: '',
+                        size_range_max: '',
                     }))
                 }
             >
@@ -91,6 +94,7 @@ const ClassificationFields = ({
                 <option value="men">Hombre</option>
                 <option value="women">Mujer</option>
                 <option value="kids">Niños</option>
+                <option value="babies">Bebés</option>
             </select>
         </label>
     </>

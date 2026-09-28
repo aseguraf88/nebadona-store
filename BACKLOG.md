@@ -318,6 +318,13 @@ como punto de partida, en vez de diseñar a ciegas.
       similar. Ninguno de los dos afecta el funcionamiento ni las rutas
       públicas (`/guia-cuidados`, que sí conviene mantener en español).
 
+- [ ] Limpieza chica, sin apuro: la lista de sinónimos de "calcetines"
+      (`calceta`, `calcetas`, `calcetin`, `calcetines`) está repetida en
+      `PRODUCT_TYPES_BY_CATEGORY` (`productTypeOptions.js`) y en
+      `CATEGORY_ALIASES` (`sizeGuides.js`). Candidato a unificarse en una
+      sola constante exportada antes de que el acordeón de Tallas y
+      Medidas (Fase 4, paso 32) necesite una tercera copia.
+
 - [x] **Guía de Cuidados y Envíos separadas a páginas propias** —
       encontrado en QA con la dueña real del negocio: el texto de
       cuidados en la ficha de producto era demasiado largo para leerse,
@@ -620,6 +627,18 @@ como punto de partida, en vez de diseñar a ciegas.
       aclarar si es Handle, SKU u otro). Confirmado en una prueba real de
       Fase 3: el campo que faltaba era Stock, no Handle, y el mensaje no
       ayudó a encontrarlo rápido.
+
+## 🟡 Nuevo, encontrado durante Fase 4 (tallas)
+
+- [ ] **Género en el CSV: exportar y reimportar lo pierde**: la
+      exportación (`productsControllers.js`, `exportProductsCsv`) escribe
+      `gender` tal cual se guarda (`men`, `women`, `kids`), pero la
+      importación solo traduce nombres en español (`genderTranslationMap`:
+      `hombre`, `mujer`, `niños`, `ninos`, `unisex`) y cualquier otro valor
+      cae a `'unisex'`. Resultado: un CSV exportado y vuelto a importar
+      deja todos los productos como `unisex`. Tampoco hay traducción para
+      el nuevo `babies` (Fase 4) ni un `bebés` en español. Sin arreglar a
+      propósito, fuera del alcance de la Fase 4.
 
 ## ❓ Pregunta abierta, sin resolver
 

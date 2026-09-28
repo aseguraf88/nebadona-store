@@ -1,5 +1,5 @@
 import ProductModel from '../models/ProductModel.js'
-import { productSchema } from '../schemas/productSchema.js'
+import { productSchema, productUpdateSchema } from '../schemas/productSchema.js'
 import { ZodError } from 'zod'
 import cloudinary, {
     isCloudinaryConfigured,
@@ -106,7 +106,7 @@ export const createProduct = async (req, res) => {
 
 export const updateProduct = async (req, res) => {
     try {
-        const parsedData = productSchema.partial().parse(req.body)
+        const parsedData = productUpdateSchema.parse(req.body)
 
         // 🔥 FUERZA BRUTA INTELIGENTE: Aseguramos que el status viaje sí o sí
         if (req.body.status) {

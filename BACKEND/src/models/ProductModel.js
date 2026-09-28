@@ -82,7 +82,7 @@ const ProductSchema = new Schema(
         },
         gender: {
             type: String,
-            enum: ['men', 'women', 'unisex', 'kids'],
+            enum: ['men', 'women', 'unisex', 'kids', 'babies'],
             default: 'unisex',
             index: true,
         },
@@ -110,7 +110,24 @@ const ProductSchema = new Schema(
         },
         size_standard: {
             type: String,
-            enum: ['bebe', 'nino', 'mujer', 'hombre', 'unisex', 'unisex_amplio', 'plus'],
+            enum: [
+                'bebe_0_6',
+                'bebe_6_12',
+                'bebe_12_24',
+                'nino_2_4',
+                'nino_5_7',
+                'nino_8_10',
+                'personalizado',
+                'internacional',
+            ],
+            default: null,
+        },
+        size_range_min: {
+            type: Number,
+            default: null,
+        },
+        size_range_max: {
+            type: Number,
             default: null,
         },
         franchise_name: {
