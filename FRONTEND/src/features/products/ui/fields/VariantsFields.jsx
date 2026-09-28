@@ -1,14 +1,49 @@
-import { TbWand } from 'react-icons/tb'
+import { TbWand, TbLock } from 'react-icons/tb'
+
+// Selector de Talla: bloqueado a una sola opción si el Estándar de talla la
+// fija; si no, libre con SIZE_OPTIONS, sumando el valor actual cuando no
+// está en la lista (ej. "39-43" de un CSV, o la talla fija de un estándar
+// anterior) para no mostrar "N/A" sobre un dato que sí existe.
+const SizeSelect = ({ className, value, onChange, sizeOptions, lockedSize }) => {
+    if (lockedSize) {
+        return (
+            <select className={className} value={lockedSize.code} disabled>
+                <option value={lockedSize.code}>{lockedSize.code}</option>
+            </select>
+        )
+    }
+    const hasCustomValue = Boolean(value) && !sizeOptions?.includes(value)
+    return (
+        <select className={className} value={value} onChange={onChange}>
+            <option value="">N/A</option>
+            {hasCustomValue && <option value={value}>{value}</option>}
+            {sizeOptions?.map((opt) => (
+                <option key={opt} value={opt}>
+                    {opt}
+                </option>
+            ))}
+        </select>
+    )
+}
 
 const VariantsFields = ({
     template,
     sizeOptions,
+    lockedSize,
     handleVariantChange,
     removeVariant,
     autoGenerateSku,
     lastVariantRef,
 }) => (
     <>
+        {lockedSize && (
+            <p className="flex items-center gap-1.5 px-4 pt-3 text-xs text-base-content/60">
+                <TbLock className="shrink-0" />
+                La talla está fijada por el Estándar de talla elegido:{' '}
+                {lockedSize.label}.
+            </p>
+        )}
+
         {/* TABLA — solo desktop/tablet, sin cambios respecto a la de siempre */}
         <div className="card-body p-0 overflow-x-auto hidden md:block">
             <table className="table table-sm w-full">
@@ -51,7 +86,7 @@ const VariantsFields = ({
                                 </div>
                             </td>
                             <td>
-                                <select
+                                <SizeSelect
                                     className="select select-xs select-bordered w-full"
                                     value={v.size}
                                     onChange={(e) =>
@@ -61,17 +96,9 @@ const VariantsFields = ({
                                             e.target.value,
                                         )
                                     }
-                                >
-                                    <option value="">N/A</option>
-                                    {sizeOptions?.map((opt) => (
-                                        <option
-                                            key={opt}
-                                            value={opt}
-                                        >
-                                            {opt}
-                                        </option>
-                                    ))}
-                                </select>
+                                    sizeOptions={sizeOptions}
+                                    lockedSize={lockedSize}
+                                />
                             </td>
                             <td>
                                 <input
@@ -211,7 +238,7 @@ const VariantsFields = ({
                             <span className="label-text text-xs font-semibold text-base-content/60 mb-1">
                                 Talla
                             </span>
-                            <select
+                            <SizeSelect
                                 className="select select-sm select-bordered w-full"
                                 value={v.size}
                                 onChange={(e) =>
@@ -221,14 +248,9 @@ const VariantsFields = ({
                                         e.target.value,
                                     )
                                 }
-                            >
-                                <option value="">N/A</option>
-                                {sizeOptions?.map((opt) => (
-                                    <option key={opt} value={opt}>
-                                        {opt}
-                                    </option>
-                                ))}
-                            </select>
+                                sizeOptions={sizeOptions}
+                                lockedSize={lockedSize}
+                            />
                         </label>
                         <label className="form-control w-full">
                             <span className="label-text text-xs font-semibold text-base-content/60 mb-1">

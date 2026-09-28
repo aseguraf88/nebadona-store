@@ -142,6 +142,7 @@ const ProductAttributesForm = ({
                     <VariantsFields
                         template={template}
                         sizeOptions={sizeOptions}
+                        lockedSize={attributes.lockedSize}
                         handleVariantChange={attributes.handleVariantChange}
                         removeVariant={attributes.removeVariant}
                         autoGenerateSku={attributes.autoGenerateSku}

@@ -650,6 +650,20 @@ como punto de partida, en vez de diseñar a ciegas.
       deja todos los productos como `unisex`. Tampoco hay traducción para
       el nuevo `babies` (Fase 4) ni un `bebés` en español. Sin arreglar a
       propósito, fuera del alcance de la Fase 4.
+- [ ] **CSV y Estándar de talla: la importación puede dejar Tallas
+      inconsistentes**: el importador (`importProductsCsv`) no lee ni
+      escribe `size_standard` y guarda la Talla de cada variante tal cual
+      viene en el archivo, con `bulkWrite` directo (sin pasar por Zod). Un
+      producto con estándar de talla fija (ej. `bebe_0_6` → `0-6M`)
+      reimportado por CSV puede quedar con variantes en otra Talla (ej.
+      `M`). Mitigado desde Fase 4 (paso 33): al abrir ese producto en el
+      dashboard, las variantes se corrigen solas a la talla fija (y queda
+      marcado con cambios sin guardar). Un chequeo real en el backend
+      tendría que ir en el importador o en Mongoose, no en Zod.
+      Relacionado, **resuelto en el paso 33**: el selector libre de Talla
+      ya no muestra "N/A" para tallas que no están en `SIZE_OPTIONS` (ej.
+      "39-43" cargado por CSV, detectado en el paso 16 y nunca anotado);
+      ahora muestra el valor real como opción extra.
 
 ## ❓ Pregunta abierta, sin resolver
 

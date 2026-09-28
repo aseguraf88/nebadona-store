@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
+import { getLockedVariantSize } from '../../../entities/product/config/sizeStandardOptions'
 
 // Helper simple para autogenerar SKU de variante si se desea
 const generateVariantSku = (handle, size, baseColor, existingSkus = []) => {
@@ -47,6 +48,22 @@ export function useProductAttributes({
         }
         prevVariantsLength.current = template.variants.length
     }, [template.variants.length])
+
+    // Estándar con talla fija (bebé, niño, Talla Única): todas las variantes
+    // llevan esa talla. Cubre el cambio de estándar, las variantes nuevas y
+    // un producto cargado inconsistente (ej. por CSV). Solo escribe si alguna
+    // variante difiere, así que no entra en bucle.
+    const lockedSize = getLockedVariantSize(template.size_standard)
+    const lockedCode = lockedSize?.code
+
+    useEffect(() => {
+        if (!lockedCode) return
+        if (template.variants.every((v) => v.size === lockedCode)) return
+        setTemplate((prev) => ({
+            ...prev,
+            variants: prev.variants.map((v) => ({ ...v, size: lockedCode })),
+        }))
+    }, [lockedCode, template.variants, setTemplate])
 
     // LÓGICA DE IMÁGENES
     const handleImageUpload = (event) => {
@@ -190,6 +207,7 @@ export function useProductAttributes({
         setIsImageModalOpen,
         setDragIndex,
         lastVariantRef,
+        lockedSize,
         hasImages,
         handleImageUpload,
         handleRemoveImage,
