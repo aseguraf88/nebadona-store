@@ -5,6 +5,7 @@ export { default as ProductCard } from './ui/ProductCard'
 export { normalizeCategoryKey } from './config/productTypeOptions.js'
 export { SIZE_OPTIONS } from './config/productTypeOptions.js'
 export { getProductTypesByCategory } from './config/productTypeOptions.js'
+export { isSockCategory } from './config/productTypeOptions.js'
 
 export {
     ProductContext,

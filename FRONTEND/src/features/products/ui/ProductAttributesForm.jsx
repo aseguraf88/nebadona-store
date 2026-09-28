@@ -1,8 +1,16 @@
-import { TbFileDescription, TbPhoto, TbCash, TbBox } from 'react-icons/tb'
+import {
+    TbFileDescription,
+    TbPhoto,
+    TbCash,
+    TbRuler,
+    TbBox,
+} from 'react-icons/tb'
+import { isSockCategory } from '../../../entities/product'
 import { useProductAttributes } from '../model/useProductAttributes'
 import BasicInfoFields from './fields/BasicInfoFields'
 import ClassificationFields from './fields/ClassificationFields'
 import PhysicalAttributesFields from './fields/PhysicalAttributesFields'
+import SizeStandardFields from './fields/SizeStandardFields'
 import BrandIdentityFields from './fields/BrandIdentityFields'
 import VariantsFields from './fields/VariantsFields'
 import ImagesFields from './fields/ImagesFields'
@@ -93,6 +101,25 @@ const ProductAttributesForm = ({
                         />
                     </div>
                 </section>
+
+                {/* TALLAS Y MEDIDAS: solo calcetines, junto a Variantes porque
+                    el Estándar va a condicionar la Talla de las variantes */}
+                {isSockCategory(template.product_category) && (
+                    <section className="card bg-base-100 shadow-sm ring-1 ring-base-200">
+                        <div className="border-b border-base-200 px-6 py-4 flex items-center gap-2">
+                            <TbRuler className="text-base-content/60 text-xl" />
+                            <h3 className="text-sm font-bold uppercase tracking-widest text-base-content/80">
+                                Tallas y Medidas
+                            </h3>
+                        </div>
+                        <div className="card-body gap-4 p-6">
+                            <SizeStandardFields
+                                template={template}
+                                setTemplate={setTemplate}
+                            />
+                        </div>
+                    </section>
+                )}
 
                 {/* 4. VARIANTES (EL NUEVO CORAZÓN) */}
                 <section className="card bg-base-100 border border-base-200 shadow-sm">

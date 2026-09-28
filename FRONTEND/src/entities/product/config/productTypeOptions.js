@@ -100,3 +100,9 @@ export const getProductTypesByCategory = (categoryName = '') => {
     const normalizedKey = normalizeCategoryKey(categoryName)
     return PRODUCT_TYPES_BY_CATEGORY[normalizedKey] || []
 }
+
+// ¿Es calcetines (en cualquiera de sus sinónimos)? Usa las claves que ya
+// apuntan a calcetasTipos en PRODUCT_TYPES_BY_CATEGORY: sin lista nueva.
+export const isSockCategory = (category) =>
+    PRODUCT_TYPES_BY_CATEGORY[normalizeCategoryKey(category || '')] ===
+    calcetasTipos

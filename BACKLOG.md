@@ -319,11 +319,12 @@ como punto de partida, en vez de diseñar a ciegas.
       públicas (`/guia-cuidados`, que sí conviene mantener en español).
 
 - [ ] Limpieza chica, sin apuro: la lista de sinónimos de "calcetines"
-      (`calceta`, `calcetas`, `calcetin`, `calcetines`) está repetida en
-      `PRODUCT_TYPES_BY_CATEGORY` (`productTypeOptions.js`) y en
-      `CATEGORY_ALIASES` (`sizeGuides.js`). Candidato a unificarse en una
-      sola constante exportada antes de que el acordeón de Tallas y
-      Medidas (Fase 4, paso 32) necesite una tercera copia.
+      (`calceta`, `calcetas`, `calcetin`, `calcetines`) tiene su fuente en
+      `PRODUCT_TYPES_BY_CATEGORY` (`productTypeOptions.js`), que
+      `isSockCategory` reutiliza desde la Fase 4 (paso 32) sin copiarla.
+      Queda una sola copia a mano: `CATEGORY_ALIASES` en `sizeGuides.js`,
+      que además traduce `camisa`/`poleron`. Si se suma un sinónimo nuevo,
+      hay que agregarlo en los dos lugares.
 
 - [x] **Guía de Cuidados y Envíos separadas a páginas propias** —
       encontrado en QA con la dueña real del negocio: el texto de

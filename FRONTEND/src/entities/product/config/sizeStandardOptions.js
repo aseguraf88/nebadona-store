@@ -20,3 +20,17 @@ export const SIZE_STANDARD_OPTIONS = [
 
 export const getSizeStandardById = (id = '') =>
     SIZE_STANDARD_OPTIONS.find((option) => option.id === id) || null
+
+// Grupo de tallas de un Género: qué estándares se ofrecen y cuándo hay que
+// resetear al cambiar de Género. Cualquier otro valor (unisex, men, women,
+// o vacío) cae en 'adult'.
+export const getGenderSizeGroup = (gender) =>
+    gender === 'babies' || gender === 'kids' ? gender : 'adult'
+
+// Estándares visibles para un Género (en las opciones, gender: null = adulto)
+export const getSizeStandardsForGender = (gender) => {
+    const group = getGenderSizeGroup(gender)
+    return SIZE_STANDARD_OPTIONS.filter(
+        (option) => (option.gender ?? 'adult') === group,
+    )
+}

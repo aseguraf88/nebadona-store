@@ -1,3 +1,5 @@
+import { getGenderSizeGroup } from '../../../../entities/product/config/sizeStandardOptions'
+
 const ClassificationFields = ({
     template,
     setTemplate,
@@ -83,12 +85,21 @@ const ClassificationFields = ({
             <select
                 className="select select-bordered w-full bg-base-100"
                 value={template.gender}
-                onChange={(e) =>
+                onChange={(e) => {
+                    const nextGender = e.target.value
                     setTemplate((prev) => ({
                         ...prev,
-                        gender: e.target.value,
+                        gender: nextGender,
+                        // Si cambia el grupo (adulto/niño/bebé), el Estándar
+                        // elegido deja de aplicar
+                        ...(getGenderSizeGroup(prev.gender) !==
+                            getGenderSizeGroup(nextGender) && {
+                            size_standard: '',
+                            size_range_min: '',
+                            size_range_max: '',
+                        }),
                     }))
-                }
+                }}
             >
                 <option value="unisex">Unisex</option>
                 <option value="men">Hombre</option>

@@ -2,6 +2,7 @@ import {
     TbFileDescription,
     TbCategory,
     TbNeedleThread,
+    TbRuler,
     TbTags,
     TbBox,
     TbPhoto,
@@ -10,10 +11,12 @@ import {
     TbCircleCheckFilled,
     TbCircleDashed,
 } from 'react-icons/tb'
+import { isSockCategory } from '../../../entities/product'
 import { useProductAttributes } from '../model/useProductAttributes'
 import BasicInfoFields from './fields/BasicInfoFields'
 import ClassificationFields from './fields/ClassificationFields'
 import PhysicalAttributesFields from './fields/PhysicalAttributesFields'
+import SizeStandardFields from './fields/SizeStandardFields'
 import BrandIdentityFields from './fields/BrandIdentityFields'
 import VariantsFields from './fields/VariantsFields'
 import ImagesFields from './fields/ImagesFields'
@@ -128,6 +131,18 @@ const ProductCreateForm = ({
                     />
                 </div>
             </AccordionSection>
+
+            {/* Solo calcetines: fuera de esa categoría quedaría un acordeón vacío */}
+            {isSockCategory(template.product_category) && (
+                <AccordionSection icon={TbRuler} title="Tallas y Medidas">
+                    <div className="flex flex-col gap-4">
+                        <SizeStandardFields
+                            template={template}
+                            setTemplate={setTemplate}
+                        />
+                    </div>
+                </AccordionSection>
+            )}
 
             <AccordionSection icon={TbTags} title="Identidad y marca">
                 <div className="flex flex-col gap-4">
