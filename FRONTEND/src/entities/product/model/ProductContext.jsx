@@ -85,7 +85,9 @@ export const ProductContextProvider = ({ children }) => {
     // MUTACIONES DE PRODUCTOS (CRUD)
     // ==========================================
     const updateProduct = useCallback(async (id, data) => {
-        setProductsLoading(true)
+        // Sin setProductsLoading: ProductFormPage cambiaría el formulario por
+        // el loader y, al volver, useProductForm recargaría el producto,
+        // pisando las ediciones si el guardado falla. El botón ya tiene isSaving.
         setProductLoading(true)
 
         try {
@@ -107,10 +109,11 @@ export const ProductContextProvider = ({ children }) => {
             setError(error.message || 'Error al actualizar el producto')
             return {
                 success: false,
-                message: 'Error al actualizar el producto',
+                message:
+                    error.response?.data?.message ||
+                    'Error al actualizar el producto',
             }
         } finally {
-            setProductsLoading(false)
             setProductLoading(false)
         }
     }, [])
@@ -137,7 +140,9 @@ export const ProductContextProvider = ({ children }) => {
             setError(error.message || 'Error al crear el producto')
             return {
                 success: false,
-                message: error.message || 'Error al crear el producto',
+                message:
+                    error.response?.data?.message ||
+                    'Error al crear el producto',
             }
         } finally {
             setProductLoading(false)

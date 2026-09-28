@@ -622,12 +622,22 @@ como punto de partida, en vez de diseñar a ciegas.
       título, precio y categoría. El backend sí (mínimo 3 caracteres,
       `productSchema.js`). Hoy el botón Guardar se habilita con Handle
       vacío o muy corto, y recién el backend lo rechaza.
-- [ ] **Mensajes de error del backend, genéricos**: cuando Zod rechaza el
-      guardado, el mensaje que llega al frontend no dice qué campo falló
-      (ej. "Too small: expected string to have >=3 characters", sin
-      aclarar si es Handle, SKU u otro). Confirmado en una prueba real de
-      Fase 3: el campo que faltaba era Stock, no Handle, y el mensaje no
-      ayudó a encontrarlo rápido.
+- [ ] **Mensajes de error del backend al guardar un producto**: la causa
+      real (diagnosticada en Fase 4, paso 32b) no era solo que faltara el
+      nombre del campo — el mensaje del backend **nunca llegaba al toast**.
+      El backend responde bien (400 con `message` = primer issue de Zod,
+      mismo formato para errores simples y para `superRefine`), pero
+      `ProductContext.jsx` lo descartaba: texto fijo al editar,
+      `error.message` de axios ("Request failed with status code 400") al
+      crear. Corregido en el paso 32b solo para productos: el toast ahora
+      muestra `error.response.data.message`. **Queda pendiente
+      (alternativa B):** que el mensaje diga qué campo falló — los errores
+      genéricos de Zod siguen llegando en inglés y sin nombre de campo
+      (ej. "Too small: expected string to have >=3 characters"; en la
+      prueba real de Fase 3 el campo era Stock). Si se hace con un helper
+      compartido en el backend, toca los 5 controladores que atrapan
+      `ZodError` (products, auth, franchiseNames, designThemes,
+      productCategories): afectaría también login y registro.
 
 ## 🟡 Nuevo, encontrado durante Fase 4 (tallas)
 
