@@ -12,6 +12,7 @@ const BasicInfoFields = ({ template, setTemplate }) => (
                     type="text"
                     className="input input-bordered w-full bg-base-100/50 uppercase font-mono tracking-widest"
                     placeholder="Ej. POL-SPI-01"
+                    maxLength={50}
                     value={template.handle}
                     onChange={(e) =>
                         setTemplate((prev) => ({
@@ -32,6 +33,7 @@ const BasicInfoFields = ({ template, setTemplate }) => (
                     type="text"
                     className="input input-bordered w-full bg-base-100/50"
                     placeholder="Ej. Polera de Goku..."
+                    maxLength={100}
                     value={
                         template.title === 'Titulo'
                             ? ''

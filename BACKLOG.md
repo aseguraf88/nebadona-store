@@ -618,13 +618,14 @@ como punto de partida, en vez de diseñar a ciegas.
 
 ## 🟡 Nuevo, encontrado durante Fase 3 (formulario de producto)
 
-- [ ] **Handle sin validar en el frontend**: "Handle (Cód. Agrupador)"
-      lleva asterisco de obligatorio en `ProductAttributesForm.jsx` (vía
-      `BasicInfoFields.jsx`, así que también en `ProductCreateForm.jsx`),
-      pero `isFormValid` en `useProductForm.js` no lo exige — solo pide
-      título, precio y categoría. El backend sí (mínimo 3 caracteres,
-      `productSchema.js`). Hoy el botón Guardar se habilita con Handle
-      vacío o muy corto, y recién el backend lo rechaza.
+- [x] ~~**Handle sin validar en el frontend**~~ — resuelto (paso 35):
+      `isFormValid` exige Handle y Título de al menos 3 caracteres
+      (medidos con `trim()`, igual que los manda el `payload`), como ya
+      exigía `productSchema.js`. El indicador de "Información básica" en
+      creación usa el mismo criterio, y los inputs tienen el máximo del
+      backend: Handle `maxLength={50}` y Título `maxLength={100}`. El
+      Título tenía el mismo bug (mínimo 3 en el backend, solo "no vacío"
+      en el frontend) y se corrigió en el mismo paso.
 - [ ] **Mensajes de error del backend al guardar un producto**: la causa
       real (diagnosticada en Fase 4, paso 32b) no era solo que faltara el
       nombre del campo — el mensaje del backend **nunca llegaba al toast**.

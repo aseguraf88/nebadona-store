@@ -207,10 +207,13 @@ export function useProductForm() {
         JSON.stringify(normalizeTemplate(template)) !==
         JSON.stringify(normalizeTemplate(savedTemplate))
 
+    // Mismos mínimos que el backend (productSchema.js): handle y name de al
+    // menos 3 caracteres, medidos con trim() como se mandan en el payload
     const isFormValid =
+        (template.handle?.trim().length ?? 0) >= 3 &&
         template.title &&
         template.title !== 'Titulo' &&
-        template.title.trim() !== '' &&
+        template.title.trim().length >= 3 &&
         template.price &&
         template.price !== '0000' &&
         String(template.price).trim() !== '' &&

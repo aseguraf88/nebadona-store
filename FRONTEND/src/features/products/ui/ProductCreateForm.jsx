@@ -80,9 +80,10 @@ const ProductCreateForm = ({
 
     // Mismos criterios que isFormValid en useProductForm
     const isBasicInfoComplete = Boolean(
+        (template.handle?.trim().length ?? 0) >= 3 &&
         template.title &&
             template.title !== 'Titulo' &&
-            template.title.trim() !== '',
+            template.title.trim().length >= 3,
     )
     const isClassificationComplete = Boolean(template.product_category)
     const isPricingComplete = Boolean(
