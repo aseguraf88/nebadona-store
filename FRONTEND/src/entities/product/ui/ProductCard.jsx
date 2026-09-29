@@ -11,9 +11,7 @@ const ProductCard = ({ product }) => {
         imageUrls,
         description,
         price,
-        stock,
         product_category,
-        sku,
         franchise_name,
         tags,
     } = product
@@ -61,7 +59,6 @@ const ProductCard = ({ product }) => {
                 description,
                 variants: product.variants,
                 product_category: product_category || 'Sin categoría',
-                sku: sku || 'SIN-SKU',
             },
             quantityFromModal,
             variant,

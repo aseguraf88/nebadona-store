@@ -579,12 +579,14 @@ como punto de partida, en vez de diseñar a ciegas.
       una lista suelta sin asociación a ninguna variante en particular.
       Requiere schema + selector en `ProductAttributesForm` + lógica en el
       selector del cliente. Mejora post-lanzamiento, no un bug.
-- [ ] Limpieza menor: sacar el `console.log('UPDATE CART', ...)` que sigue
-      en `cartControllers.js` (ya señalado en la auditoría de seguridad
-      original, nunca se sacó).
-- [ ] Limpieza menor: `ProductCard.jsx` manda un campo `stock` sin uso en
-      el payload de `addToCart` — `CartContext` ya lo resuelve desde la
-      variante real, es código muerto que quedó del cambio.
+- [x] ~~Limpieza menor: sacar el `console.log('UPDATE CART', ...)`~~ de
+      `cartControllers.js` — resuelto (paso 38).
+- [x] ~~Limpieza menor: `stock` sin uso en `ProductCard.jsx`~~ — resuelto
+      (paso 38). El payload ya no lo mandaba; quedaba solo la variable
+      desestructurada sin usar. De paso se quitó `sku: sku || 'SIN-SKU'`:
+      el producto no tiene `sku` propio (es de cada variante), así que
+      siempre mandaba `'SIN-SKU'`, y `CartContext` lo pisaba con el `sku`
+      de la variante elegida.
 - [x] **`jspdf` usado en `Checkout.jsx` pero nunca declarado en
       `package.json`** — funcionaba en local porque ya estaba instalado
       físicamente en `node_modules` de alguna instalación anterior; un
@@ -594,12 +596,11 @@ como punto de partida, en vez de diseñar a ciegas.
       `package-lock.json` juntos, no se editó a mano). Confirmado con
       `npx depcheck` que no quedó ningún otro paquete usado-pero-no-
       declarado en el proyecto.
-- [ ] Limpieza opcional, de `npx depcheck` — NO urgente, revisar con
-      calma en otro momento:
-      - `@types/react`, `@types/react-dom` en devDependencies — candidato
-        razonable a eliminar (el proyecto es `.jsx`, no `.tsx`).
-      - `react-router` en dependencies — posiblemente redundante, ya que
-        `react-router-dom` lo trae internamente.
+- [x] ~~Limpieza opcional, de `npx depcheck`~~ — resuelto (paso 38):
+      se desinstalaron `@types/react` y `@types/react-dom` (el proyecto es
+      `.jsx`, sin `tsconfig`) y `react-router` (ningún import directo;
+      `react-router-dom` lo declara como dependencia propia, así que sigue
+      instalado). Para no repetir la duda:
       - ⚠️ `tailwindcss`, `postcss`, `autoprefixer` — depcheck los marca
         como "no usados", pero es un FALSO POSITIVO: se usan desde
         archivos de configuración (`tailwind.config.js`,

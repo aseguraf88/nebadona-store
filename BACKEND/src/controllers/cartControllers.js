@@ -131,7 +131,6 @@ export const updateCart = async (req, res) => {
     try {
         const { userId } = req.params
         const { productId, sku, quantity } = req.body
-        console.log('UPDATE CART', productId, sku, quantity)
 
         const cart = await CartModel.findOne({ userId })
 
