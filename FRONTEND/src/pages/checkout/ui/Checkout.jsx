@@ -319,7 +319,7 @@ const Checkout = () => {
             setCompletedOrder({ folio, whatsappUrl })
             await clearCart()
         } catch (error) {
-            toast.error('Hubo un error al procesar el pedido.')
+            toast.error(error.message || 'Hubo un error al procesar el pedido.')
             console.error(error)
         } finally {
             setLoading(false)

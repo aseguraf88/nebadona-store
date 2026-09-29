@@ -329,6 +329,13 @@ como punto de partida, en vez de diseñar a ciegas.
       que además traduce `camisa`/`poleron`. Si se suma un sinónimo nuevo,
       hay que agregarlo en los dos lugares.
 
+- [ ] El listado de productos del dashboard (`ProductsListPage.jsx`) no
+      muestra el Handle: dos productos con el mismo nombre solo se
+      distinguen por estado o stock. Pasó en una prueba real (paso 37):
+      había dos "Misfits" (`CAL-ROCK-MISF-01` publicado y `CAL-ROCK-MISF`
+      en borrador) y se bajó el stock del que no era. Sumar el Handle
+      (aunque sea en texto chico bajo el nombre) evitaría la confusión.
+
 - [x] **Guía de Cuidados y Envíos separadas a páginas propias** —
       encontrado en QA con la dueña real del negocio: el texto de
       cuidados en la ficha de producto era demasiado largo para leerse,
@@ -551,9 +558,23 @@ como punto de partida, en vez de diseñar a ciegas.
 
 ## 🟡 Nuevo, encontrado durante el trabajo de variantes
 
-- [ ] Validar stock en el backend al crear la orden (`createWhatsAppOrder`
-      no valida stock hoy). El carrito de invitado nunca toca el backend
-      hasta el checkout final — hoy solo hay defensa del lado del cliente.
+- [x] ~~Validar stock en el backend al crear la orden~~ — resuelto (paso
+      37): `createWhatsAppOrder` consulta en una sola query el stock real
+      de cada variante (por `sku`) y, si algo no alcanza o la variante ya
+      no existe, rechaza la orden completa con 409 y un mensaje por ítem
+      (no ajusta cantidades: el PDF y el WhatsApp se arman en el frontend
+      con el carrito). `Checkout.jsx` ahora muestra ese mensaje en vez del
+      genérico. Límite conocido: no reserva stock (se descuenta al
+      aprobar), así que dos órdenes casi simultáneas por la última unidad
+      pasan las dos; el admin lo ve como aviso de stock negativo al
+      aprobar la segunda.
+- [ ] **La orden confía en el precio que manda el frontend**:
+      `createWhatsAppOrder` guarda `price` de cada ítem y `totalAmount` tal
+      cual llegan, sin compararlos con la base — un pedido con precios
+      alterados se guardaría así. Riesgo bajo mientras el pago se confirme
+      a mano por WhatsApp. Se arreglaría recalculando precio (variante o
+      producto) y total en el backend, con la misma consulta que ya hace
+      la validación de stock.
 - [ ] Imagen específica por variante de color — hoy la galería de fotos es
       una lista suelta sin asociación a ninguna variante en particular.
       Requiere schema + selector en `ProductAttributesForm` + lógica en el
@@ -592,10 +613,23 @@ como punto de partida, en vez de diseñar a ciegas.
       Borrado junto con su export del barrel. `ProductEditModal.jsx` ya no
       existía: se había borrado en el commit `e895121` (división de
       `ProductsPage` en rutas separadas), no quedaba nada que limpiar ahí.
-- [ ] `syncCartWithBackend`: un carrito viejo en `localStorage` de antes de
-      este cambio (sin `sku`) va a fallar el sync al loguearse. No
-      bloqueante mientras el sitio no esté publicado — revisar antes del
-      lanzamiento si hay usuarios de prueba con carritos viejos guardados.
+- [x] ~~`syncCartWithBackend` falla con carritos viejos sin `sku`~~ —
+      resuelto (paso 37). El bug real era peor: llamaba
+      `addToCartService(userId, item._id, item.quantity)`, sin `sku` y con
+      la cantidad en su lugar, así que **todo** carrito de invitado se
+      perdía en silencio al iniciar sesión (404 "Variante no encontrada"
+      en cada ítem, solo logueado en dev, y después se borraba el
+      `localStorage`). Ahora pasa `sku` y cantidad reales; los ítems viejos
+      sin `sku` se resuelven con `resolveLocalItemSku`
+      (`entities/cart/lib/`) solo si no hay ambigüedad (variante única, o
+      talla + color exactos); lo que no se puede pasar (sin variante
+      identificable, sin stock, variante borrada) se avisa en un toast.
+      Encontrado al probar: un carrito **guardado en la base** con ítems
+      viejos sin `sku` (obligatorio en `CartModel`) hacía fallar con 500
+      cualquier `cart.save()` de ese usuario — no podía agregar, cambiar
+      cantidad ni quitar nada. `cartControllers.js` ahora descarta esos
+      ítems (`dropItemsWithoutSku`) antes de tocar el carrito, así que cada
+      carrito viejo se limpia solo la primera vez que el usuario lo usa.
 - [x] ~~Patrón de archivos modificados sin explicación~~ — descartado como
       preocupación real. Las dos apariciones tienen causa mundana
       confirmada, no un proceso externo: (1) los secretos en `env.js` se

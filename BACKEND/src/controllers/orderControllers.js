@@ -1,3 +1,4 @@
+import mongoose from 'mongoose'
 import OrderModel from '../models/OrderModel.js'
 import ProductModel from '../models/ProductModel.js'
 
@@ -16,6 +17,42 @@ export const createWhatsAppOrder = async (req, res) => {
             return res
                 .status(400)
                 .json({ success: false, message: 'Faltan datos de contacto' })
+        }
+
+        // 1b. Stock real de cada variante pedida (una sola consulta). Si algo
+        // no alcanza, se rechaza la orden completa: el PDF y el mensaje de
+        // WhatsApp se arman en el frontend con el carrito, así que ajustar
+        // cantidades acá los dejaría distintos de la orden guardada.
+        // No reserva stock (se descuenta al aprobar): evita el caso común de
+        // un carrito viejo, no dos órdenes simultáneas por la última unidad.
+        const itemProductId = (item) => String(item._id || item.id)
+        const productIds = [...new Set(items.map(itemProductId))].filter(
+            (id) => mongoose.isValidObjectId(id),
+        )
+        const products = await ProductModel.find(
+            { _id: { $in: productIds } },
+            { variants: 1 },
+        ).lean()
+
+        const problems = []
+        for (const item of items) {
+            const product = products.find(
+                (p) => String(p._id) === itemProductId(item),
+            )
+            const variant = product?.variants?.find((v) => v.sku === item.sku)
+            if (!variant) {
+                problems.push(`${item.name}: ya no está disponible`)
+            } else if (variant.stock < item.quantity) {
+                problems.push(
+                    `${item.name}${item.size ? ` (${item.size})` : ''}: pediste ${item.quantity}, quedan ${variant.stock}`,
+                )
+            }
+        }
+        if (problems.length > 0) {
+            return res.status(409).json({
+                success: false,
+                message: `Sin stock suficiente: ${problems.join('; ')}. Ajusta tu carrito e inténtalo de nuevo.`,
+            })
         }
 
         // 2. Generación de Folio Autoincremental

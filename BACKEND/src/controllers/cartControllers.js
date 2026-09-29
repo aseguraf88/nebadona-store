@@ -1,6 +1,14 @@
 import CartModel from '../models/CartModel.js'
 import ProductModel from '../models/ProductModel.js' // Tenemos que validar que el producto exista
 
+// Ítems viejos del carrito, guardados antes de que existiera `sku` (hoy
+// obligatorio en CartModel): no se pueden mostrar ni comprar, y como save()
+// valida el documento completo, uno solo hace fallar cualquier cambio del
+// carrito con un 500. Se descartan antes de tocar el carrito.
+const dropItemsWithoutSku = (cart) => {
+    cart.products = cart.products.filter((item) => item.sku)
+}
+
 export const addToCart = async (req, res) => {
     try {
         const userId = req.user?._id || req.body.userId
@@ -49,6 +57,8 @@ export const addToCart = async (req, res) => {
         let cart = await CartModel.findOne({ userId })
 
         if (cart) {
+            dropItemsWithoutSku(cart)
+
             // Dedupe por productId + sku (no solo productId)
             const productIndex = cart.products.findIndex(
                 (p) => p.productId.toString() === productId && p.sku === sku
@@ -129,6 +139,8 @@ export const updateCart = async (req, res) => {
             return res.status(404).json({ message: 'Carrito no encontrado' })
         }
 
+        dropItemsWithoutSku(cart)
+
         const productIndex = cart.products.findIndex(
             (p) => p.productId.toString() === productId && p.sku === sku
         )
@@ -191,6 +203,8 @@ export const removeProductFromCart = async (req, res) => {
         if (!cart) {
             return res.status(404).json({ message: 'Carrito no encontrado' })
         }
+
+        dropItemsWithoutSku(cart)
 
         // Buscar el indice del producto en el carrito
         const productIndex = cart.products.findIndex(

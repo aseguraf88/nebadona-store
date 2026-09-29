@@ -9,6 +9,7 @@ import {
     clearCartService,
 } from '../../cart/api/cartServices'
 import { toast } from 'react-hot-toast'
+import { resolveLocalItemSku } from '../lib/resolveLocalItemSku'
 
 export const CartContext = createContext({})
 
@@ -111,21 +112,44 @@ export const CartContextProvider = ({ children }) => {
             try {
                 setLoading(true)
                 const userId = getUserId()
+                const failed = []
 
-                // Agregar cada producto del carrito local al backend
+                // Pasar cada ítem del carrito local al backend con su sku y su
+                // cantidad reales (antes faltaba el sku y la cantidad caía en
+                // su lugar: fallaba todo). El backend valida variante y stock.
                 for (const item of localCart) {
+                    const sku = resolveLocalItemSku(item)
+                    if (!sku) {
+                        failed.push(`${item.name} (sin variante identificable)`)
+                        continue
+                    }
                     try {
-                        await addToCartService(userId, item._id, item.quantity)
+                        await addToCartService(
+                            userId,
+                            item._id,
+                            sku,
+                            item.quantity || 1,
+                        )
                     } catch (error) {
                         logError(
                             `Error al sincronizar producto ${item.name}:`,
                             error,
                         )
+                        failed.push(`${item.name} (${error.message})`)
                     }
                 }
 
+                // Se borra igual: con sesión el carrito se lee del backend, y
+                // reintentar no arregla una variante o un stock inválidos
                 localStorage.removeItem('cart')
                 await loadCart()
+
+                if (failed.length > 0) {
+                    toast.error(
+                        `No pudimos pasar a tu carrito: ${failed.join(', ')}`,
+                        { duration: 8000 },
+                    )
+                }
             } catch (error) {
                 logError('Error al sincronizar carrito:', error)
             } finally {
