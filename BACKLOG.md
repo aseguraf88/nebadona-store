@@ -336,6 +336,19 @@ como punto de partida, en vez de diseñar a ciegas.
       en borrador) y se bajó el stock del que no era. Sumar el Handle
       (aunque sea en texto chico bajo el nombre) evitaría la confusión.
 
+- [ ] PDF del pedido (`generatePDF` en `Checkout.jsx`): el nombre del
+      producto se corta en el código a 38 caracteres
+      (`item.name.substring(0, 38)`) y la categoría a 15
+      (`categoryName.substring(0, 15)`). No impiden distinguir variantes
+      (el SKU completo ya alcanza, desde el paso 39), pero un nombre largo
+      queda trunco. Mismo arreglo posible que el SKU: `splitTextToSize`.
+
+- [ ] PDF del pedido: no hay salto de página. Cada fila avanza 8 mm y la
+      tabla empieza en y=75 de una hoja A4 (297 mm), así que con un
+      carrito de ~25 ítems o más las filas y el total se salen de la hoja.
+      Se arreglaría con un `doc.addPage()` cuando `startY` pase el
+      margen inferior, repitiendo el encabezado de la tabla.
+
 - [x] **Guía de Cuidados y Envíos separadas a páginas propias** —
       encontrado en QA con la dueña real del negocio: el texto de
       cuidados en la ficha de producto era demasiado largo para leerse,
@@ -579,6 +592,18 @@ como punto de partida, en vez de diseñar a ciegas.
       una lista suelta sin asociación a ninguna variante en particular.
       Requiere schema + selector en `ProductAttributesForm` + lógica en el
       selector del cliente. Mejora post-lanzamiento, no un bug.
+- [x] ~~**El checkout y su PDF no distinguen variantes del mismo
+      producto**~~ — encontrado probando el paso 38, resuelto en el paso
+      39. En `Checkout.jsx`, la lista del resumen mostraba solo imagen y
+      título: ahora muestra talla y color debajo del nombre (mismo formato
+      y clases que `CartDrawer.jsx`), y la `key` de cada fila pasó de
+      `item._id` (repetida con dos variantes del mismo producto) a
+      `${item._id}-${item.sku}`. En el PDF, el SKU se cortaba **en el
+      código** a 18 caracteres (`sku.substring(0, 18)`), que se llevaba
+      justo el sufijo de talla/color: `CAL-RANDOM-PAT-XXL-ROS-2`, `-ROS` y
+      `-AMA` salían idénticos. Ahora va completo y, si no entra en su
+      columna, sigue en otra línea (`splitTextToSize`), con la fila
+      creciendo solo cuando hace falta.
 - [x] ~~Limpieza menor: sacar el `console.log('UPDATE CART', ...)`~~ de
       `cartControllers.js` — resuelto (paso 38).
 - [x] ~~Limpieza menor: `stock` sin uso en `ProductCard.jsx`~~ — resuelto

@@ -174,14 +174,27 @@ const Checkout = () => {
                 item.categoryName ||
                 'General'
             const sku = item.sku || 'SIN-SKU'
+            // El SKU completo distingue variantes (el sufijo es talla/color):
+            // si no entra en su columna (x 28 → 70), sigue en otra línea.
+            // Corta solo en los guiones: agrega un espacio después de cada
+            // "-" para que splitTextToSize corte ahí, y lo quita al dibujar
+            // (solo si no entra en una línea: medido con los espacios, un
+            // SKU que sí entra parecería más ancho y se cortaría de más)
+            const skuLines =
+                doc.getTextWidth(sku) <= 40
+                    ? [sku]
+                    : doc
+                          .splitTextToSize(sku.replace(/-/g, '- '), 40)
+                          .map((line) => line.replace(/- /g, '-').trim())
 
             doc.text(String(qty), 16, startY)
-            doc.text(sku.substring(0, 18), 28, startY)
+            doc.text(skuLines, 28, startY)
             doc.text(categoryName.substring(0, 15), 70, startY)
             doc.text(item.name.substring(0, 38), 105, startY)
             doc.text(formatPrice(itemTotal), 192, startY, { align: 'right' })
 
-            startY += 8
+            // Fila de siempre (8 mm) + una línea extra por cada renglón de SKU
+            startY += 8 + (skuLines.length - 1) * 4
         })
 
         doc.setDrawColor(200, 200, 200)
@@ -601,7 +614,7 @@ const Checkout = () => {
                         <div className="space-y-4 max-h-[350px] overflow-y-auto px-2 pt-3 custom-scrollbar">
                             {cart.map((item) => (
                                 <div
-                                    key={item._id}
+                                    key={`${item._id}-${item.sku}`}
                                     className="flex items-center justify-between border-b border-base-200/60 pb-3"
                                 >
                                     <div className="flex items-center gap-4">
@@ -619,6 +632,11 @@ const Checkout = () => {
                                             <h3 className="text-xs sm:text-sm font-medium line-clamp-2 max-w-[130px] sm:max-w-[150px] text-base-content leading-tight">
                                                 {item.name}
                                             </h3>
+                                            {[item.size, item.baseColor].filter(Boolean).join(' · ') && (
+                                                <p className="mt-0.5 text-xs text-base-content/40 font-medium">
+                                                    {[item.size, item.baseColor].filter(Boolean).join(' · ')}
+                                                </p>
+                                            )}
                                         </div>
                                     </div>
                                     <span className="text-xs sm:text-sm font-bold text-primary whitespace-nowrap">
