@@ -30,6 +30,20 @@ const SIZE_STANDARD_IDS = [
     'internacional',
 ]
 
+// Talla fija que cada Estándar impone a sus variantes. Copia de
+// `variantSize` en FRONTEND/src/entities/product/config/sizeStandardOptions.js
+// (frontend y backend no comparten código): mantener las dos iguales.
+// La usa el importador de CSV (productsControllers.js).
+export const LOCKED_VARIANT_SIZE_BY_STANDARD = {
+    bebe_0_6: '0-6M',
+    bebe_6_12: '6-12M',
+    bebe_12_24: '12-24M',
+    nino_2_4: '2-4A',
+    nino_5_7: '5-7A',
+    nino_8_10: '8-10A',
+    personalizado: 'UNICA',
+}
+
 // Talla EU de calzado, entera, dentro del tramo que cubren las opciones
 const sizeRangeNumber = z.number().int().min(15).max(49).nullable().optional()
 

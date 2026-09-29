@@ -645,29 +645,29 @@ como punto de partida, en vez de diseñar a ciegas.
 
 ## 🟡 Nuevo, encontrado durante Fase 4 (tallas)
 
-- [ ] **Género en el CSV: exportar y reimportar lo pierde**: la
-      exportación (`productsControllers.js`, `exportProductsCsv`) escribe
-      `gender` tal cual se guarda (`men`, `women`, `kids`), pero la
-      importación solo traduce nombres en español (`genderTranslationMap`:
-      `hombre`, `mujer`, `niños`, `ninos`, `unisex`) y cualquier otro valor
-      cae a `'unisex'`. Resultado: un CSV exportado y vuelto a importar
-      deja todos los productos como `unisex`. Tampoco hay traducción para
-      el nuevo `babies` (Fase 4) ni un `bebés` en español. Sin arreglar a
-      propósito, fuera del alcance de la Fase 4.
-- [ ] **CSV y Estándar de talla: la importación puede dejar Tallas
-      inconsistentes**: el importador (`importProductsCsv`) no lee ni
-      escribe `size_standard` y guarda la Talla de cada variante tal cual
-      viene en el archivo, con `bulkWrite` directo (sin pasar por Zod). Un
-      producto con estándar de talla fija (ej. `bebe_0_6` → `0-6M`)
-      reimportado por CSV puede quedar con variantes en otra Talla (ej.
-      `M`). Mitigado desde Fase 4 (paso 33): al abrir ese producto en el
-      dashboard, las variantes se corrigen solas a la talla fija (y queda
-      marcado con cambios sin guardar). Un chequeo real en el backend
-      tendría que ir en el importador o en Mongoose, no en Zod.
+- [x] ~~**CSV: exportar y reimportar perdía datos**~~ — resuelto (paso
+      36), todo en `importProductsCsv`. El diagnóstico real era peor que
+      lo anotado: el BOM que agrega la exportación (para Excel) hacía que
+      la primera columna llegara como "﻿Handle", así que un CSV
+      exportado y reimportado sin tocar no importaba **ninguna** fila. Se
+      corrigió: (1) `mapHeaders` quita el BOM; (2) se lee la columna
+      `Genero` (sin tilde, como la exporta) además de `Género`/`gender`,
+      y `genderTranslationMap` reconoce los valores en inglés que exporta
+      (`men`/`women`/`kids`/`babies`) y `bebés`/`bebes`; un Género
+      desconocido avisa en `errors` en vez de caer en silencio a
+      `unisex`; (3) se lee `Precio Variante` (antes cada variante
+      reimportada quedaba con `price: null`, borrando precios reales);
+      (4) antes del `bulkWrite`, una consulta liviana trae el
+      `size_standard` de los productos que ya existen y, si tiene talla
+      fija, fuerza esa Talla en sus variantes (con aviso en `errors`),
+      usando `LOCKED_VARIANT_SIZE_BY_STANDARD` (`productSchema.js`, copia
+      de `variantSize` del frontend). Los SKUs no se regeneran.
+      Pendiente menor, sin tocar: `parseInt` lee mal precios con punto
+      de miles ("1.000" → 1) si el CSV se edita en Excel con formato;
+      afecta también a Precio y Costo del producto, desde antes.
       Relacionado, **resuelto en el paso 33**: el selector libre de Talla
       ya no muestra "N/A" para tallas que no están en `SIZE_OPTIONS` (ej.
-      "39-43" cargado por CSV, detectado en el paso 16 y nunca anotado);
-      ahora muestra el valor real como opción extra.
+      "39-43" cargado por CSV); ahora muestra el valor real.
 
 ## ❓ Pregunta abierta, sin resolver
 
@@ -679,6 +679,18 @@ como punto de partida, en vez de diseñar a ciegas.
   `ProductPage`, catálogo) renderiza un badge visual para ellos todavía —
   el dato existe, no tiene salida visual. Confirmar si era esto antes de
   construir nada.
+- Revisar precios de variantes: el modelo y el CSV ya soportan un
+  precio propio por variante (price en variants, null = usa el
+  precio general del producto), confirmado funcional en el paso 36. Hoy
+  el dashboard no tiene forma de asignarlo: en VariantsFields.jsx la
+  tabla y las tarjetas muestran SKU, Talla, Color Base, Diseño y Stock,
+  pero ninguna columna de precio — el campo existe en el formulario y se
+  envía al guardar, pero nadie lo puede editar desde la pantalla; solo
+  llega por CSV. Falta definir cómo se le mostraría al cliente en la
+  ficha de producto (¿el precio cambia al elegir una variante mediante
+  un selector, o se necesita agregar ese selector?), y qué pasa con la
+  galería/scroll de variantes que ya existe. Sin definir todavía — es
+  una conversación de diseño pendiente, no una implementación en curso.
 
 ## 🟡 Puede esperar sin riesgo real (post-lanzamiento)
 

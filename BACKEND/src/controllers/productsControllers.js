@@ -1,5 +1,9 @@
 import ProductModel from '../models/ProductModel.js'
-import { productSchema, productUpdateSchema } from '../schemas/productSchema.js'
+import {
+    productSchema,
+    productUpdateSchema,
+    LOCKED_VARIANT_SIZE_BY_STANDARD,
+} from '../schemas/productSchema.js'
 import { ZodError } from 'zod'
 import cloudinary, {
     isCloudinaryConfigured,
@@ -220,13 +224,27 @@ export const importProductsCsv = async (req, res) => {
             mujer: 'women',
             niños: 'kids',
             ninos: 'kids',
+            bebés: 'babies',
+            bebes: 'babies',
             unisex: 'unisex',
+            // Los valores que escribe exportProductsCsv (tal como se guardan)
+            men: 'men',
+            women: 'women',
+            kids: 'kids',
+            babies: 'babies',
         }
 
         let rowIndex = 1
 
         stream
-            .pipe(csv())
+            // Sin el BOM que agrega nuestra propia exportación (para Excel),
+            // la primera columna llegaría como "﻿Handle" y se ignoraría
+            .pipe(
+                csv({
+                    mapHeaders: ({ header }) =>
+                        header.replace(/^﻿/, '').trim(),
+                })
+            )
             .on('data', (data) => {
                 const currentRow = rowIndex++
                 const handle = (data.Handle || data.handle)
@@ -271,11 +289,17 @@ export const importProductsCsv = async (req, res) => {
                     newProduct.product_category = product_category
 
                     const rawGender = cellValue(
-                        data.Género || data.gender
+                        data.Género || data.Genero || data.gender
                     )?.toLowerCase()
-                    if (rawGender)
-                        newProduct.gender =
-                            genderTranslationMap[rawGender] || 'unisex'
+                    if (rawGender) {
+                        const gender = genderTranslationMap[rawGender]
+                        if (!gender) {
+                            errors.push(
+                                `Fila ${currentRow}: Género "${rawGender}" no reconocido en ${handle}, se usó unisex.`
+                            )
+                        }
+                        newProduct.gender = gender || 'unisex'
+                    }
 
                     if (cellValue(data.Material || data.material))
                         newProduct.material = cellValue(
@@ -348,6 +372,25 @@ export const importProductsCsv = async (req, res) => {
 
                 const stock = parseInt(cellValue(data.Stock || data.stock)) || 0
 
+                // Precio propio de la variante: vacío = usa el del producto
+                // (null). No se inventa 0 si el valor es inválido: 0 sería
+                // la variante gratis. bulkWrite no pasa por los validadores
+                // de Mongoose, así que el mínimo 0 se chequea acá.
+                const variantPriceStr = cellValue(
+                    data['Precio Variante'] || data.variantPrice
+                )
+                let variantPrice = null
+                if (variantPriceStr) {
+                    const parsed = parseInt(variantPriceStr, 10)
+                    if (Number.isNaN(parsed) || parsed < 0) {
+                        errors.push(
+                            `Fila ${currentRow}: Precio Variante "${variantPriceStr}" inválido en ${handle}, se dejó sin precio propio.`
+                        )
+                    } else {
+                        variantPrice = parsed
+                    }
+                }
+
                 let sku = cellValue(data.SKU || data.sku)?.toUpperCase()
                 if (!sku) {
                     const colorSnippet = baseColor
@@ -363,7 +406,7 @@ export const importProductsCsv = async (req, res) => {
                     baseColor,
                     designColors,
                     stock,
-                    price: null,
+                    price: variantPrice,
                 }
 
                 const isDuplicate = parent.variants.some((v) => v.sku === sku)
@@ -386,6 +429,32 @@ export const importProductsCsv = async (req, res) => {
                     const productsToInsert = Array.from(
                         groupedProducts.values()
                     )
+
+                    // Productos que ya existen con Estándar de talla fija: sus
+                    // variantes llevan esa talla, venga lo que venga en el CSV
+                    // (el CSV no toca size_standard). Mismo criterio que el
+                    // dashboard (paso 33). Una sola consulta, solo 2 campos.
+                    const existingStandards = await ProductModel.find(
+                        { handle: { $in: [...groupedProducts.keys()] } },
+                        { handle: 1, size_standard: 1 }
+                    ).lean()
+                    for (const { handle, size_standard } of existingStandards) {
+                        const lockedSize =
+                            LOCKED_VARIANT_SIZE_BY_STANDARD[size_standard]
+                        const product = groupedProducts.get(handle)
+                        if (
+                            !lockedSize ||
+                            !product ||
+                            product.variants.every((v) => v.size === lockedSize)
+                        )
+                            continue
+                        product.variants.forEach((v) => {
+                            v.size = lockedSize
+                        })
+                        errors.push(
+                            `Producto ${handle}: Talla ajustada a ${lockedSize} por su Estándar de talla.`
+                        )
+                    }
 
                     const bulkOps = productsToInsert.map((product) => {
                         const { status, isActive, ...fieldsToUpdate } = product

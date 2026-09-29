@@ -7,6 +7,8 @@
  * `variantSize` es la talla fija que el estándar impone a todas las
  * variantes (null = Talla libre). Mayúsculas y sin espacios: se guarda tal
  * cual, la ve el cliente y forma parte del SKU.
+ * Copia en el backend: LOCKED_VARIANT_SIZE_BY_STANDARD (productSchema.js),
+ * que usa el importador de CSV. Mantener las dos iguales.
  * Los id deben coincidir con el enum de size_standard en el backend
  * (productSchema.js y ProductModel.js).
  */
