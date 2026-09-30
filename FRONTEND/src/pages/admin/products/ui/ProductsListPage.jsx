@@ -41,7 +41,10 @@ const ProductsListPage = () => {
     const visibleProducts = useMemo(() => {
         const query = (searchQuery || '').trim().toLowerCase()
         return products.filter((p) => {
-            const matchesQuery = !query || p.name?.toLowerCase().includes(query)
+            const matchesQuery =
+                !query ||
+                p.name?.toLowerCase().includes(query) ||
+                p.handle?.toLowerCase().includes(query)
             const matchesStatus =
                 statusFilter === 'all' || p.status === statusFilter
             return matchesQuery && matchesStatus
@@ -101,7 +104,7 @@ const ProductsListPage = () => {
                 <div className="p-4 flex flex-col sm:flex-row gap-3 border-b border-base-200">
                     <input
                         type="text"
-                        placeholder="Buscar por nombre..."
+                        placeholder="Buscar por nombre o handle..."
                         className="input input-bordered input-sm w-full sm:w-64"
                         value={searchQuery || ''}
                         onChange={(e) => setSearchQuery(e.target.value)}
@@ -158,7 +161,12 @@ const ProductsListPage = () => {
                                                     <div className="w-10 h-10 rounded-lg bg-base-200" />
                                                 )}
                                             </td>
-                                            <td className="font-semibold">{product.name}</td>
+                                            <td>
+                                                <p className="font-semibold">{product.name}</p>
+                                                <p className="font-mono text-xs text-base-content/60">
+                                                    {product.handle}
+                                                </p>
+                                            </td>
                                             <td className="capitalize">
                                                 {product.product_category || '—'}
                                             </td>
@@ -235,6 +243,9 @@ const ProductsListPage = () => {
                                         )}
                                         <div className="flex-1 min-w-0">
                                             <p className="font-semibold truncate">{product.name}</p>
+                                            <p className="font-mono text-xs text-base-content/60 truncate">
+                                                {product.handle}
+                                            </p>
                                             <p className="text-xs text-base-content/60 capitalize">
                                                 {product.product_category || '—'}
                                             </p>

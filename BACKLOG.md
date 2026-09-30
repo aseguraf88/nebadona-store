@@ -329,12 +329,18 @@ como punto de partida, en vez de diseñar a ciegas.
       que además traduce `camisa`/`poleron`. Si se suma un sinónimo nuevo,
       hay que agregarlo en los dos lugares.
 
-- [ ] El listado de productos del dashboard (`ProductsListPage.jsx`) no
-      muestra el Handle: dos productos con el mismo nombre solo se
-      distinguen por estado o stock. Pasó en una prueba real (paso 37):
-      había dos "Misfits" (`CAL-ROCK-MISF-01` publicado y `CAL-ROCK-MISF`
-      en borrador) y se bajó el stock del que no era. Sumar el Handle
-      (aunque sea en texto chico bajo el nombre) evitaría la confusión.
+- [x] ~~El listado de productos del dashboard (`ProductsListPage.jsx`) no
+      muestra el Handle~~ — resuelto (paso 42). Encontrado en una prueba
+      real (paso 37): había dos "Misfits" (`CAL-ROCK-MISF-01` publicado y
+      `CAL-ROCK-MISF` en borrador) y se bajó el stock del que no era.
+      Ahora el Handle va debajo del nombre, en la misma celda (tabla) o
+      entre nombre y categoría (tarjeta mobile, con `truncate`), sin
+      columna nueva: `font-mono text-xs` como en `InventoryPage.jsx`, más
+      el gris de dato secundario del mismo archivo (`text-base-content/60`).
+      El buscador también busca por Handle ("Buscar por nombre o
+      handle..."), sin distinguir mayúsculas. Confirmado en el navegador:
+      desktop, mobile, nombres cortos y largos, dos productos con el mismo
+      nombre, y búsqueda combinada con los filtros de estado.
 
 - [ ] PDF del pedido (`generatePDF` en `Checkout.jsx`): el nombre del
       producto se corta en el código a 38 caracteres
@@ -375,10 +381,23 @@ como punto de partida, en vez de diseñar a ciegas.
       El formulario del dashboard nunca guarda 0 (lo convierte en `null`),
       así que hoy solo puede llegar por CSV. Encontrado en el paso 40.
 
-- [ ] **Se puede pedir un producto en borrador (`DRAFT`)**: la consulta de
-      `createWhatsAppOrder` no filtra por `status`, así que mandando a mano
-      el `_id` de un producto `DRAFT` la orden pasa (si la variante existe,
-      tiene stock y precio). Encontrado en el paso 40.
+- [x] ~~**Se puede pedir un producto en borrador (`DRAFT`)**~~ — resuelto
+      (paso 41): la consulta de `createWhatsAppOrder` ahora filtra por
+      `status: 'PUBLISHED'` (la misma regla que usa el sitio público), así
+      que un producto en `DRAFT` no aparece entre los encontrados y cae en
+      el mismo 409 "ya no está disponible" que un producto borrado. También
+      cubre el caso legítimo: un producto que se pasa a Borrador mientras
+      está en el carrito de alguien ya no se puede comprar. Probado: 409 con
+      un `DRAFT` con variante válida (fetch a mano), orden normal con un
+      `PUBLISHED` sin cambios. (Código en el commit `6aa9297`; BACKLOG
+      actualizado en el commit del paso 42.)
+
+- [ ] **La ficha de un producto en `DRAFT` se puede abrir por URL directa
+      y agregar al carrito**: `ProductPage` carga con `getProductById`, que
+      no filtra por `status`, y la ficha no revisa el estado (pasa con un
+      link compartido de un producto que después se ocultó, sin DevTools).
+      Desde el paso 41 ya no se puede comprar (la orden da 409 "ya no está
+      disponible"), pero el cliente recién se entera en el checkout.
 
 - [x] **Guía de Cuidados y Envíos separadas a páginas propias** —
       encontrado en QA con la dueña real del negocio: el texto de
