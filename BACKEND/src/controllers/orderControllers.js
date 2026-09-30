@@ -47,8 +47,10 @@ export const createWhatsAppOrder = async (req, res) => {
         const productIds = [...new Set(items.map(itemProductId))].filter(
             (id) => mongoose.isValidObjectId(id),
         )
+        // Solo productos a la venta: uno en DRAFT no aparece entre los
+        // encontrados y cae en "ya no está disponible", igual que uno borrado
         const products = await ProductModel.find(
-            { _id: { $in: productIds } },
+            { _id: { $in: productIds }, status: 'PUBLISHED' },
             { variants: 1, price: 1 },
         ).lean()
 
