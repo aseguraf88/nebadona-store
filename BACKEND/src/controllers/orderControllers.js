@@ -19,39 +19,84 @@ export const createWhatsAppOrder = async (req, res) => {
                 .json({ success: false, message: 'Faltan datos de contacto' })
         }
 
-        // 1b. Stock real de cada variante pedida (una sola consulta). Si algo
-        // no alcanza, se rechaza la orden completa: el PDF y el mensaje de
-        // WhatsApp se arman en el frontend con el carrito, así que ajustar
-        // cantidades acá los dejaría distintos de la orden guardada.
+        // 1b. Cantidad, stock y precio real de cada variante pedida (una sola
+        // consulta). Si algo no cuadra, se rechaza la orden completa: el PDF
+        // y el mensaje de WhatsApp se arman en el frontend con el carrito,
+        // así que corregir cantidades o precios acá los dejaría distintos de
+        // la orden guardada.
         // No reserva stock (se descuenta al aprobar): evita el caso común de
         // un carrito viejo, no dos órdenes simultáneas por la última unidad.
+        const invalidQuantity = items.find(
+            (item) => !Number.isInteger(item.quantity) || item.quantity < 1,
+        )
+        if (invalidQuantity) {
+            return res.status(400).json({
+                success: false,
+                message: `Cantidad inválida para ${invalidQuantity.name}`,
+            })
+        }
+
         const itemProductId = (item) => String(item._id || item.id)
+        const itemLabel = (item) =>
+            `${item.name}${item.size ? ` (${item.size})` : ''}`
+        const formatCLP = (amount) =>
+            new Intl.NumberFormat('es-CL', {
+                style: 'currency',
+                currency: 'CLP',
+            }).format(amount)
         const productIds = [...new Set(items.map(itemProductId))].filter(
             (id) => mongoose.isValidObjectId(id),
         )
         const products = await ProductModel.find(
             { _id: { $in: productIds } },
-            { variants: 1 },
+            { variants: 1, price: 1 },
         ).lean()
 
-        const problems = []
-        for (const item of items) {
+        const stockProblems = []
+        const priceProblems = []
+        const realPrices = []
+        for (const [i, item] of items.entries()) {
             const product = products.find(
                 (p) => String(p._id) === itemProductId(item),
             )
             const variant = product?.variants?.find((v) => v.sku === item.sku)
-            if (!variant) {
-                problems.push(`${item.name}: ya no está disponible`)
+            // Misma regla que el carrito (CartContext, cartControllers)
+            const realPrice = variant ? (variant.price ?? product.price ?? null) : null
+            realPrices[i] = realPrice
+            if (!variant || realPrice === null) {
+                stockProblems.push(`${item.name}: ya no está disponible`)
             } else if (variant.stock < item.quantity) {
-                problems.push(
-                    `${item.name}${item.size ? ` (${item.size})` : ''}: pediste ${item.quantity}, quedan ${variant.stock}`,
+                stockProblems.push(
+                    `${itemLabel(item)}: pediste ${item.quantity}, quedan ${variant.stock}`,
+                )
+            } else if (Number(item.price) !== realPrice) {
+                priceProblems.push(
+                    `el precio de ${itemLabel(item)} cambió a ${formatCLP(realPrice)}`,
                 )
             }
         }
-        if (problems.length > 0) {
+        if (stockProblems.length > 0) {
             return res.status(409).json({
                 success: false,
-                message: `Sin stock suficiente: ${problems.join('; ')}. Ajusta tu carrito e inténtalo de nuevo.`,
+                message: `Sin stock suficiente: ${stockProblems.join('; ')}. Ajusta tu carrito e inténtalo de nuevo.`,
+            })
+        }
+        if (priceProblems.length > 0) {
+            return res.status(409).json({
+                success: false,
+                message: `Precios actualizados: ${priceProblems.join('; ')}. Quita esos productos del carrito y vuelve a agregarlos.`,
+            })
+        }
+
+        const realTotal = items.reduce(
+            (acc, item, i) => acc + realPrices[i] * item.quantity,
+            0,
+        )
+        if (Number(totalAmount) !== realTotal) {
+            return res.status(409).json({
+                success: false,
+                message:
+                    'El total del pedido no coincide con los precios actuales. Recarga la página e inténtalo de nuevo.',
             })
         }
 
@@ -91,17 +136,17 @@ export const createWhatsAppOrder = async (req, res) => {
             userId: req.user?._id || null,
             orderNumber,
             deliveryType,
-            products: items.map((item) => ({
+            products: items.map((item, i) => ({
                 productId: item._id || item.id, // Compatibilidad por si pasas _id o id
                 name: item.name,
                 sku: item.sku || '',
                 size: item.size || '',
                 baseColor: item.baseColor || '',
-                price: item.price,
+                price: realPrices[i],
                 quantity: item.quantity,
                 imageUrl: item.imageUrl || '',
             })),
-            totalAmount,
+            totalAmount: realTotal,
             status: 'whatsapp_pending',
             shippingInfo: formattedShippingInfo,
         })

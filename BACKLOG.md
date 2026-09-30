@@ -349,6 +349,37 @@ como punto de partida, en vez de diseñar a ciegas.
       Se arreglaría con un `doc.addPage()` cuando `startY` pase el
       margen inferior, repitiendo el encabezado de la tabla.
 
+- [ ] **PDF y mensaje de WhatsApp generados en el backend, editables desde
+      el dashboard**: hoy ambos los arma `Checkout.jsx` con el `cart` local,
+      así que pueden no coincidir con lo que el backend valida (el paso 40
+      lo contiene rechazando con 409 cualquier diferencia de precio, pero
+      la fuente sigue siendo el frontend). Corto plazo: armarlos con los
+      datos que devuelve el backend al crear la orden. Más adelante: mover
+      la generación al backend (permite reimprimir el PDF desde el panel de
+      órdenes) y una plantilla de WhatsApp editable desde el dashboard.
+
+- [ ] Contador del carrito (navbar) no sanea cantidades manipuladas en
+      `localStorage`: con `-1` el contador desaparece, con `0` lo corrige a
+      1, con `1.5` lo muestra tal cual. Solo cosmético — el backend ya
+      rechaza los tres casos al crear la orden (paso 40).
+
+- [ ] El checkout no se limpia al cerrar sesión: si la pantalla de
+      confirmación del pedido (reabrir WhatsApp / seguir comprando) queda
+      abierta y el usuario cierra sesión, sigue visible. No expone datos de
+      otro usuario, pero en un equipo compartido podría quedar a la vista.
+
+- [ ] **`variant.price` en 0 desde el CSV haría gratis esa variante en
+      todo el sitio**: `importProductsCsv` acepta "Precio Variante" = 0
+      (solo rechaza negativos), y la regla `variant.price ?? product.price`
+      usa el 0 tal cual (`??` solo cae al precio del producto con `null`).
+      El formulario del dashboard nunca guarda 0 (lo convierte en `null`),
+      así que hoy solo puede llegar por CSV. Encontrado en el paso 40.
+
+- [ ] **Se puede pedir un producto en borrador (`DRAFT`)**: la consulta de
+      `createWhatsAppOrder` no filtra por `status`, así que mandando a mano
+      el `_id` de un producto `DRAFT` la orden pasa (si la variante existe,
+      tiene stock y precio). Encontrado en el paso 40.
+
 - [x] **Guía de Cuidados y Envíos separadas a páginas propias** —
       encontrado en QA con la dueña real del negocio: el texto de
       cuidados en la ficha de producto era demasiado largo para leerse,
@@ -581,13 +612,26 @@ como punto de partida, en vez de diseñar a ciegas.
       aprobar), así que dos órdenes casi simultáneas por la última unidad
       pasan las dos; el admin lo ve como aviso de stock negativo al
       aprobar la segunda.
-- [ ] **La orden confía en el precio que manda el frontend**:
-      `createWhatsAppOrder` guarda `price` de cada ítem y `totalAmount` tal
-      cual llegan, sin compararlos con la base — un pedido con precios
-      alterados se guardaría así. Riesgo bajo mientras el pago se confirme
-      a mano por WhatsApp. Se arreglaría recalculando precio (variante o
-      producto) y total en el backend, con la misma consulta que ya hace
-      la validación de stock.
+- [x] ~~**La orden confía en el precio que manda el frontend**~~ — resuelto
+      (paso 40), todo en `createWhatsAppOrder`. Valida que cada `quantity`
+      sea un entero ≥ 1 (400 si no: antes una cantidad negativa pasaba el
+      chequeo de stock y habría restado del total), recalcula el precio
+      real de cada ítem con la misma regla del carrito (`variant.price ??
+      product.price`) y el total, reutilizando la consulta de stock del
+      paso 37 (solo se sumó `price` a la proyección), y rechaza con 409 si
+      el precio de algún ítem o el `totalAmount` no coinciden. Nunca guarda
+      lo que manda el frontend: precio y total salen siempre de la base.
+      Se eligió rechazar en vez de corregir en silencio porque el PDF y el
+      WhatsApp los arma el frontend con el carrito local: corregir solo la
+      orden guardada los dejaría distintos (y el WhatsApp es por donde se
+      cobra). Cubre también un caso legítimo: el carrito de invitado guarda
+      el precio al agregar y nunca lo refresca, así que un cambio de precio
+      en el dashboard ahora se avisa antes de crear la orden ("quítalo del
+      carrito y vuelve a agregarlo"). Límite: el cliente siempre puede
+      editar el texto del WhatsApp antes de enviarlo; la referencia para
+      cobrar es el total del panel de órdenes. Probado: pedido normal
+      (invitado y logueado), precio manipulado en `localStorage` y en el
+      payload, cantidad inválida, y carrito viejo tras cambiar el precio.
 - [ ] Imagen específica por variante de color — hoy la galería de fotos es
       una lista suelta sin asociación a ninguna variante en particular.
       Requiere schema + selector en `ProductAttributesForm` + lógica en el
