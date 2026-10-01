@@ -2,6 +2,7 @@ import DesignThemeModel from '../models/DesignThemeModel.js'
 import ProductModel from '../models/ProductModel.js'
 import { designThemeSchema } from '../schemas/designThemeSchema.js'
 import { ZodError } from 'zod'
+import { formatZodError } from '../utils/formatZodError.js'
 
 export const createDesignTheme = async (req, res) => {
     try {
@@ -15,9 +16,7 @@ export const createDesignTheme = async (req, res) => {
         })
     } catch (error) {
         if (error instanceof ZodError) {
-            return res
-                .status(400)
-                .json(error.issues.map((issue) => ({ message: issue.message })))
+            return res.status(400).json(formatZodError(error, req.body))
         }
 
         return res.status(500).json({ message: 'Error al crear el tema.' })
@@ -56,9 +55,7 @@ export const updateDesignTheme = async (req, res) => {
         return res.status(200).json(updatedDesignTheme)
     } catch (error) {
         if (error instanceof ZodError) {
-            return res
-                .status(400)
-                .json(error.issues.map((issue) => ({ message: issue.message })))
+            return res.status(400).json(formatZodError(error, req.body))
         }
 
         return res.status(500).json({ message: 'Error al actualizar el tema.' })

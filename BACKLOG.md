@@ -399,6 +399,14 @@ como punto de partida, en vez de diseñar a ciegas.
       Desde el paso 41 ya no se puede comprar (la orden da 409 "ya no está
       disponible"), pero el cliente recién se entera en el checkout.
 
+- [ ] **El formulario de Configuración no avisa por qué no guarda**: al
+      crear un tema, categoría o franquicia con el nombre vacío o solo con
+      espacios, el formulario bloquea el envío en silencio, sin mandar
+      ninguna petición ni mostrar ningún aviso. El usuario no se entera de
+      por qué no se guardó. Encontrado al probar el paso 43; el mensaje
+      nuevo del backend ("Nombre: es obligatorio.") nunca llega a
+      ejecutarse por esta vía.
+
 - [x] **Guía de Cuidados y Envíos separadas a páginas propias** —
       encontrado en QA con la dueña real del negocio: el texto de
       cuidados en la ficha de producto era demasiado largo para leerse,
@@ -749,7 +757,7 @@ como punto de partida, en vez de diseñar a ciegas.
       backend: Handle `maxLength={50}` y Título `maxLength={100}`. El
       Título tenía el mismo bug (mínimo 3 en el backend, solo "no vacío"
       en el frontend) y se corrigió en el mismo paso.
-- [ ] **Mensajes de error del backend al guardar un producto**: la causa
+- [x] ~~**Mensajes de error del backend al guardar un producto**~~ — la causa
       real (diagnosticada en Fase 4, paso 32b) no era solo que faltara el
       nombre del campo — el mensaje del backend **nunca llegaba al toast**.
       El backend responde bien (400 con `message` = primer issue de Zod,
@@ -765,6 +773,38 @@ como punto de partida, en vez de diseñar a ciegas.
       compartido en el backend, toca los 5 controladores que atrapan
       `ZodError` (products, auth, franchiseNames, designThemes,
       productCategories): afectaría también login y registro.
+      **Alternativa B resuelta (paso 43)** con un helper compartido,
+      `BACKEND/src/utils/formatZodError.js`, usado en los 10 `catch` de
+      esos 5 controladores. Arma el mensaje en español según el tipo de
+      error de Zod (`issue.code`), con el nombre del campo en español
+      ("Handle: debe tener al menos 3 caracteres.", "Variantes #1 › Stock:
+      debe ser mayor o igual a 0."), y distingue "es obligatorio" de "debe
+      ser un número". Los mensajes `custom` (refine/superRefine), ya en
+      español, se respetan tal cual. Se descartó el locale en español de
+      Zod 4 (`z.locales.es()`): traduce literal ("se esperaba string") y
+      no nombra el campo. La investigación encontró algo más grave que el
+      idioma: en 4 de los 5 controladores el mensaje **nunca llegaba a la
+      pantalla**. Login y los 3 de catálogo respondían un array suelto, sin
+      `message`, así que el usuario veía siempre el genérico del frontend;
+      y el registro ni siquiera atrapaba `ZodError`: respondía 500 "Error
+      interno" ante un dato mal escrito. Ahora los 5 responden el mismo
+      formato `{ message, errors }` (el toast muestra el primero), y el
+      registro da 400 como el login. Probado: registro y login con datos
+      inválidos (Console), tema vacío y producto con stock negativo.
+- [x] **El email distinguía mayúsculas: "Juan@Gmail.com" no podía
+      registrarse ni iniciar sesión** — encontrado y resuelto en el paso
+      43. El patrón de email de `LoginForm.jsx` y `RegisterForm.jsx` no
+      tenía la bandera `i`, así que rechazaba cualquier mayúscula con
+      "Correo electrónico inválido.". Agregar solo la `i` habría creado
+      otro bug: `UserModel` guarda el email tal cual y el login lo busca
+      exacto, así que `Juan@` no habría podido entrar como `juan@`, y el
+      índice único habría permitido dos cuentas. Por eso `authSchema.js`
+      ahora pasa el email a minúscula (`z.email().toLowerCase()`) en
+      registro y login. Los usuarios existentes no se ven afectados: con
+      el formulario anterior, todos sus emails estaban en minúscula.
+      Probado: registro con mayúsculas, login con el mismo email en
+      minúscula y en mayúscula, registro duplicado rechazado, login del
+      admin con mayúscula.
 
 ## 🟡 Nuevo, encontrado durante Fase 4 (tallas)
 

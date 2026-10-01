@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken'
 import UserModel from '../models/UserModel.js'
 import { registerSchema, loginSchema } from '../schemas/authSchema.js'
 import { ZodError } from 'zod'
+import { formatZodError } from '../utils/formatZodError.js'
 
 export const registerUser = async (req, res) => {
     try {
@@ -50,6 +51,9 @@ export const registerUser = async (req, res) => {
             maxAge: 60 * 60 * 1000,
         }).status(201).json({ message: 'Usuario registrado con éxito.' })
     } catch (error) {
+        if (error instanceof ZodError) {
+            return res.status(400).json(formatZodError(error, req.body))
+        }
         console.error('Error registerUser:', error)
         res.status(500).json({ message: 'Error interno al registrar usuario.' })
     }
@@ -105,9 +109,7 @@ export const loginUser = async (req, res) => {
             .json(userData)
     } catch (error) {
         if (error instanceof ZodError) {
-            return res
-                .status(400)
-                .json(error.issues.map((issue) => ({ message: issue.message })))
+            return res.status(400).json(formatZodError(error, req.body))
         }
         console.error('Error loginUser:', error)
         return res.status(500).json({ message: 'Error interno al iniciar sesión.' })

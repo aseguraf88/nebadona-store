@@ -2,6 +2,7 @@ import ProductCategoryModel from '../models/ProductCategoryModel.js'
 import ProductModel from '../models/ProductModel.js'
 import { productCategorySchema } from '../schemas/productCategorySchema.js'
 import { ZodError } from 'zod'
+import { formatZodError } from '../utils/formatZodError.js'
 
 export const createProductCategory = async (req, res) => {
     try {
@@ -15,9 +16,7 @@ export const createProductCategory = async (req, res) => {
         })
     } catch (error) {
         if (error instanceof ZodError) {
-            return res
-                .status(400)
-                .json(error.issues.map((issue) => ({ message: issue.message })))
+            return res.status(400).json(formatZodError(error, req.body))
         }
 
         return res.status(500).json({ message: 'Error al crear la categoria.' })
@@ -58,9 +57,7 @@ export const updateProductCategory = async (req, res) => {
         return res.status(200).json(updatedProductCategory)
     } catch (error) {
         if (error instanceof ZodError) {
-            return res
-                .status(400)
-                .json(error.issues.map((issue) => ({ message: issue.message })))
+            return res.status(400).json(formatZodError(error, req.body))
         }
 
         return res

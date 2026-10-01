@@ -2,6 +2,7 @@ import FranchiseNameModel from '../models/FranchiseNameModel.js'
 import ProductModel from '../models/ProductModel.js'
 import { franchiseNameSchema } from '../schemas/franchiseNameSchema.js'
 import { ZodError } from 'zod'
+import { formatZodError } from '../utils/formatZodError.js'
 
 export const createFranchiseName = async (req, res) => {
     try {
@@ -15,9 +16,7 @@ export const createFranchiseName = async (req, res) => {
         })
     } catch (error) {
         if (error instanceof ZodError) {
-            return res
-                .status(400)
-                .json(error.issues.map((issue) => ({ message: issue.message })))
+            return res.status(400).json(formatZodError(error, req.body))
         }
 
         return res.status(500).json({ message: 'Error al crear la franquicia.' })
@@ -56,9 +55,7 @@ export const updateFranchiseName = async (req, res) => {
         return res.status(200).json(updatedFranchiseName)
     } catch (error) {
         if (error instanceof ZodError) {
-            return res
-                .status(400)
-                .json(error.issues.map((issue) => ({ message: issue.message })))
+            return res.status(400).json(formatZodError(error, req.body))
         }
 
         return res

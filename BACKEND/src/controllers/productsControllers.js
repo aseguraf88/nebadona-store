@@ -5,6 +5,7 @@ import {
     LOCKED_VARIANT_SIZE_BY_STANDARD,
 } from '../schemas/productSchema.js'
 import { ZodError } from 'zod'
+import { formatZodError } from '../utils/formatZodError.js'
 import cloudinary, {
     isCloudinaryConfigured,
 } from '../config/cloudinaryConfig.js'
@@ -86,10 +87,7 @@ export const createProduct = async (req, res) => {
             .json({ message: 'Producto creado exitosamente.', product })
     } catch (error) {
         if (error instanceof ZodError) {
-            return res.status(400).json({
-                message: error.issues[0]?.message || 'Datos inválidos.',
-                errors: error.issues.map((issue) => ({ message: issue.message })),
-            })
+            return res.status(400).json(formatZodError(error, req.body))
         }
         if (error?.code === 11000) {
             return res
@@ -137,10 +135,7 @@ export const updateProduct = async (req, res) => {
         return res.status(200).json(product)
     } catch (error) {
         if (error instanceof ZodError) {
-            return res.status(400).json({
-                message: error.issues[0]?.message || 'Datos inválidos.',
-                errors: error.issues.map((issue) => ({ message: issue.message })),
-            })
+            return res.status(400).json(formatZodError(error, req.body))
         }
         if (error?.code === 11000) {
             return res

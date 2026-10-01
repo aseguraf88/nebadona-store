@@ -54,7 +54,7 @@ const LoginForm = () => {
                     {...register('email', {
                         required: 'El correo electrónico es requerido.',
                         pattern: {
-                            value: /^(?!\.)(?!.*\.\.)([a-z0-9_'+.-]*)[a-z0-9_+-]@([a-z0-9][a-z0-9-]*\.)+[a-z]{2,}$/,
+                            value: /^(?!\.)(?!.*\.\.)([a-z0-9_'+.-]*)[a-z0-9_+-]@([a-z0-9][a-z0-9-]*\.)+[a-z]{2,}$/i,
                             message: 'Correo electrónico inválido.',
                         },
                         minLength: {
