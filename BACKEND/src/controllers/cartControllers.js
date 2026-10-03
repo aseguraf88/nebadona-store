@@ -35,11 +35,15 @@ export const addToCart = async (req, res) => {
                 .json({ message: 'La cantidad debe ser al menos de 1' })
         }
 
-        // Verificar que el producto exista
-        const product = await ProductModel.findById(productId)
+        // Verificar que el producto exista y esté a la venta: un borrador no
+        // se agrega, igual que no se puede pedir (createWhatsAppOrder, paso 41)
+        const product = await ProductModel.findOne({
+            _id: productId,
+            status: 'PUBLISHED',
+        })
 
         if (!product) {
-            return res.status(404).json({ message: 'Producto no encontrado' })
+            return res.status(404).json({ message: 'Producto no disponible' })
         }
 
         // Buscar la variante exacta por sku y validar stock

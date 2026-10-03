@@ -47,12 +47,13 @@ export const CsvImportModal = ({ open, onClose, onSuccess }) => {
         formData.append('file', file)
 
         try {
-            // 1. Apuntamos explícitamente al puerto 3001
+            // Misma URL base que el resto del frontend (termina en "/"). Antes
+            // era localhost escrito a mano: en producción no podía funcionar
             const response = await fetch(
-                'http://localhost:3001/api/products/import',
+                `${import.meta.env.VITE_BACKEND_URL}products/import`,
                 {
                     method: 'POST',
-                    // 2. Fundamental para que Express lea tu cookie de sesión/admin
+                    // Fundamental para que Express lea la cookie de sesión del admin
                     credentials: 'include',
                     body: formData,
                 },

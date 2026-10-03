@@ -59,7 +59,7 @@ const getStockWarning = (currentStatus, newStatus) => {
 }
 
 const OrdersPage = () => {
-    const { getProducts } = useProduct()
+    const { getProducts, getAdminProducts } = useProduct()
     const [orders, setOrders] = useState([])
     const [loading, setLoading] = useState(true)
     const [loadError, setLoadError] = useState(null)
@@ -137,7 +137,8 @@ const OrdersPage = () => {
             response?.warnings?.forEach((w) => toast(w, { icon: '⚠️' }))
             setPendingChange(null)
             await fetchOrders()
-            await getProducts()
+            // El stock cambió: refrescar el dashboard y la tienda
+            await Promise.all([getAdminProducts(), getProducts()])
         } catch (error) {
             toast.error(error.message)
         } finally {

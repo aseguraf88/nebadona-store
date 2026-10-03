@@ -149,8 +149,9 @@ export function useProductForm() {
     const navigate = useNavigate()
     const location = useLocation()
     const {
-        products,
-        productsLoading,
+        // Catálogo completo del dashboard: editar un borrador lo busca acá
+        adminProducts: products,
+        adminProductsLoading: productsLoading,
         productCategories,
         createProduct,
         updateProduct,

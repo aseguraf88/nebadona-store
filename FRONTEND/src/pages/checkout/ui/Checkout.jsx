@@ -252,7 +252,7 @@ const Checkout = () => {
             }
 
             const baseUrl =
-                import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001/api'
+                import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001/api/'
             const apiUrl = `${baseUrl}orders/whatsapp`
 
             const response = await fetch(apiUrl, {

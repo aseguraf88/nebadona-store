@@ -204,9 +204,9 @@ const ProductPage = () => {
     if (!product || !product._id) {
         return (
             <div className="min-h-screen flex flex-col items-center justify-center gap-4">
-                <h1 className="text-2xl font-bold">Producto no encontrado</h1>
+                <h1 className="text-2xl font-bold">Producto no disponible</h1>
                 <p className="text-base-content/70">
-                    La calceta que buscas no existe o fue retirada.
+                    Este producto no existe o ya no está disponible.
                 </p>
                 <Link to="/shop" className="btn btn-primary mt-4">
                     Volver a la tienda

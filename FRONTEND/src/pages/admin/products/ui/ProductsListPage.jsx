@@ -25,8 +25,9 @@ const totalStockOf = (product) =>
 const ProductsListPage = () => {
     const navigate = useNavigate()
     const {
-        products,
-        productsLoading,
+        // Catálogo completo del dashboard, con borradores
+        adminProducts: products,
+        adminProductsLoading: productsLoading,
         searchQuery,
         setSearchQuery,
         deleteProduct,

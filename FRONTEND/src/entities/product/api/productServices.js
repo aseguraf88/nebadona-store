@@ -17,6 +17,11 @@ const productServices = {
         const response = await axios.get(`${API_URL}${queryString}`)
         return response.data
     },
+    // Catálogo completo con borradores, solo para el dashboard (ruta de admin)
+    getAdminProducts: async () => {
+        const response = await axios.get(`${API_URL}/admin`)
+        return response.data
+    },
     getProductById: async (id) => {
         const response = await axios.get(`${API_URL}/${id}`)
         return response.data

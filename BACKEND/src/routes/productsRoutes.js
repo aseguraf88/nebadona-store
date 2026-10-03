@@ -4,6 +4,7 @@ import {
     createProduct,
     getProductById,
     getAllProducts,
+    getAllProductsAdmin,
     updateProduct,
     deleteProduct,
     importProductsCsv,
@@ -21,6 +22,8 @@ const upload = multer({
 
 // Rutas públicas
 router.get('/', getAllProducts)
+// Solo admin, pero declarada antes de /:id: si no, '/admin' se leería como un id
+router.get('/admin', authenticate, requireAdmin, getAllProductsAdmin)
 router.get('/:id', getProductById)
 
 // Rutas protegidas (sólo administradores)

@@ -1,4 +1,5 @@
 import ProductModel from '../models/ProductModel.js'
+import mongoose from 'mongoose'
 import {
     productSchema,
     productUpdateSchema,
@@ -156,9 +157,17 @@ export const updateProduct = async (req, res) => {
     }
 }
 
+// Lecturas públicas: solo productos publicados. La tienda y la ficha nunca
+// ven borradores; el dashboard usa getAllProductsAdmin (GET /api/products/admin)
 export const getProductById = async (req, res) => {
     try {
-        const product = await ProductModel.findById(req.params.id)
+        // Un id mal formado también es "no encontrado" (antes daba 500)
+        if (!mongoose.isValidObjectId(req.params.id))
+            return res.status(404).json({ message: 'Producto no encontrado.' })
+        const product = await ProductModel.findOne({
+            _id: req.params.id,
+            status: 'PUBLISHED',
+        })
         if (!product)
             return res.status(404).json({ message: 'Producto no encontrado.' })
         return res.status(200).json(product)
@@ -171,15 +180,19 @@ export const getProductById = async (req, res) => {
 
 export const getAllProducts = async (req, res) => {
     try {
-        const filter = {}
+        // Siempre solo publicados; ?status= se ignora (antes un visitante
+        // podía pedir ?status=DRAFT y recibir los borradores)
+        const products = await ProductModel.find({ status: 'PUBLISHED' })
+        return res.status(200).json(products)
+    } catch (error) {
+        return res.status(500).json({ message: 'Error al obtener productos.' })
+    }
+}
 
-        // Si la URL de la petición incluye "?status=PUBLISHED", filtramos.
-        // Si no incluye nada, devolvemos todo (ideal para el Dashboard).
-        if (req.query.status) {
-            filter.status = req.query.status
-        }
-
-        const products = await ProductModel.find(filter)
+// Catálogo completo, borradores incluidos: solo admin (ruta protegida)
+export const getAllProductsAdmin = async (req, res) => {
+    try {
+        const products = await ProductModel.find()
         return res.status(200).json(products)
     } catch (error) {
         return res.status(500).json({ message: 'Error al obtener productos.' })

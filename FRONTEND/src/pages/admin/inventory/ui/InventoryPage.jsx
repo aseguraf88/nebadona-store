@@ -5,7 +5,13 @@ import { CsvImportModal } from '../../../../features/products'
 import { TbFileUpload, TbFileDownload } from 'react-icons/tb'
 
 const InventoryPage = () => {
-    const { products, productsLoading, getProducts } = useProduct()
+    const {
+        // Catálogo completo del dashboard, con borradores
+        adminProducts: products,
+        adminProductsLoading: productsLoading,
+        getAdminProducts,
+        getProducts,
+    } = useProduct()
     const [isCsvModalOpen, setIsCsvModalOpen] = useState(false)
     const [query, setQuery] = useState('')
     const [isExporting, setIsExporting] = useState(false)
@@ -187,7 +193,9 @@ const InventoryPage = () => {
                 open={isCsvModalOpen}
                 onClose={() => setIsCsvModalOpen(false)}
                 onSuccess={() => {
-                    if (getProducts) getProducts()
+                    // Las dos listas: el dashboard y la tienda (stock y precios)
+                    getAdminProducts()
+                    getProducts()
                 }}
             />
         </div>

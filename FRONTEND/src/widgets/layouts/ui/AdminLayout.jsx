@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Outlet, Link, useLocation } from 'react-router-dom'
+import { useProduct } from '../../../entities/product'
 import {
     TbMenu2,
     TbChartBar,
@@ -15,6 +16,13 @@ import {
 const AdminLayout = () => {
     const [isDrawerOpen, setIsDrawerOpen] = useState(false)
     const location = useLocation()
+    const { getAdminProducts } = useProduct()
+
+    // Catálogo completo (con borradores) para todas las pantallas del
+    // dashboard. ProtectedRoute ya garantiza que el usuario es admin
+    useEffect(() => {
+        getAdminProducts()
+    }, [getAdminProducts])
 
     const navigationGroups = [
         {

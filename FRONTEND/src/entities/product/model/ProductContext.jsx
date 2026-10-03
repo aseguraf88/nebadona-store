@@ -13,6 +13,10 @@ export const ProductContext = createContext({})
 export const ProductContextProvider = ({ children }) => {
     const [products, setProducts] = useState([])
     const [productsLoading, setProductsLoading] = useState(true)
+    // Catálogo completo (borradores incluidos) solo para el dashboard. La
+    // tienda usa `products`, que el backend ya devuelve solo con PUBLISHED
+    const [adminProducts, setAdminProducts] = useState([])
+    const [adminProductsLoading, setAdminProductsLoading] = useState(true)
     const [product, setProduct] = useState({})
     const [productLoading, setProductLoading] = useState(true)
     const [error, setError] = useState(null)
@@ -28,10 +32,26 @@ export const ProductContextProvider = ({ children }) => {
         try {
             const data = await productServices.getProducts()
             setProducts(data)
+            // El error global es solo del catálogo: se limpia al cargar bien
+            setError(null)
         } catch (error) {
             setError(error.message || 'Error al obtener los productos')
         } finally {
             setProductsLoading(false)
+        }
+    }, [])
+
+    // Lo pide AdminLayout al entrar al dashboard (también justo después del
+    // login, sin recargar la página)
+    const getAdminProducts = useCallback(async () => {
+        try {
+            const data = await productServices.getAdminProducts()
+            setAdminProducts(data)
+        } catch (error) {
+            // Sin setError: el error global es del catálogo de la tienda
+            console.error('Error al obtener el catálogo de admin:', error)
+        } finally {
+            setAdminProductsLoading(false)
         }
     }, [])
 
@@ -75,7 +95,8 @@ export const ProductContextProvider = ({ children }) => {
             const data = await productServices.getProductById(id)
             setProduct(data)
         } catch (error) {
-            setError(error.message || 'Error al obtener el producto')
+            // Sin setError: la ficha muestra su propio "no disponible", y el
+            // error global dejaría la tienda en error al volver a ella
         } finally {
             setProductLoading(false)
         }
@@ -96,9 +117,12 @@ export const ProductContextProvider = ({ children }) => {
 
             if (response.status === 200) {
                 setProduct(response.data)
-                setProducts((prevProducts) =>
+                setAdminProducts((prevProducts) =>
                     prevProducts.map((p) => (p._id === id ? response.data : p)),
                 )
+                // La tienda vuelve a pedir su lista: un cambio de estado o de
+                // stock se ve sin recargar la página
+                getProducts()
                 return {
                     success: true,
                     message: 'Producto actualizado correctamente',
@@ -106,7 +130,6 @@ export const ProductContextProvider = ({ children }) => {
                 }
             }
         } catch (error) {
-            setError(error.message || 'Error al actualizar el producto')
             return {
                 success: false,
                 message:
@@ -116,7 +139,7 @@ export const ProductContextProvider = ({ children }) => {
         } finally {
             setProductLoading(false)
         }
-    }, [])
+    }, [getProducts])
 
     const createProduct = useCallback(async (data) => {
         setProductLoading(true)
@@ -126,10 +149,11 @@ export const ProductContextProvider = ({ children }) => {
             const response = await productServices.createProduct(data)
 
             if (response.status === 201) {
-                setProducts((prevProducts) => [
+                setAdminProducts((prevProducts) => [
                     ...prevProducts,
                     response.data.product,
                 ])
+                getProducts()
                 return {
                     success: true,
                     message: response.data.message,
@@ -137,7 +161,6 @@ export const ProductContextProvider = ({ children }) => {
                 }
             }
         } catch (error) {
-            setError(error.message || 'Error al crear el producto')
             return {
                 success: false,
                 message:
@@ -147,7 +170,7 @@ export const ProductContextProvider = ({ children }) => {
         } finally {
             setProductLoading(false)
         }
-    }, [])
+    }, [getProducts])
 
     const deleteProduct = useCallback(async (id) => {
         try {
@@ -155,21 +178,21 @@ export const ProductContextProvider = ({ children }) => {
             const response = await productServices.deleteProduct(id)
 
             if (response.status === 200) {
-                setProducts((prevProducts) =>
+                setAdminProducts((prevProducts) =>
                     prevProducts.filter((p) => p._id !== id),
                 )
+                getProducts()
                 return {
                     success: true,
                     message: 'Producto eliminado correctamente',
                 }
             }
         } catch (error) {
-            setError(error.message || 'Error al eliminar el producto')
             return { success: false, message: 'Error al eliminar el producto' }
         } finally {
             setProductsLoading(false)
         }
-    }, [])
+    }, [getProducts])
 
     // ==========================================
     // MUTACIONES DE CATEGORÍAS/TEMAS/FRANQUICIAS
@@ -468,6 +491,7 @@ export const ProductContextProvider = ({ children }) => {
     const value = {
         product,
         products,
+        adminProducts,
         filteredProducts,
         searchQuery,
         setSearchQuery,
@@ -475,9 +499,11 @@ export const ProductContextProvider = ({ children }) => {
         designThemes,
         franchiseNames,
         productsLoading,
+        adminProductsLoading,
         productLoading,
         error,
         getProducts,
+        getAdminProducts,
         getProductCategories,
         getDesignThemes,
         getFranchiseNames,
