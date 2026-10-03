@@ -324,20 +324,74 @@ como punto de partida, en vez de diseñar a ciegas.
       con una cuenta no-admin y descarga como admin, en local y en
       producción.
 
-- [ ] **Prioridad media, paso propio — `GET /api/products` devuelve
-      borradores y stock a cualquier visitante**: `getAllProducts` solo
-      filtra si llega `?status=`, y `ProductContext.jsx` la llama sin
-      filtro al cargar la app, para todos (la tienda filtra los borradores
-      recién en el navegador). Cualquiera que abra la tienda descarga los
-      244 productos, incluidos los borradores y el stock de cada variante.
-      No expone costos (`select: false`) ni datos de clientes. Encontrado
-      en el barrido del paso 45. Arreglarlo no es solo agregar middlewares:
-      hay que separar la lectura pública (solo `PUBLISHED`) de la de admin,
-      y eso toca `ProductContext.jsx`, que alimenta la tienda y el
-      dashboard. De paso reduce lo que descarga cada visitante (hoy, el
-      catálogo completo en cada carga). A revisar en ese paso: si la
-      llamada de `ProductContext` también corre en `nebadon.cl`, aunque ahí
-      solo se muestre la pantalla de "Próxima apertura".
+- [x] ~~**Prioridad media, paso propio — `GET /api/products` devuelve
+      borradores y stock a cualquier visitante**~~ — resuelto (paso 46,
+      commit `b44ec8d`). Encontrado en el barrido del paso 45: cualquiera
+      que abriera la tienda descargaba el catálogo completo, con
+      borradores y stock. Ahora `getAllProducts` devuelve siempre solo
+      `PUBLISHED` e ignora `?status=` (antes un visitante podía pedir
+      `?status=DRAFT` y recibir solo los borradores), y `getProductById`
+      responde 404 para un borrador y para un id mal formado (antes, 500).
+      El dashboard tiene su propia ruta, `GET /api/products/admin`
+      (`authenticate` + `requireAdmin`, declarada antes de `/:id`), y
+      `ProductContext` tiene dos listas: `products` para la tienda (se pide
+      al cargar la app, ya filtrada por el backend) y `adminProducts` para
+      el dashboard (la pide `AdminLayout` al entrar; la usan el listado, la
+      edición, que busca el producto en esa lista, e Inventario). Después
+      de crear, editar o borrar un producto, de importar un CSV o de cambiar
+      el estado de una orden, se refrescan las dos, así que la tienda
+      refleja los cambios sin recargar. Los filtros por `PUBLISHED` del
+      navegador quedan como segunda barrera. Se corrigió además un bug del
+      error global: `getProductById` (y crear, editar o borrar) lo dejaban
+      puesto y nada lo limpiaba, así que después de abrir la ficha de un
+      producto no disponible, "Volver a la tienda" llevaba a una tienda con
+      el cartel de error hasta recargar. Ahora el error global es solo el
+      de la carga del catálogo, y se limpia al cargar bien. `addToCart`
+      también rechaza borradores, con 404 "Producto no disponible" (se ve
+      en el aviso al pasar el carrito de invitado al iniciar sesión). En
+      `nebadon.cl` no se pide ningún producto: `App.jsx` muestra "Próxima
+      apertura" antes de montar `ProductContext`. Probado en local (API sin
+      sesión, 403 con una cuenta no-admin, tienda, dashboard, F5 en la
+      edición de un borrador, import, órdenes y carrito con un producto que
+      pasa a borrador) y en producción (`GET /api/products` con 21
+      productos y 0 no publicados, ficha de un borrador en incógnito,
+      dashboard con el admin en una ventana normal de Chrome; en incógnito
+      falla por el ítem de cookies de terceros).
+
+- [x] **El import CSV del dashboard nunca funcionó en producción** —
+      encontrado y resuelto en el paso 46. `CsvImportModal.jsx` hacía el
+      `fetch` contra `http://localhost:3001/api/products/import` escrito a
+      mano, así que desde el dashboard de Vercel el navegador intentaba
+      subir el archivo a la propia computadora del admin; las importaciones
+      se hacían desde local. Ahora usa `VITE_BACKEND_URL` como el resto del
+      frontend (con `fetch` y `credentials: 'include'`). Confirmado en
+      producción: importar un CSV de prueba dio "1 nuevos productos",
+      visible sin recargar. De paso se corrigió el respaldo de
+      `Checkout.jsx` (`'http://localhost:3001/api'` → `'.../api/'`, con la
+      barra final como el resto); solo se usaría si faltara la variable.
+
+- [ ] **Prioridad alta, paso propio — la sesión depende de cookies de
+      terceros**: el frontend (`nebadona-store-cyan.vercel.app`) y el
+      backend (`nebadona-store.vercel.app`) son sites distintos, porque
+      `vercel.app` está en la Public Suffix List, así que la cookie de
+      sesión es de terceros. Evidencia: en una ventana de incógnito de
+      Chrome, con el admin logueado, el dashboard de producción no carga
+      productos y `GET /api/products/admin` responde 401 (antes del paso 46
+      no se notaba en el listado, que salía de la lista pública, pero
+      cualquier acción de admin ya fallaba igual en incógnito). Probable
+      además, todavía sin probar: Safari (iPhone y Mac) bloquea las cookies
+      de terceros por defecto también en ventanas normales, y Chrome va en
+      esa dirección. Afecta al dashboard completo y al carrito de un
+      cliente logueado (incluida la sincronización al iniciar sesión). No
+      afecta al checkout como invitado (`POST /api/orders/whatsapp` no usa
+      sesión). Opciones a investigar: a) backend en un subdominio del mismo
+      dominio (por ejemplo `api.nebadon.cl`, con el frontend en
+      `nebadon.cl`/`www.nebadon.cl`): la cookie pasa a ser del mismo sitio;
+      b) un rewrite en `FRONTEND/vercel.json` que haga de proxy de `/api/*`
+      hacia el backend: mismo origen (ojo con `express-rate-limit` y
+      `trust proxy`: todas las peticiones podrían llegar con la IP del
+      proxy). Considerar también cómo convive con el dominio de pruebas de
+      Vercel mientras `nebadon.cl` muestra "Próxima apertura".
 
 - [ ] **Prioridad media — el dashboard borra `cost_price` en cada
       guardado**: `getProductById` no trae el costo (`select: false` en
@@ -364,6 +418,10 @@ como punto de partida, en vez de diseñar a ciegas.
       imagen) antes de publicarlos. Ojo: hay **dos Finn**, `CAL-HDA-FINN`
       (del CSV, sin precio) y `CAL-HDV-FINN` (cargado a mano): publicar
       solo uno.
+      Actualizado en el paso 46: la consulta dio 23 publicados y 224
+      borradores. Los dos `PRUEBA-P44-` publicados ya se borraron, así que
+      hoy hay **21 productos reales a la venta** (confirmado por
+      `GET /api/products` en producción).
 
 ## 🔵 Baja prioridad, no bloqueante
 
@@ -475,8 +533,9 @@ como punto de partida, en vez de diseñar a ciegas.
       `PUBLISHED` sin cambios. (Código en el commit `6aa9297`; BACKLOG
       actualizado en el commit del paso 42.)
 
-- [ ] **La ficha de un producto en `DRAFT` se puede abrir por URL directa
-      y agregar al carrito**: `ProductPage` carga con `getProductById`, que
+- [x] ~~**La ficha de un producto en `DRAFT` se puede abrir por URL directa
+      y agregar al carrito**~~ — resuelto en el paso 46 (commit `b44ec8d`),
+      junto con `GET /api/products`. `ProductPage` cargaba con `getProductById`, que
       no filtra por `status`, y la ficha no revisa el estado (pasa con un
       link compartido de un producto que después se ocultó, sin DevTools).
       Desde el paso 41 ya no se puede comprar (la orden da 409 "ya no está
@@ -484,6 +543,11 @@ como punto de partida, en vez de diseñar a ciegas.
       El barrido del paso 45 confirmó que `GET /api/products/:id` no filtra
       por `status`: conviene resolverlo junto con el ítem de
       `GET /api/products` (en "🔴 Antes del lanzamiento").
+      Ahora `getProductById` responde 404 para un borrador, y la ficha
+      muestra "Producto no disponible" ("Este producto no existe o ya no
+      está disponible.", sin asumir que es una calceta) con el botón
+      "Volver a la tienda", que lleva a una tienda que carga normal.
+      Probado en local y en producción (incógnito).
 
 - [ ] **El formulario de Configuración no avisa por qué no guarda**: al
       crear un tema, categoría o franquicia con el nombre vacío o solo con
