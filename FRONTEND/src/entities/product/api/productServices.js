@@ -34,6 +34,15 @@ const productServices = {
         const response = await axios.delete(`${API_URL}/${id}`)
         return response
     },
+    // CSV del inventario (solo admin). Con axios, igual que el resto del
+    // dashboard, para que viaje la cookie de sesión entre dominios. 'blob'
+    // conserva los bytes tal cual (UTF-8 con BOM: Calc muestra bien los acentos)
+    exportProductsCsv: async () => {
+        const response = await axios.get(`${API_URL}/export/csv`, {
+            responseType: 'blob',
+        })
+        return response.data
+    },
 
     // --- CATEGORÍAS ---
     getProductCategories: async () => {

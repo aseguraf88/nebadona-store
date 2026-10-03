@@ -21,11 +21,13 @@ const upload = multer({
 
 // Rutas públicas
 router.get('/', getAllProducts)
-router.get('/export/csv', exportProductsCsv)
 router.get('/:id', getProductById)
 
 // Rutas protegidas (sólo administradores)
 router.post('/', authenticate, requireAdmin, createProduct)
+// Export CSV: trae borradores y stock, así que es solo admin. El dashboard lo
+// descarga con axios (cookie de sesión), no con un link (InventoryPage.jsx)
+router.get('/export/csv', authenticate, requireAdmin, exportProductsCsv)
 
 // Ruta de importación masiva CSV
 router.post(

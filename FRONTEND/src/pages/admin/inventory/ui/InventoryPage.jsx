@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
-import { useProduct } from '../../../../entities/product'
+import toast from 'react-hot-toast'
+import { useProduct, productServices } from '../../../../entities/product'
 import { CsvImportModal } from '../../../../features/products'
 import { TbFileUpload, TbFileDownload } from 'react-icons/tb'
 
@@ -7,6 +8,39 @@ const InventoryPage = () => {
     const { products, productsLoading, getProducts } = useProduct()
     const [isCsvModalOpen, setIsCsvModalOpen] = useState(false)
     const [query, setQuery] = useState('')
+    const [isExporting, setIsExporting] = useState(false)
+
+    // Descarga con axios y no con un link: el export es solo admin, y en
+    // producción frontend y backend están en dominios distintos, así que la
+    // cookie de sesión tiene que viajar igual que en el resto del dashboard
+    const handleExportCsv = async () => {
+        setIsExporting(true)
+        try {
+            const blob = await productServices.exportProductsCsv()
+            const url = URL.createObjectURL(blob)
+            const link = document.createElement('a')
+            link.href = url
+            link.download = 'inventario_nebadon.csv'
+            document.body.appendChild(link)
+            link.click()
+            link.remove()
+            // Liberar la URL con un pequeño margen: algunos navegadores
+            // cancelan la descarga si se revoca en el mismo instante
+            setTimeout(() => URL.revokeObjectURL(url), 1000)
+        } catch (error) {
+            // Con responseType 'blob', el JSON de error también llega como Blob
+            let message = 'No se pudo exportar el inventario.'
+            try {
+                const text = await error.response?.data?.text()
+                message = JSON.parse(text).message || message
+            } catch {
+                // Sin cuerpo legible (por ejemplo, sin conexión): mensaje genérico
+            }
+            toast.error(message)
+        } finally {
+            setIsExporting(false)
+        }
+    }
 
     const variantRows = useMemo(() => {
         const rows = []
@@ -63,14 +97,19 @@ const InventoryPage = () => {
                             <TbFileUpload className="text-base" />
                             Importar CSV
                         </button>
-                        <a
-                            href={`${import.meta.env.VITE_BACKEND_URL}products/export/csv`}
-                            download="inventario_nebadon.csv"
+                        <button
+                            type="button"
                             className="btn btn-sm btn-outline btn-success"
+                            onClick={handleExportCsv}
+                            disabled={isExporting}
                         >
-                            <TbFileDownload className="text-base" />
+                            {isExporting ? (
+                                <span className="loading loading-spinner loading-xs" />
+                            ) : (
+                                <TbFileDownload className="text-base" />
+                            )}
                             Exportar CSV
-                        </a>
+                        </button>
                     </div>
                 </div>
 
