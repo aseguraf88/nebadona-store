@@ -6,7 +6,9 @@ const variantSchema = z.object({
     baseColor: z.string().max(50).toLowerCase().nullable().optional(),
     designColors: z.array(z.string().toLowerCase()).optional().default([]),
     stock: z.number().min(0),
-    price: z.number().min(0).nullable().optional(),
+    // Entero > 0 o sin precio propio (null): 0 haría gratis la variante.
+    // Misma regla que parseClpPrice en el import CSV (productsControllers.js)
+    price: z.number().int().positive().nullable().optional(),
 })
 
 const imageInputSchema = z.string().refine((value) => {
@@ -66,7 +68,7 @@ const productBaseSchema = z.object({
     character_name: z.string().max(100).toLowerCase().nullable().optional(),
     design_theme: z.string().max(100).toLowerCase().nullable().optional(),
 
-    price: z.number().min(0),
+    price: z.number().int().positive(),
     compareAtPrice: z.number().min(0).nullable().optional(),
     cost_price: z.number().min(0).nullable().optional(),
 

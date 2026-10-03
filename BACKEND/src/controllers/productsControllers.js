@@ -202,6 +202,21 @@ export const deleteProduct = async (req, res) => {
 // ==========================================
 // IMPORTACIÓN DE CSV (AGRUPACIÓN Y UPSERT INTELIGENTE)
 // ==========================================
+
+// Precio en CLP (entero, sin decimales). Acepta "12990", "12.990", "12,990"
+// y "$12.990"; rechaza lo ambiguo en vez de truncar en silencio (parseInt
+// leía "1.000" como 1). Devuelve NaN si no es un precio válido; qué hacer
+// con el 0 lo decide quien la llama. Misma regla que productSchema.js
+// (entero > 0), que el import no usa porque escribe con bulkWrite.
+const parseClpPrice = (raw) => {
+    const str = String(raw).trim().replace(/^\$\s*/, '')
+    if (/^\d+$/.test(str)) return Number(str)
+    // Miles con punto o con coma, siempre el mismo y en grupos de 3
+    if (/^[1-9]\d{0,2}(\.\d{3})+$/.test(str) || /^[1-9]\d{0,2}(,\d{3})+$/.test(str))
+        return Number(str.replace(/[.,]/g, ''))
+    return NaN
+}
+
 export const importProductsCsv = async (req, res) => {
     try {
         if (!req.file) {
@@ -212,6 +227,8 @@ export const importProductsCsv = async (req, res) => {
 
         const groupedProducts = new Map()
         const errors = []
+        // Handles rechazados (sin Nombre/Categoría o con Precio inválido)
+        const rejectedHandles = new Set()
         const stream = Readable.from(req.file.buffer)
 
         const genderTranslationMap = {
@@ -252,6 +269,15 @@ export const importProductsCsv = async (req, res) => {
                     return
                 }
 
+                // Un Handle rechazado no se importa: sus filas siguientes se
+                // omiten, en vez de crear el producto a medias desde otra fila
+                if (rejectedHandles.has(handle)) {
+                    errors.push(
+                        `Fila ${currentRow}: omitida, el producto ${handle} fue rechazado más arriba.`
+                    )
+                    return
+                }
+
                 // Helper: Retorna undefined si la celda viene vacía
                 const cellValue = (val) =>
                     val !== undefined &&
@@ -277,6 +303,7 @@ export const importProductsCsv = async (req, res) => {
                         errors.push(
                             `Fila ${currentRow}: Falta Nombre o Categoría en producto: ${handle}`
                         )
+                        rejectedHandles.add(handle)
                         return
                     }
 
@@ -331,7 +358,15 @@ export const importProductsCsv = async (req, res) => {
 
                     const priceStr = cellValue(data.Precio || data.price)
                     if (priceStr) {
-                        newProduct.price = parseInt(priceStr) || 0
+                        const price = parseClpPrice(priceStr)
+                        if (Number.isNaN(price) || price === 0) {
+                            errors.push(
+                                `Fila ${currentRow}: Precio "${priceStr}" inválido en ${handle} (debe ser un entero mayor que 0). Producto rechazado, no se importó.`
+                            )
+                            rejectedHandles.add(handle)
+                            return
+                        }
+                        newProduct.price = price
                     } else {
                         errors.push(
                             `Fila ${currentRow}: Advertencia: Producto ${handle} no trae precio en el CSV. Si es nuevo, se creará sin precio.`
@@ -341,7 +376,16 @@ export const importProductsCsv = async (req, res) => {
                     const costStr = cellValue(
                         data.Costo || data.cost || data.cost_price
                     )
-                    if (costStr) newProduct.cost_price = parseInt(costStr) || 0
+                    if (costStr) {
+                        const cost = parseClpPrice(costStr)
+                        if (Number.isNaN(cost)) {
+                            errors.push(
+                                `Fila ${currentRow}: Costo "${costStr}" inválido en ${handle}, se ignoró.`
+                            )
+                        } else {
+                            newProduct.cost_price = cost
+                        }
+                    }
 
                     groupedProducts.set(handle, newProduct)
                 }
@@ -367,19 +411,23 @@ export const importProductsCsv = async (req, res) => {
 
                 const stock = parseInt(cellValue(data.Stock || data.stock)) || 0
 
-                // Precio propio de la variante: vacío = usa el del producto
-                // (null). No se inventa 0 si el valor es inválido: 0 sería
-                // la variante gratis. bulkWrite no pasa por los validadores
-                // de Mongoose, así que el mínimo 0 se chequea acá.
+                // Precio propio de la variante: vacío o 0 = usa el del
+                // producto (null), igual que el dashboard; 0 haría gratis la
+                // variante. bulkWrite no pasa por los validadores de
+                // Mongoose, así que la regla se chequea acá.
                 const variantPriceStr = cellValue(
                     data['Precio Variante'] || data.variantPrice
                 )
                 let variantPrice = null
                 if (variantPriceStr) {
-                    const parsed = parseInt(variantPriceStr, 10)
-                    if (Number.isNaN(parsed) || parsed < 0) {
+                    const parsed = parseClpPrice(variantPriceStr)
+                    if (Number.isNaN(parsed)) {
                         errors.push(
                             `Fila ${currentRow}: Precio Variante "${variantPriceStr}" inválido en ${handle}, se dejó sin precio propio.`
+                        )
+                    } else if (parsed === 0) {
+                        errors.push(
+                            `Fila ${currentRow}: Precio Variante 0 en ${handle}, se dejó sin precio propio (usa el precio del producto).`
                         )
                     } else {
                         variantPrice = parsed
@@ -459,6 +507,12 @@ export const importProductsCsv = async (req, res) => {
                                 filter: { handle: product.handle },
                                 update: {
                                     $set: fieldsToUpdate,
+                                    // El import no lee la columna Estado: todo
+                                    // producto nuevo nace DRAFT aquí (no por el
+                                    // default del schema) y uno existente
+                                    // conserva el suyo. Por eso un producto
+                                    // nuevo sin precio es inofensivo. Si algún
+                                    // día se lee Estado, revisar esa regla.
                                     $setOnInsert: {
                                         status: 'DRAFT',
                                         isActive: false,

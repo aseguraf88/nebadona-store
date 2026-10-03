@@ -65,7 +65,14 @@ export const createWhatsAppOrder = async (req, res) => {
             // Misma regla que el carrito (CartContext, cartControllers)
             const realPrice = variant ? (variant.price ?? product.price ?? null) : null
             realPrices[i] = realPrice
-            if (!variant || realPrice === null) {
+            // Última barrera: un precio que no es un entero positivo (0, sin
+            // precio o mal importado) no termina en una orden real
+            if (!variant || !Number.isInteger(realPrice) || realPrice <= 0) {
+                if (variant) {
+                    console.warn(
+                        `Orden rechazada: precio inválido (${realPrice}) en SKU ${variant.sku}`,
+                    )
+                }
                 stockProblems.push(`${item.name}: ya no está disponible`)
             } else if (variant.stock < item.quantity) {
                 stockProblems.push(

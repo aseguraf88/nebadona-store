@@ -303,6 +303,44 @@ como punto de partida, en vez de diseñar a ciegas.
       cualquier "enlace roto" al mismo tiempo — era un solo bug con
       varios síntomas. Confirmado entrando directo por URL a `/login`.
 
+## 🔴 Antes del lanzamiento (octubre)
+
+- [ ] **Prioridad alta, paso propio — el export CSV no tiene
+      autenticación**: `GET /api/products/export/csv`
+      (`productsRoutes.js:24`) no tiene `authenticate` ni `requireAdmin`.
+      Cualquiera que conozca la URL descarga el catálogo completo,
+      incluidos los borradores y el stock de cada variante (el costo no se
+      filtra, por el `select: false`). Al ponerle autenticación, revisar
+      también cómo descarga el archivo el dashboard (botón de exportar en
+      Inventario): si no manda la cookie de sesión, dejaría de funcionar.
+      Encontrado en el paso 44.
+
+- [ ] **Prioridad media — el dashboard borra `cost_price` en cada
+      guardado**: `getProductById` no trae el costo (`select: false` en
+      `ProductModel`), `useProductForm.js` lo convierte en `''` y al
+      guardar lo manda como `null`, y `updateProduct` lo pisa. El costo
+      cargado por CSV dura hasta el primer guardado desde el dashboard
+      (observado en el paso 44: `PRUEBA-P44-MILES` se importó con Costo
+      5.000 y, después de guardarlo desde el dashboard, `cost_price`
+      estaba en `null`. La causa se dedujo del código, no se aisló: antes
+      de arreglarlo, confirmar con una consulta inmediatamente después de
+      un import, sin guardar desde el dashboard, que el import sí escribe
+      `cost_price`, y descartar así que el problema esté en el import y no
+      en el dashboard). Viene de antes del paso 44. No afecta lo que paga
+      el cliente. Antes de arreglarlo, hace falta también una consulta de
+      solo lectura para saber cuántos productos reales tienen costo hoy
+      (el export no sirve: siempre deja Costo vacío, por el mismo
+      `select: false`).
+
+- [ ] **Tarea de catálogo, no de código — 209 productos en borrador sin
+      precio**: la consulta del paso 44 a producción (`ecommerceDB`)
+      encontró 209 de 244 productos sin precio, todos en `DRAFT`, creados
+      por CSV sin la columna Precio. No están dañados: el dashboard no deja
+      publicarlos sin precio. Hay que cargarles precio (y descripción e
+      imagen) antes de publicarlos. Ojo: hay **dos Finn**, `CAL-HDA-FINN`
+      (del CSV, sin precio) y `CAL-HDV-FINN` (cargado a mano): publicar
+      solo uno.
+
 ## 🔵 Baja prioridad, no bloqueante
 
 - [ ] Limpieza cosmética menor, sin apuro: `careGuides.js` contiene
@@ -374,12 +412,33 @@ como punto de partida, en vez de diseñar a ciegas.
       abierta y el usuario cierra sesión, sigue visible. No expone datos de
       otro usuario, pero en un equipo compartido podría quedar a la vista.
 
-- [ ] **`variant.price` en 0 desde el CSV haría gratis esa variante en
-      todo el sitio**: `importProductsCsv` acepta "Precio Variante" = 0
-      (solo rechaza negativos), y la regla `variant.price ?? product.price`
-      usa el 0 tal cual (`??` solo cae al precio del producto con `null`).
-      El formulario del dashboard nunca guarda 0 (lo convierte en `null`),
-      así que hoy solo puede llegar por CSV. Encontrado en el paso 40.
+- [x] ~~**`variant.price` en 0 desde el CSV haría gratis esa variante en
+      todo el sitio**~~ — resuelto (paso 44). Encontrado en el paso 40: el
+      import aceptaba "Precio Variante" = 0 y la regla `variant.price ??
+      product.price` (sin cambios) lo usaba tal cual. Junto con el bug del
+      separador de miles (`parseInt("1.000")` daba 1), era el mismo
+      problema con otra entrada. Ahora, en `importProductsCsv`:
+      `parseClpPrice` lee Precio, Precio Variante y Costo (acepta `12990`,
+      `12.990`, `12,990` y `$12.990`; rechaza con aviso lo ambiguo o no
+      numérico, como `12,99`, `1.5` o `abc`, en vez de truncar en
+      silencio). Precio Variante en 0 queda en `null` (usa el precio del
+      producto) con aviso, igual que el dashboard. Precio de producto en 0
+      o inválido rechaza el producto completo, con aviso, y sus filas
+      siguientes se omiten (también si se rechaza por falta de Nombre o
+      Categoría; antes la fila siguiente lo creaba a medias). Una celda de
+      Precio vacía sigue como antes: no toca el precio de un producto que
+      ya existe. Además, Zod exige `.int().positive()` en el precio del
+      producto y de la variante (la API tampoco acepta 0 ni decimales; no
+      cambió qué es obligatorio), y `createWhatsAppOrder` rechaza la orden
+      si algún precio calculado no es un entero positivo, con
+      `console.warn` del SKU. La consulta de solo lectura a producción no
+      encontró datos dañados (ningún precio en 0, menor a 100 ni con
+      decimales), y el catálogo exportado pasa completo por
+      `parseClpPrice` sin ningún rechazo. Probado: los 3 CSV de prueba
+      (Precio Variante 0, Precio 0 con Handle repetido, `12.990` y
+      `"12,99"`), los mensajes de Zod en el dashboard ("Precio: debe ser
+      mayor que 0.", "Precio: debe ser un número entero."), un borrador
+      sin precio (Guardar sigue desactivado) y un pedido normal.
 
 - [x] ~~**Se puede pedir un producto en borrador (`DRAFT`)**~~ — resuelto
       (paso 41): la consulta de `createWhatsAppOrder` ahora filtra por
@@ -406,6 +465,20 @@ como punto de partida, en vez de diseñar a ciegas.
       por qué no se guardó. Encontrado al probar el paso 43; el mensaje
       nuevo del backend ("Nombre: es obligatorio.") nunca llega a
       ejecutarse por esta vía.
+
+- [ ] El import CSV no acepta `;` como separador: `csv-parser` usa coma
+      y no lo detecta. Un CSV con `;` responde "Archivo CSV vacío o sin
+      filas válidas." y no importa nada (falla sin hacer daño). Baja
+      prioridad: los CSV se editan con OpenOffice Calc, que pregunta el
+      separador al abrir y al guardar, así que el flujo con coma funciona.
+      Nota: si en Calc la columna Precio tiene formato de miles y se guarda
+      con "contenido de la celda como se muestra", el CSV sale con
+      `12.990`. Es el caso que cubre `parseClpPrice` desde el paso 44.
+
+- [ ] Stock en el import CSV sigue usando `parseInt(...) || 0`: `"1.000"`
+      en Stock queda en 1, y un texto inválido en 0, sin aviso. Mismo
+      problema de separador de miles que se resolvió para los precios en
+      el paso 44 (no se tocó a propósito: no es un precio). Baja prioridad.
 
 - [x] **Guía de Cuidados y Envíos separadas a páginas propias** —
       encontrado en QA con la dueña real del negocio: el texto de
@@ -825,9 +898,10 @@ como punto de partida, en vez de diseñar a ciegas.
       fija, fuerza esa Talla en sus variantes (con aviso en `errors`),
       usando `LOCKED_VARIANT_SIZE_BY_STANDARD` (`productSchema.js`, copia
       de `variantSize` del frontend). Los SKUs no se regeneran.
-      Pendiente menor, sin tocar: `parseInt` lee mal precios con punto
-      de miles ("1.000" → 1) si el CSV se edita en Excel con formato;
-      afecta también a Precio y Costo del producto, desde antes.
+      ~~Pendiente menor: `parseInt` lee mal precios con punto de miles
+      ("1.000" → 1)~~ — resuelto para Precio, Precio Variante y Costo en
+      el paso 44 (`parseClpPrice`). Stock sigue con `parseInt`: anotado
+      aparte en "🔵 Baja prioridad".
       Relacionado, **resuelto en el paso 33**: el selector libre de Talla
       ya no muestra "N/A" para tallas que no están en `SIZE_OPTIONS` (ej.
       "39-43" cargado por CSV); ahora muestra el valor real.
