@@ -305,15 +305,39 @@ como punto de partida, en vez de diseñar a ciegas.
 
 ## 🔴 Antes del lanzamiento (octubre)
 
-- [ ] **Prioridad alta, paso propio — el export CSV no tiene
-      autenticación**: `GET /api/products/export/csv`
-      (`productsRoutes.js:24`) no tiene `authenticate` ni `requireAdmin`.
-      Cualquiera que conozca la URL descarga el catálogo completo,
-      incluidos los borradores y el stock de cada variante (el costo no se
-      filtra, por el `select: false`). Al ponerle autenticación, revisar
-      también cómo descarga el archivo el dashboard (botón de exportar en
-      Inventario): si no manda la cookie de sesión, dejaría de funcionar.
-      Encontrado en el paso 44.
+- [x] ~~**Prioridad alta, paso propio — el export CSV no tiene
+      autenticación**~~ — resuelto (paso 45, commit `bd29200`). Encontrado
+      en el paso 44: cualquiera que conociera la URL descargaba el catálogo
+      completo, con borradores y stock. Ahora `GET /api/products/export/csv`
+      está en el bloque de rutas protegidas de `productsRoutes.js`, con
+      `authenticate` y `requireAdmin`. El botón "Exportar CSV" de
+      Inventario descarga con axios (`responseType: 'blob'`, cookie de
+      sesión como el resto del dashboard) en vez de un link: con un link,
+      en producción (frontend y backend en dominios distintos) no estaba
+      garantizado que viajara la cookie, y con la sesión vencida el clic
+      reemplazaba el dashboard por una página de error; ahora muestra un
+      aviso con el mensaje del backend. El archivo conserva el BOM y el
+      UTF-8 (los acentos se ven bien en OpenOffice Calc). El paso incluyó
+      un barrido de las 7 rutas del backend: ninguna ruta de escritura
+      (POST, PUT, PATCH, DELETE) quedó sin protección; el único POST
+      público es el checkout, a propósito. Probado: 401 sin sesión, 403
+      con una cuenta no-admin y descarga como admin, en local y en
+      producción.
+
+- [ ] **Prioridad media, paso propio — `GET /api/products` devuelve
+      borradores y stock a cualquier visitante**: `getAllProducts` solo
+      filtra si llega `?status=`, y `ProductContext.jsx` la llama sin
+      filtro al cargar la app, para todos (la tienda filtra los borradores
+      recién en el navegador). Cualquiera que abra la tienda descarga los
+      244 productos, incluidos los borradores y el stock de cada variante.
+      No expone costos (`select: false`) ni datos de clientes. Encontrado
+      en el barrido del paso 45. Arreglarlo no es solo agregar middlewares:
+      hay que separar la lectura pública (solo `PUBLISHED`) de la de admin,
+      y eso toca `ProductContext.jsx`, que alimenta la tienda y el
+      dashboard. De paso reduce lo que descarga cada visitante (hoy, el
+      catálogo completo en cada carga). A revisar en ese paso: si la
+      llamada de `ProductContext` también corre en `nebadon.cl`, aunque ahí
+      solo se muestre la pantalla de "Próxima apertura".
 
 - [ ] **Prioridad media — el dashboard borra `cost_price` en cada
       guardado**: `getProductById` no trae el costo (`select: false` en
@@ -457,6 +481,9 @@ como punto de partida, en vez de diseñar a ciegas.
       link compartido de un producto que después se ocultó, sin DevTools).
       Desde el paso 41 ya no se puede comprar (la orden da 409 "ya no está
       disponible"), pero el cliente recién se entera en el checkout.
+      El barrido del paso 45 confirmó que `GET /api/products/:id` no filtra
+      por `status`: conviene resolverlo junto con el ítem de
+      `GET /api/products` (en "🔴 Antes del lanzamiento").
 
 - [ ] **El formulario de Configuración no avisa por qué no guarda**: al
       crear un tema, categoría o franquicia con el nombre vacío o solo con
