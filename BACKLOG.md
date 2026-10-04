@@ -428,22 +428,31 @@ como punto de partida, en vez de diseñar a ciegas.
          en `authControllers.js`: login, registro y logout a la vez, para
          que el logout la siga borrando.
 
-- [ ] **Prioridad media — el dashboard borra `cost_price` en cada
-      guardado**: `getProductById` no trae el costo (`select: false` en
-      `ProductModel`), `useProductForm.js` lo convierte en `''` y al
-      guardar lo manda como `null`, y `updateProduct` lo pisa. El costo
-      cargado por CSV dura hasta el primer guardado desde el dashboard
-      (observado en el paso 44: `PRUEBA-P44-MILES` se importó con Costo
-      5.000 y, después de guardarlo desde el dashboard, `cost_price`
-      estaba en `null`. La causa se dedujo del código, no se aisló: antes
-      de arreglarlo, confirmar con una consulta inmediatamente después de
-      un import, sin guardar desde el dashboard, que el import sí escribe
-      `cost_price`, y descartar así que el problema esté en el import y no
-      en el dashboard). Viene de antes del paso 44. No afecta lo que paga
-      el cliente. Antes de arreglarlo, hace falta también una consulta de
-      solo lectura para saber cuántos productos reales tienen costo hoy
-      (el export no sirve: siempre deja Costo vacío, por el mismo
-      `select: false`).
+- [x] ~~**Prioridad media — el dashboard borra `cost_price` en cada
+      guardado**~~ — resuelto (paso 48, commit `e195e84`). Observado en el
+      paso 44 (`PRUEBA-P44-MILES` se importó con Costo 5.000 y quedó en
+      `null` después de guardarlo desde el dashboard). Causa aislada: el
+      import sí guardaba el costo (comprobado pasando una operación como la
+      del import por el mismo `castUpdateOne` que usa `bulkWrite`, sin tocar
+      la base: `cost_price` llegaba al `$set`). El problema era el
+      dashboard: la lista de admin no traía el costo (`select: false` en
+      `ProductModel`), así que el campo "Costo Bodega" aparecía siempre
+      vacío, y al guardar el formulario mandaba `cost_price: null`, que
+      `updateProduct` guardaba tal cual. Arreglo: `getAllProductsAdmin` y el
+      export CSV (los dos solo admin) piden `+cost_price`; el formulario
+      muestra el costo real y lo conserva al guardar, y exportar y reimportar
+      ya no lo pierde. Además, un costo de 0 se muestra como 0 (antes, por
+      un chequeo de verdad, aparecía vacío y se guardaba como `null`).
+      Vaciar el campo a propósito y guardar deja el costo en `null`. Las
+      lecturas públicas (`getAllProducts`, `getProductById`) y los
+      `populate` del carrito siguen sin traer el costo: verificado con grep,
+      `+cost_price` aparece solo en `getAllProductsAdmin` y en el export.
+      Probado en local: import con costo (5.000 y 0), el campo muestra el
+      valor, guardar sin tocarlo lo conserva, cambiarlo, el costo 0 visible,
+      borrarlo a propósito (`null`), el export con la columna Costo y la
+      ruta de admin con `cost_price`. En producción (`pruebas.nebadon.cl`):
+      el campo muestra 5000, guardar cambiando solo la descripción lo
+      conserva (confirmado con una consulta) y el export trae el costo.
 
 - [ ] **Tarea de catálogo, no de código — 209 productos en borrador sin
       precio**: la consulta del paso 44 a producción (`ecommerceDB`)
@@ -457,6 +466,10 @@ como punto de partida, en vez de diseñar a ciegas.
       borradores. Los dos `PRUEBA-P44-` publicados ya se borraron, así que
       hoy hay **21 productos reales a la venta** (confirmado por
       `GET /api/products` en producción).
+      Actualizado en el paso 48: **ningún producto tiene costo cargado**
+      (0 de 245, según la consulta del paso 48). Hay que cargarlo por CSV
+      (desde el paso 48, exportar y reimportar lo conserva) o desde el
+      campo "Costo Bodega" del dashboard.
 
 ## 🔵 Baja prioridad, no bloqueante
 
