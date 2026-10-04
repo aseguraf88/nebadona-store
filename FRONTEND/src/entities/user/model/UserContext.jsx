@@ -7,14 +7,18 @@ export const UserContextProvider = ({ children }) => {
     const [userInfo, setUserInfo] = useState({})
     const [loading, setLoading] = useState(true)
 
-    // Función para verificar la sesión del usuario
+    // Verifica la sesión contra el backend (GET /api/auth/profile). Devuelve
+    // el usuario si la cookie de sesión llegó, o null si no: login y registro
+    // lo usan para no dar por iniciada una sesión que el navegador bloqueó
     const checkSession = async () => {
         try {
             setLoading(true)
             const userData = await getProfileService()
             setUserInfo(userData)
+            return userData
         } catch (error) {
             setUserInfo({})
+            return null
         } finally {
             setLoading(false)
         }

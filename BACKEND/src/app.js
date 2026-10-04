@@ -34,6 +34,12 @@ const authLimiter = rateLimit({
 })
 
 app.disable('x-powered-by')
+// En Vercel, la capa de borde es el único proxy delante de Express y pone en
+// X-Forwarded-For la IP real del visitante (sobrescribe la que mande el
+// cliente). Con 1, req.ip es esa IP y express-rate-limit cuenta por
+// visitante, no por la conexión del proxy, que es la misma para todos.
+// En local no hay proxy ni X-Forwarded-For: req.ip sigue siendo la conexión
+app.set('trust proxy', 1)
 const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:5173')
     .split(',')
     .map((url) => url.trim())

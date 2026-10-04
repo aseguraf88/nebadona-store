@@ -16,7 +16,7 @@ const LoginForm = () => {
         mode: 'onChange', // validacion en tiempo real
     })
 
-    const { setUserInfo, userInfo } = useUser()
+    const { checkSession, userInfo } = useUser()
     const [showPassword, setShowPassword] = useState(false)
     const [redirect, setRedirect] = useState(false)
     const fieldClass = (hasError) =>
@@ -26,14 +26,26 @@ const LoginForm = () => {
         // Logueando usuario
         const result = await loginService(data)
 
-        if (result.success) {
-            setUserInfo(result.data)
-            reset()
-            setRedirect(true)
-            toast.success('Inicio de Sesión Exitoso.')
-        } else {
+        if (!result.success) {
             toast.error(result.message)
+            return
         }
+
+        // Que el login responda bien no prueba que el navegador guardó la
+        // cookie de sesión (puede bloquearla si la considera de terceros).
+        // Se confirma con /profile antes de dar la sesión por iniciada
+        const user = await checkSession()
+        if (!user) {
+            toast.error(
+                'Tu navegador bloqueó la sesión. Prueba en una ventana normal o con otro navegador.',
+                { duration: 8000 },
+            )
+            return
+        }
+
+        reset()
+        setRedirect(true)
+        toast.success('Inicio de Sesión Exitoso.')
     }
 
     if (redirect) {

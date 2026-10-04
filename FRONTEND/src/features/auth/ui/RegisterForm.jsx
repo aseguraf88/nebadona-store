@@ -27,9 +27,18 @@ const RegisterForm = () => {
         const result = await registerService(data)
 
         if (result.success) {
-            // Verificar la sesión real del servidor después del registro
-            await checkSession()
+            // La cuenta ya se creó. Se confirma con /profile que el navegador
+            // guardó la cookie de sesión (puede bloquearla si la considera de
+            // terceros) antes de dar la sesión por iniciada
+            const user = await checkSession()
             reset()
+            if (!user) {
+                toast.error(
+                    'Tu cuenta se creó, pero tu navegador bloqueó la sesión. Inicia sesión desde una ventana normal o con otro navegador.',
+                    { duration: 8000 },
+                )
+                return
+            }
             setRedirect(true)
             toast.success('Registro exitoso.')
         } else {
