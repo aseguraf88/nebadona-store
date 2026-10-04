@@ -110,7 +110,8 @@ const mapProductToTemplate = (product) => ({
     compareAtPrice: product?.compareAtPrice
         ? String(product.compareAtPrice)
         : '',
-    cost_price: product?.cost_price ? String(product.cost_price) : '',
+    // != null y no un chequeo de verdad: un costo de 0 se muestra como 0
+    cost_price: product?.cost_price != null ? String(product.cost_price) : '',
     tags: Array.isArray(product?.tags) ? product.tags.join(', ') : '',
     featured: Boolean(product?.featured),
     popular: Boolean(product?.popular),

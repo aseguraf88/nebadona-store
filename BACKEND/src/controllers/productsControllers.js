@@ -189,10 +189,13 @@ export const getAllProducts = async (req, res) => {
     }
 }
 
-// Catálogo completo, borradores incluidos: solo admin (ruta protegida)
+// Catálogo completo, borradores incluidos: solo admin (ruta protegida).
+// Trae el costo (select: false en el modelo) para que el formulario del
+// dashboard lo muestre y lo conserve al guardar; las lecturas públicas no
+// lo traen y nunca deben traerlo
 export const getAllProductsAdmin = async (req, res) => {
     try {
-        const products = await ProductModel.find()
+        const products = await ProductModel.find().select('+cost_price')
         return res.status(200).json(products)
     } catch (error) {
         return res.status(500).json({ message: 'Error al obtener productos.' })
@@ -580,8 +583,9 @@ export const importProductsCsv = async (req, res) => {
 // ==========================================
 export const exportProductsCsv = async (req, res) => {
     try {
-        // Traemos todos los productos desde la base de datos
-        const products = await ProductModel.find().lean()
+        // Todos los productos, con el costo (select: false en el modelo): el
+        // export es solo admin, y así exportar y reimportar no lo pierde
+        const products = await ProductModel.find().select('+cost_price').lean()
 
         // Estos son los mismos títulos exactos que usa nuestro importador
         const headers = [
