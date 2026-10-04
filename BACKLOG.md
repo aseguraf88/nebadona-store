@@ -146,6 +146,8 @@ por el usuario, sin definir todavía:
 - [ ] Carrusel del Hero (Home) — el usuario lo sintió "poco atractivo".
       Sin diagnóstico específico todavía (¿la imagen, la composición del
       texto, la animación, el CTA?).
+      Pedido concreto de octubre: deslizamiento táctil en mobile (ver
+      "📝 Lista de la dueña y usuarios (octubre)").
 
 **Para preparar esa sesión, conviene tener a mano**: `HeroCarousel.jsx`
 (nunca se vio completo en esta conversación), `tailwind.config.js` o
@@ -471,6 +473,170 @@ como punto de partida, en vez de diseñar a ciegas.
       (desde el paso 48, exportar y reimportar lo conserva) o desde el
       campo "Costo Bodega" del dashboard.
 
+## 📝 Lista de la dueña y usuarios (octubre)
+
+Pedidos de la dueña del negocio y de usuarios reales, recibidos en
+octubre. Sin código todavía: cada grupo se convierte en uno o más pasos.
+
+### Prioridad alta, antes del lanzamiento
+
+- [ ] **Acordeones de la página de producto independientes**: que cada
+      uno se abra y se cierre libremente; hoy solo uno puede estar abierto
+      a la vez. Es una queja de clientes reales. Tiene la misma causa y el
+      mismo arreglo que el **scroll que salta al abrir un acordeón**
+      (movido aquí desde "🔵 Baja prioridad"): `ProductPage.jsx` usa
+      `<input type="radio">` nativos, que funcionan como grupo (por eso
+      solo uno abierto) y reciben el foco del navegador, que intenta
+      centrarlos mientras el contenido se reacomoda (por eso el scroll
+      salta hasta "Explora más diseños"). El arreglo liviano
+      (`onClick={(e) => e.target.blur()}` en los 4 radios) no lo resolvió
+      del todo. Arreglo de fondo para los dos: reemplazar los radios por un
+      estado controlado con `useState`, uno por acordeón para que sean
+      independientes, sin depender del foco del navegador. Ojo: `CLAUDE.md`
+      todavía lista el scroll como "pausado a pedido del usuario";
+      actualizarlo al hacer este paso.
+
+- [ ] **Stock en 0**: un producto o una talla sin stock tiene que mostrar
+      "Agotado" y no dejar agregar al carrito. Hoy aparece un 1,
+      probablemente el selector de cantidad (por diagnosticar).
+
+- [ ] **Quitar el mensaje sobre impuestos del carrito**, y revisar que los
+      precios mostrados sean siempre el total con IVA.
+
+- [ ] **"Explora más diseños increíbles"**: mostrar primero los productos
+      de la misma franquicia, y después el resto de la categoría. Hoy
+      muestra solo los de la misma categoría (ver el ítem resuelto de esa
+      sección en "🔵 Baja prioridad").
+
+- [ ] **Inicio del dashboard (`AdminHome.jsx`) con números reales**: hoy
+      los números están fijos en el código (`salesToday`, `salesCount`,
+      `ticketMedio`, `totalCustomers`; confirmado en el paso 46).
+      Reemplazarlos por datos reales, incluido el contador de productos
+      publicados.
+
+- [ ] **Esconder el registro y el link de iniciar sesión para los
+      clientes**: sin registro y sin link de login visible; `/login` queda
+      solo para el admin. Los clientes compran siempre como invitados. A
+      revisar en ese paso: "Historial de pedidos consultable por cliente"
+      (post-lanzamiento) supone cuentas de cliente, y el carrito guardado
+      de un cliente logueado (pasos 37 y 47) quedaría sin uso.
+
+- [ ] **Google Analytics 4**, con aviso de privacidad. Revisar qué exige
+      la ley chilena de datos personales.
+
+### Prioridad alta, antes de la feria navideña (meta: probado a mediados de noviembre)
+
+- [ ] **Ventas en la feria: aplicación de venta rápida.**
+
+      **Contexto:**
+      - Una sola feria navideña: puesto fijo durante 14 o 15 días en
+        diciembre, de 18:00 a 24:00 (hasta la 01:00 los fines de semana).
+        Se esperan entre 500 y 700 ventas.
+      - Hoy anotan en un cuaderno: número de venta por cliente, hora,
+        artículo, precio y pago (efectivo o transferencia). Si un cliente
+        lleva varios artículos, van bajo el mismo número de venta. Lo pasan
+        a Excel de madrugada.
+
+      **Requisitos:**
+      - Registro rápido desde el celular. Una venta por cliente, con uno o
+        varios artículos; pago efectivo o transferencia por venta; hora
+        automática.
+      - Descuenta stock. El stock es **uno solo** para el sitio, la feria y
+        cualquier otro canal.
+      - **Artículos del catálogo** (producto, talla y color) **y artículos
+        sueltos** (extraordinarios): descripción y precio a mano, sin stock.
+      - **Precio editable en cada artículo**, por descuentos y promociones.
+        Guardar el precio de lista y el precio cobrado.
+      - **Registro sin conexión obligatorio** (la señal se corta de golpe):
+        - guardar en el celular y sincronizar al volver la señal;
+        - un identificador único por venta, para que un reintento nunca la
+          duplique;
+        - un indicador de ventas pendientes de subir.
+      - **Dos vendedoras a la vez, cada una con su cuenta.** Hace falta un
+        rol "vendedor" que solo pueda registrar ventas; esto adelanta
+        "Multiusuario con niveles de acceso" (post-lanzamiento).
+      - **Stock negativo:** con dos celulares sin señal y el sitio
+        vendiendo, puede venderse algo sin stock. Aceptar la venta y avisar
+        el stock negativo, no rechazarla: la venta ya ocurrió. Es el mismo
+        criterio que ya usa el panel de órdenes al aprobar (permite stock
+        negativo y avisa).
+      - **Número de venta:** con dos celulares sin conexión no hay un
+        correlativo único. Usar una serie por vendedora (A-001, B-001) o
+        asignar el número definitivo al sincronizar.
+      - **Resumen de cierre por día** (total, efectivo y transferencia) y
+        exportación a Excel/CSV.
+      - **Las ventas de la feria tienen que poder filtrarse** respecto de
+        las ventas en línea.
+
+      **Forma y acceso:**
+      - Aplicación **separada del dashboard**, enfocada solo en vender.
+      - Propuesta: aplicación web instalable (**PWA**) en
+        `ventas.nebadon.cl`, del mismo sitio que `api.nebadon.cl` (cookie de
+        primera parte, como en el paso 47; habría que sumarla a
+        `FRONTEND_URL`), con modo sin conexión, en vez de una app nativa en
+        tiendas.
+      - Siempre **a través del backend**, nunca conectada directo a la base
+        de datos.
+      - **Celulares:** las dos vendedoras usan Android (Chrome). La PWA
+        puede usar sincronización en segundo plano y huella, sin las
+        limitaciones de iPhone.
+      - **Sesión:** hoy dura 1 hora (JWT y cookie), y una jornada dura unas
+        7 horas. Si la sesión vence sin señal, no se puede volver a entrar.
+        Primero: una sesión larga por dispositivo con el rol de vendedor.
+        Después, si hay tiempo: entrada con huella (passkeys/WebAuthn).
+
+      **Calendario:**
+      - Probado a mediados de noviembre, idealmente con una noche de prueba
+        simulando ventas y cortes de señal.
+      - Probablemente en varios pasos: roles y registro de ventas en el
+        backend (con protección contra duplicados); la PWA de venta rápida
+        con modo sin conexión; resumen, filtro y exportación; y la huella al
+        final, si hay tiempo.
+
+### Prioridad media
+
+- [ ] **Pedir por Telegram** como alternativa a WhatsApp. Telegram no
+      permite abrir un chat con un usuario con el mensaje ya escrito.
+      Opción simple para el lanzamiento: copiar el pedido al portapapeles y
+      abrir `t.me/<usuario de la tienda>`. Un bot de Telegram queda como
+      mejora posterior. Falta el usuario de Telegram de la tienda.
+
+- [ ] **Buscador**: que busque también por categoría, franquicia y tema,
+      además del nombre (por confirmar).
+
+- [ ] **Menú de categorías del navbar**: listar las categorías reales,
+      cada una llevando a `/shop?category=` (por confirmar; alternativa:
+      menú hamburguesa también en desktop).
+
+- [ ] **Página de producto, en un solo paso de diseño:**
+      - SKU y franquicia amontonados sobre el título (evaluar sacar el SKU
+        de esa zona);
+      - color de franquicia igual en `ProductCard`, `ProductDetailModal` y
+        `ProductPage`;
+      - botón de compartir visible sobre la imagen en mobile, y galería a
+        pantalla completa estilo Shein/AliExpress.
+
+- [ ] **Guía de tallas**: tablas de tallas universales, dejando claro qué
+      cubre cada tabla (sobre todo si se entra desde el footer), e imágenes
+      de cómo medir el pie. Necesita material de la dueña. Relacionado con
+      "Tallas y medidas" (punto 3 del ítem "Página de producto — 3
+      pendientes reales", en "🔵 Baja prioridad"), que ya anota los rangos
+      de calcetines, la talla de bebé y niño, y las tallas elegibles sin
+      fila en la tabla.
+
+### Pulido visual
+
+Relacionado con "🎨 Pulido visual / UI-UX", más arriba:
+
+- [ ] **Carrusel del Hero con deslizamiento táctil en mobile**,
+      reutilizando el enfoque de `ProductCarousel.jsx` (scroll nativo con
+      `overflow-x-auto` + `snap-x`, ya probado en celular). Se suma al ítem
+      del Hero "poco atractivo" de esa sección.
+
+- [ ] **Dashboard con estilos uniformes** (bordes de inputs, badges,
+      etc.), usando `informe-consistencia-ui-ux.md`, que ya tiene los
+      hallazgos del Admin priorizados.
+
 ## 🔵 Baja prioridad, no bloqueante
 
 - [ ] Limpieza cosmética menor, sin apuro: `careGuides.js` contiene
@@ -709,14 +875,6 @@ como punto de partida, en vez de diseñar a ciegas.
       a `rounded-lg` (8px, igual a `--rounded-btn` del tema). La tabla de
       `/guia-cuidados`, que no está anidada, sigue con `rounded-box`.
       Confirmado en el navegador.
-- [ ] Scroll automático al abrir un acordeón en `ProductPage.jsx` salta
-      demasiado lejos (hasta "Explora más diseños") en vez de quedarse
-      en la zona de acordeones — el fix liviano (`onClick={(e) =>
-      e.target.blur()}` en los 4 `<input type="radio">`) no lo resolvió
-      del todo. Pausado a pedido del usuario para priorizar otros
-      hallazgos. Fix de fondo pendiente si se retoma: reemplazar el
-      mecanismo de radios nativos por `useState` controlado en React,
-      eliminando la dependencia del foco del navegador por completo.
 
 - [x] **Tabla de "Tallas y Medidas" se desbordaba en mobile** (la de
       Polerones, 5 columnas, era la más notoria) — tercer caso del mismo
@@ -805,6 +963,9 @@ como punto de partida, en vez de diseñar a ciegas.
            única solo para un tipo de producto, no igual en las tres).
          Sigue conectado con la idea de tallas condicionadas por
          categoría/género (en "puede esperar").
+         Pedido de octubre relacionado: tablas universales, qué cubre cada
+         tabla e imágenes de cómo medir el pie (ver "📝 Lista de la dueña y
+         usuarios (octubre)").
 
 - [x] **Carruseles del Home sin deslizamiento táctil en mobile** —
       `ProductCarousel.jsx` nunca tuvo scroll real: armaba "páginas"
