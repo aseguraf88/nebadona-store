@@ -283,10 +283,17 @@ como punto de partida, en vez de diseñar a ciegas.
       producción automáticamente. Un build roto no tumba el sitio en
       vivo — sigue sirviendo la última versión buena hasta que se
       corrija.
+- [x] Backend también en `api.nebadon.cl` y frontend de pruebas en
+      `pruebas.nebadon.cl` (paso 47). Variables de entorno, dominios y DNS:
+      ver "Sitio en producción" en `CLAUDE.md`.
 - [ ] Renombrar todo de "nebadona" a "nebadon" (GitHub + los dos
       proyectos de Vercel) — pospuesto a propósito hasta después de
       confirmar que el sitio funciona estable en producción, para no
       arriesgar la integración recién lograda.
+      Ojo (paso 47): si cambia el nombre del proyecto del frontend en
+      Vercel, cambia `nebadona-store-cyan.vercel.app`, y hay que reescribir
+      `FRONTEND_URL` completa en el backend (Vercel no deja ver su valor) y
+      redesplegar el backend.
 
 ## 🔍 QA en producción — recién empezado
 
@@ -370,28 +377,56 @@ como punto de partida, en vez de diseñar a ciegas.
       `Checkout.jsx` (`'http://localhost:3001/api'` → `'.../api/'`, con la
       barra final como el resto); solo se usaría si faltara la variable.
 
-- [ ] **Prioridad alta, paso propio — la sesión depende de cookies de
-      terceros**: el frontend (`nebadona-store-cyan.vercel.app`) y el
-      backend (`nebadona-store.vercel.app`) son sites distintos, porque
-      `vercel.app` está en la Public Suffix List, así que la cookie de
-      sesión es de terceros. Evidencia: en una ventana de incógnito de
-      Chrome, con el admin logueado, el dashboard de producción no carga
-      productos y `GET /api/products/admin` responde 401 (antes del paso 46
-      no se notaba en el listado, que salía de la lista pública, pero
-      cualquier acción de admin ya fallaba igual en incógnito). Probable
-      además, todavía sin probar: Safari (iPhone y Mac) bloquea las cookies
-      de terceros por defecto también en ventanas normales, y Chrome va en
-      esa dirección. Afecta al dashboard completo y al carrito de un
-      cliente logueado (incluida la sincronización al iniciar sesión). No
-      afecta al checkout como invitado (`POST /api/orders/whatsapp` no usa
-      sesión). Opciones a investigar: a) backend en un subdominio del mismo
-      dominio (por ejemplo `api.nebadon.cl`, con el frontend en
-      `nebadon.cl`/`www.nebadon.cl`): la cookie pasa a ser del mismo sitio;
-      b) un rewrite en `FRONTEND/vercel.json` que haga de proxy de `/api/*`
-      hacia el backend: mismo origen (ojo con `express-rate-limit` y
-      `trust proxy`: todas las peticiones podrían llegar con la IP del
-      proxy). Considerar también cómo convive con el dominio de pruebas de
-      Vercel mientras `nebadon.cl` muestra "Próxima apertura".
+- [x] ~~**Prioridad alta, paso propio — la sesión depende de cookies de
+      terceros**~~ — resuelto (paso 47, commit `7add77f`). El frontend y el
+      backend en `*.vercel.app` eran sites distintos (`vercel.app` está en
+      la Public Suffix List), así que la cookie de sesión era de terceros:
+      en incógnito de Chrome el dashboard daba 401, y el login "parecía"
+      funcionar porque el frontend guardaba el usuario sin comprobar que la
+      cookie había quedado guardada. Solución: el backend responde también
+      en `api.nebadon.cl`, del mismo sitio que `nebadon.cl`,
+      `www.nebadon.cl` y `pruebas.nebadon.cl`, así que la cookie es de
+      primera parte. Se descartó el proxy en `FRONTEND/vercel.json`: según
+      la documentación de Vercel, un backend en Vercel sobrescribe
+      `X-Forwarded-For` cuando la petición llega desde otro proxy (y el
+      frontend también está en Vercel), así que todas las peticiones
+      llegarían con la IP del proxy y el límite de login quedaría
+      compartido entre todos. Se agregó `app.set('trust proxy', 1)` en
+      `app.js`, que corrige además un problema que ya existía: sin eso,
+      `req.ip` era la conexión de la capa de borde de Vercel, y el límite de
+      login probablemente era compartido entre todos los visitantes. Login
+      y registro ahora confirman la sesión con `GET /api/auth/profile`
+      (`checkSession` devuelve el usuario o `null`) antes de darla por
+      iniciada; si el navegador bloqueó la cookie, muestran "Tu navegador
+      bloqueó la sesión…" en vez de un dashboard vacío. Ojo:
+      `nebadona-store-cyan.vercel.app` sigue dependiendo de cookies de
+      terceros (falla en incógnito y en Safari, ahora con el aviso); para
+      probar sesiones se usa `pruebas.nebadon.cl`. Configuración de Vercel y
+      DNS: ver "Sitio en producción" en `CLAUDE.md`. Probado: en local,
+      login del admin, sincronización del carrito de invitado y registro;
+      en producción, el aviso en incógnito en
+      `nebadona-store-cyan.vercel.app`; en `pruebas.nebadon.cl` en
+      incógnito, el dashboard con productos, guardar, export, import, una
+      orden aprobada y cancelada, el carrito logueado con sincronización y
+      el logout (401 en `/api/products/admin`); en ventana normal,
+      `pruebas.nebadon.cl` y `nebadona-store-cyan.vercel.app`; el límite de
+      login, bloqueado desde el computador y con acceso desde el celular
+      con datos móviles. **Pendiente: probar en Safari (iPhone y Mac)**;
+      está en el checklist del lanzamiento.
+
+- [ ] **Checklist del día del lanzamiento** (paso 47):
+      1. Sacar `nebadon.cl` y `www.nebadon.cl` de `COMING_SOON_HOSTNAMES`
+         en `App.jsx`.
+      2. En `nebadon.cl`: login en incógnito (admin y cliente) y un
+         checkout completo.
+      3. Safari (iPhone y Mac), que nunca se probó: login del admin,
+         dashboard y carrito de un cliente logueado.
+      Después del lanzamiento:
+      4. Decidir si se retira `nebadona-store-cyan.vercel.app`; si se
+         retira, sacarlo de `FRONTEND_URL`.
+      5. Ya sin ese dominio, pasar la cookie de sesión a `sameSite: 'lax'`
+         en `authControllers.js`: login, registro y logout a la vez, para
+         que el logout la siga borrando.
 
 - [ ] **Prioridad media — el dashboard borra `cost_price` en cada
       guardado**: `getProductById` no trae el costo (`select: false` en
@@ -570,6 +605,13 @@ como punto de partida, en vez de diseñar a ciegas.
       en Stock queda en 1, y un texto inválido en 0, sin aviso. Mismo
       problema de separador de miles que se resolvió para los precios en
       el paso 44 (no se tocó a propósito: no es un precio). Baja prioridad.
+
+- [ ] El contador de `express-rate-limit` vive en la memoria de cada
+      instancia serverless de Vercel: se reinicia en cada arranque en frío
+      y no se comparte entre instancias (en la prueba del paso 47 hicieron
+      falta más de 10 intentos en algunos casos). Alcanza para frenar
+      intentos repetidos desde una IP; si algún día hace falta un límite
+      exacto, se necesitaría un almacén compartido (por ejemplo, Redis).
 
 - [x] **Guía de Cuidados y Envíos separadas a páginas propias** —
       encontrado en QA con la dueña real del negocio: el texto de

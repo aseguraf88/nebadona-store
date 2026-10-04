@@ -34,12 +34,23 @@ manual. MercadoPago fue eliminado del código por completo (no reintroducir).
   archivo: después de guardar, arrancar el servidor (o el smoke test que
   corresponda) ANTES de seguir, y no dar nada por cerrado solo porque el
   guardado no tiró error.
-- **Nunca escribas un valor real de variable de entorno en ningún archivo
-  versionado** (ni como valor, ni como "ejemplo" en un mensaje de error o
-  comentario) — pasó 3 veces con `env.js` por escribir el secreto real en
-  el segundo argumento de `.min()` en vez de un mensaje genérico. Los
-  mensajes de error de validación deben generarse a partir de nombres de
-  variable, nunca de sus valores.
+- **Nunca escribas el valor de un secreto en ningún archivo versionado**
+  (ni como valor, ni como "ejemplo" en un mensaje de error, comentario o
+  documentación). Secreto es cualquier valor que dé acceso: contraseñas,
+  tokens, claves de API, la cadena de conexión a MongoDB (`MONGO_DB_URI`
+  completa) y sus credenciales (usuario y contraseña), `JWT_SECRET`, las
+  credenciales de Cloudinary (`CLOUDINARY_URL` o sus tres variables), y
+  cualquier variable nueva con ese carácter. Ante la duda, tratarlo como
+  secreto. El porqué: pasó 3 veces con `env.js` por escribir el secreto
+  real en el segundo argumento de `.min()` en vez de un mensaje genérico.
+  Los mensajes de error de validación deben generarse a partir de nombres
+  de variable, nunca de sus valores. El host del cluster de MongoDB
+  tampoco es una credencial, pero no hace falta escribirlo en archivos
+  versionados: si alguna vez hay que identificar la base, basta con su
+  nombre. **Excepción acotada:** las URLs públicas de configuración
+  (`FRONTEND_URL`, `VITE_BACKEND_URL`) sí se pueden anotar, porque ya
+  aparecen en el JS compilado y en las respuestas de CORS (ver "Sitio en
+  producción").
 - **Bug conocido de Claude Code en Windows**: pegar bloques de texto largos
   en la consola se puede truncar en silencio, sin ningún aviso (confirmado,
   reportado a Anthropic). Para bloques de código largos que el usuario deba
@@ -99,9 +110,14 @@ Desplegado y en vivo — dos dominios con propósitos distintos:
 - `nebadon.cl` / `www.nebadon.cl` — dominio público real, muestra una
   pantalla de "Próxima apertura" (imagen + link a Instagram), no el sitio
   completo. Chequeo de `hostname` en `App.jsx`.
-- Dominio de pruebas en Vercel (`nebadona-store-cyan.vercel.app` para el
-  frontend, `nebadona-store.vercel.app` para el backend) — sitio completo
-  funcional, usado para QA con usuarios reales.
+- Dominios de pruebas — sitio completo funcional, usado para QA con
+  usuarios reales: `pruebas.nebadon.cl` (el que hay que usar para probar
+  sesiones: es del mismo sitio que el backend) y
+  `nebadona-store-cyan.vercel.app` (funciona en ventana normal, pero su
+  cookie de sesión es de terceros: falla en incógnito y en Safari).
+- Backend: `api.nebadon.cl`, el que usa el frontend desde el paso 47 (así
+  la cookie de sesión es de primera parte para `nebadon.cl`, `www` y
+  `pruebas`). `nebadona-store.vercel.app` sigue respondiendo.
 - Arquitectura: `FRONTEND` y `BACKEND` son dos proyectos de Vercel
   separados, cada uno con su propio `vercel.json` (el del frontend hace
   el rewrite de SPA `/(.*)` → `/index.html`; el del backend enruta
@@ -113,6 +129,23 @@ Desplegado y en vivo — dos dominios con propósitos distintos:
   de entorno vive en `BACKEND/src/config/env.js`.
 - Rama de trabajo real: `whatsapp-commerce` (no `main`, desactualizada).
   Cada `git push` a esa rama despliega solo a producción.
+- **Configuración fuera del código** (paso 47). Estos dos valores no son
+  secretos: son URLs públicas que ya aparecen en el JS compilado y en las
+  respuestas de CORS. La regla de no escribir secretos sigue valiendo
+  para todo lo demás.
+  - `FRONTEND_URL` (proyecto backend, entorno Production):
+    `https://nebadona-store-cyan.vercel.app,https://nebadon.cl,https://www.nebadon.cl,https://pruebas.nebadon.cl`.
+    Vercel no muestra el valor al editarla: hay que reescribirla completa,
+    sin espacios, y después redesplegar el backend.
+  - `VITE_BACKEND_URL` (proyecto frontend, entorno Production):
+    `https://api.nebadon.cl/api/`, con la barra final (todos los servicios
+    concatenan sin barra). Vite la escribe en el build: después de
+    cambiarla hay que redesplegar el frontend.
+  - Dominios: `api.nebadon.cl` en el proyecto del backend; `nebadon.cl`,
+    `www.nebadon.cl` y `pruebas.nebadon.cl` en el del frontend.
+  - DNS: `nebadon.cl` usa los nameservers de Vercel (`ns1.vercel-dns.com`,
+    `ns2.vercel-dns.com`), configurados en NIC Chile. Los registros se
+    administran en Vercel (sección Domains de la cuenta), no en NIC Chile.
 
 ## Estado del proyecto
 Ver `BACKLOG.md` en la raíz del repo para la lista completa de pendientes,
