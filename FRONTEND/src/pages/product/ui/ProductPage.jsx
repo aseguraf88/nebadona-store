@@ -1,9 +1,14 @@
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef, useId } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { Share2, Truck, Zap, Handshake, Warehouse } from 'lucide-react'
 import { useCart } from '../../../entities/cart'
-import { useProduct, isSockCategory } from '../../../entities/product'
+import {
+    useProduct,
+    isSockCategory,
+    hasStock,
+    pickInitialVariant,
+} from '../../../entities/product'
 import VariantSelector from '../../../entities/product/ui/VariantSelector'
 import { ProductSection } from '../../../widgets/catalog'
 import { getSizeGuideByCategory } from '../../../entities/product/config/sizeGuides'
@@ -38,6 +43,50 @@ const useIsMdUp = () => {
     return isMdUp
 }
 
+// Acordeón independiente, con su propio estado: cada uno se abre y se cierra
+// solo. Reemplaza los <input type="radio"> nativos, que funcionaban como
+// grupo (solo uno abierto, sin poder cerrarlo) y hacían saltar el scroll: al
+// abrir uno se cerraba el de arriba y toda la página se corría hacia arriba
+const ProductAccordion = ({
+    title,
+    defaultOpen = false,
+    className = '',
+    contentClassName = '',
+    children,
+}) => {
+    const [isOpen, setIsOpen] = useState(defaultOpen)
+    const id = useId()
+    const titleId = `${id}-title`
+    const contentId = `${id}-content`
+
+    return (
+        <div
+            className={`collapse collapse-plus bg-base-100 border border-base-200 rounded-xl ${
+                isOpen ? 'collapse-open' : 'collapse-close'
+            } ${className}`}
+        >
+            <button
+                type="button"
+                id={titleId}
+                aria-expanded={isOpen}
+                aria-controls={contentId}
+                onClick={() => setIsOpen((open) => !open)}
+                className="collapse-title text-sm font-semibold uppercase tracking-wider text-left w-full cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary"
+            >
+                {title}
+            </button>
+            <div
+                id={contentId}
+                role="region"
+                aria-labelledby={titleId}
+                className={`collapse-content ${contentClassName}`}
+            >
+                {children}
+            </div>
+        </div>
+    )
+}
+
 const ProductPage = () => {
     const { id } = useParams()
     const { addToCart } = useCart()
@@ -52,9 +101,14 @@ const ProductPage = () => {
     const [selectedVariant, setSelectedVariant] = useState(null)
 
     useEffect(() => {
+        // La primera variante con stock (antes, siempre la primera: si estaba
+        // agotada, la ficha abría en "Agotado" aunque hubiera otras tallas)
         if (product?.variants?.length > 0) {
-            setSelectedVariant(product.variants[0])
+            setSelectedVariant(pickInitialVariant(product.variants))
         }
+        // Producto nuevo: la cantidad vuelve a 1 (al navegar de una ficha a
+        // otra, el componente se reutiliza y arrastraba la cantidad anterior)
+        setQuantity(1)
     }, [product])
 
     const handleVariantSelect = useCallback((variant) => {
@@ -143,6 +197,9 @@ const ProductPage = () => {
         },
         { label: 'Especificaciones', value: product?.specifications?.trim() },
     ].filter((detail) => detail.value)
+
+    const isSoldOut = !hasStock(product)
+    const selectedHasStock = (selectedVariant?.stock ?? 0) > 0
 
     const handleDecrement = () => setQuantity((prev) => Math.max(1, prev - 1))
     const handleIncrement = () =>
@@ -373,6 +430,11 @@ const ProductPage = () => {
                                         }).format(product.compareAtPrice)}
                                     </span>
                                 )}
+                            {isSoldOut && (
+                                <span className="badge badge-error self-center font-bold uppercase tracking-widest text-xs">
+                                    Agotado
+                                </span>
+                            )}
                         </div>
 
                         <div className="flex flex-col gap-6">
@@ -383,6 +445,8 @@ const ProductPage = () => {
                             />
 
                             <div className="flex flex-col sm:flex-row items-center gap-4 mt-4">
+                                {/* Sin stock: sin contador (antes mostraba un 1 junto a "Agotado") */}
+                                {selectedHasStock && (
                                 <div className="flex items-center border border-base-300 rounded-2xl h-14 w-full sm:w-36 bg-base-100 overflow-hidden shrink-0">
                                     <button
                                         onClick={handleDecrement}
@@ -404,20 +468,18 @@ const ProductPage = () => {
                                         +
                                     </button>
                                 </div>
+                                )}
 
                                 <button
                                     onClick={handleAddToCart}
-                                    disabled={
-                                        (selectedVariant?.stock ?? 0) === 0 ||
-                                        isAdded
-                                    }
+                                    disabled={!selectedHasStock || isAdded}
                                     className={`btn flex-1 h-14 rounded-2xl text-sm uppercase tracking-widest font-bold border-none transition-all w-full ${
                                         isAdded
                                             ? 'bg-success text-success-content hover:bg-success'
                                             : 'btn-primary shadow-lg hover:shadow-xl'
                                     }`}
                                 >
-                                    {(selectedVariant?.stock ?? 0) === 0
+                                    {!selectedHasStock
                                         ? 'Agotado'
                                         : isAdded
                                           ? '✓ Agregado'
@@ -427,17 +489,11 @@ const ProductPage = () => {
                         </div>
 
                         <div className="mt-8 flex flex-col gap-3 border-t border-base-200 pt-8">
-                            <div className="collapse collapse-plus bg-base-100 border border-base-200 rounded-xl">
-                                <input
-                                    type="radio"
-                                    name="product-accordion"
-                                    defaultChecked
-                                    onClick={(e) => e.target.blur()}
-                                />
-                                <div className="collapse-title text-sm font-semibold uppercase tracking-wider">
-                                    Descripción del Producto
-                                </div>
-                                <div className="collapse-content text-sm text-base-content/80 leading-relaxed">
+                            <ProductAccordion
+                                title="Descripción del Producto"
+                                defaultOpen
+                                contentClassName="text-sm text-base-content/80 leading-relaxed"
+                            >
                                     <p>
                                         {product.description ||
                                             'Un diseño exclusivo creado para destacar. Confeccionadas para máxima comodidad y durabilidad en tu día a día.'}
@@ -455,16 +511,14 @@ const ProductPage = () => {
                                                 ))}
                                             </div>
                                         )}
-                                </div>
-                            </div>
+                            </ProductAccordion>
 
                             {(productDetails.length > 0 || careGuide) && (
-                                <div className="collapse collapse-plus bg-base-100 border border-base-200 rounded-xl min-w-0">
-                                    <input type="radio" name="product-accordion" onClick={(e) => e.target.blur()} />
-                                    <div className="collapse-title text-sm font-semibold uppercase tracking-wider">
-                                        Detalles del Producto y Cuidados
-                                    </div>
-                                    <div className="collapse-content text-sm text-base-content/80 min-w-0">
+                                <ProductAccordion
+                                    title="Detalles del Producto y Cuidados"
+                                    className="min-w-0"
+                                    contentClassName="text-sm text-base-content/80 min-w-0"
+                                >
                                         {productDetails.length > 0 && (
                                             <>
                                                 <p className="text-xs uppercase tracking-widest text-primary font-semibold mb-2 px-3">
@@ -517,21 +571,15 @@ const ProductPage = () => {
                                                 </Link>
                                             </div>
                                         )}
-                                    </div>
-                                </div>
+                                </ProductAccordion>
                             )}
 
                             {sizeGuide && (
-                                <div className="collapse collapse-plus bg-base-100 border border-base-200 rounded-xl min-w-0">
-                                    <input
-                                        type="radio"
-                                        name="product-accordion"
-                                        onClick={(e) => e.target.blur()}
-                                    />
-                                    <div className="collapse-title text-sm font-semibold uppercase tracking-wider">
-                                        Tallas y Medidas
-                                    </div>
-                                    <div className="collapse-content text-sm text-base-content/80 min-w-0">
+                                <ProductAccordion
+                                    title="Tallas y Medidas"
+                                    className="min-w-0"
+                                    contentClassName="text-sm text-base-content/80 min-w-0"
+                                >
                                         {standardSummary ? (
                                             <div className="overflow-x-auto rounded-lg border border-base-content/10">
                                                 <table className="table table-sm">
@@ -613,16 +661,14 @@ const ProductPage = () => {
                                                 Ver guía de tallas completa →
                                             </Link>
                                         )}
-                                    </div>
-                                </div>
+                                </ProductAccordion>
                             )}
 
-                            <div className="collapse collapse-plus bg-base-100 border border-base-200 rounded-xl min-w-0">
-                                <input type="radio" name="product-accordion" onClick={(e) => e.target.blur()} />
-                                <div className="collapse-title text-sm font-semibold uppercase tracking-wider">
-                                    Detalles de Envío y Entregas
-                                </div>
-                                <div className="collapse-content text-sm text-base-content/80 space-y-4 min-w-0">
+                            <ProductAccordion
+                                title="Detalles de Envío y Entregas"
+                                className="min-w-0"
+                                contentClassName="text-sm text-base-content/80 space-y-4 min-w-0"
+                            >
                                     <div className="overflow-x-auto rounded-lg border border-base-content/10">
                                         <table className="table table-xs">
                                             <tbody>
@@ -644,8 +690,7 @@ const ProductPage = () => {
                                     >
                                         Ver detalles de envíos y entregas →
                                     </Link>
-                                </div>
-                            </div>
+                            </ProductAccordion>
                         </div>
                     </div>
                 </div>

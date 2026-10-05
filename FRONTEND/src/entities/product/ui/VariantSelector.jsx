@@ -17,12 +17,24 @@ const VariantSelector = ({ variants, selectedVariant, onSelect }) => {
     const uniqueSizes = [...new Set(variants.map((v) => v.size).filter(Boolean))]
     const uniqueColors = [...new Set(variants.map((v) => v.baseColor).filter(Boolean))]
 
-    const findVariant = (size, color) =>
+    // Una talla (o un color) se marca agotada solo si NINGUNA variante con
+    // ese valor tiene stock. Antes se miraba solo la combinación con el color
+    // (o la talla) elegido, y una talla con stock en otro color salía tachada
+    const inStock = (v) => (v.stock || 0) > 0
+    const sizeHasStock = (size) => variants.some((v) => v.size === size && inStock(v))
+    const colorHasStock = (color) =>
+        variants.some((v) => v.baseColor === color && inStock(v))
+
+    // Al tocar una talla: la del color elegido si tiene stock; si no, la
+    // primera de esa talla con stock. Lo mismo al tocar un color
+    const pickForSize = (size) =>
         variants.find(
-            (v) =>
-                (!hasSizes || v.size === size) &&
-                (!hasColors || v.baseColor === color),
-        )
+            (v) => v.size === size && v.baseColor === selectedVariant?.baseColor && inStock(v),
+        ) ?? variants.find((v) => v.size === size && inStock(v))
+    const pickForColor = (color) =>
+        variants.find(
+            (v) => v.baseColor === color && v.size === selectedVariant?.size && inStock(v),
+        ) ?? variants.find((v) => v.baseColor === color && inStock(v))
 
     return (
         <div className="flex flex-col gap-4">
@@ -33,16 +45,18 @@ const VariantSelector = ({ variants, selectedVariant, onSelect }) => {
                     </span>
                     <div className="flex flex-wrap gap-2">
                         {uniqueSizes.map((size) => {
-                            const matching = findVariant(size, selectedVariant?.baseColor)
                             const isSelected = selectedVariant?.size === size
-                            const outOfStock = matching ? matching.stock === 0 : true
+                            const outOfStock = !sizeHasStock(size)
 
                             return (
                                 <button
                                     key={size}
                                     type="button"
                                     disabled={outOfStock}
-                                    onClick={() => matching && onSelect(matching)}
+                                    onClick={() => {
+                                        const next = pickForSize(size)
+                                        if (next) onSelect(next)
+                                    }}
                                     className={badgeClasses(isSelected, outOfStock)}
                                 >
                                     {size}
@@ -60,16 +74,18 @@ const VariantSelector = ({ variants, selectedVariant, onSelect }) => {
                     </span>
                     <div className="flex flex-wrap gap-2">
                         {uniqueColors.map((color) => {
-                            const matching = findVariant(selectedVariant?.size, color)
                             const isSelected = selectedVariant?.baseColor === color
-                            const outOfStock = matching ? matching.stock === 0 : true
+                            const outOfStock = !colorHasStock(color)
 
                             return (
                                 <button
                                     key={color}
                                     type="button"
                                     disabled={outOfStock}
-                                    onClick={() => matching && onSelect(matching)}
+                                    onClick={() => {
+                                        const next = pickForColor(color)
+                                        if (next) onSelect(next)
+                                    }}
                                     className={badgeClasses(isSelected, outOfStock)}
                                 >
                                     {color}

@@ -14,3 +14,5 @@ export {
 } from './model/ProductContext'
 
 export { default as productServices } from './api/productServices.js'
+
+export { hasStock, pickInitialVariant } from './lib/stock.js'

@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { useCart } from '../../cart/model/CartContext'
 import { Link } from 'react-router-dom'
 import ProductDetailModal from '../../../widgets/product-detail-modal/ui/ProductDetailModal'
+import { hasStock } from '../lib/stock'
 
 const ProductCard = ({ product }) => {
     const {
@@ -31,10 +32,7 @@ const ProductCard = ({ product }) => {
 
     const currentImage = images[0] || ''
 
-    const totalStock = (product.variants || []).reduce(
-        (sum, v) => sum + (v.stock || 0),
-        0,
-    )
+    const isSoldOut = !hasStock(product)
 
     const handleAddToCart = async (
         event,
@@ -126,6 +124,14 @@ const ProductCard = ({ product }) => {
                             </div>
                         )}
 
+                        {/* Siempre visible: el botón de abajo, en desktop, solo
+                            aparece al pasar el mouse */}
+                        {isSoldOut && (
+                            <span className="absolute top-3 left-3 z-20 badge badge-error font-bold uppercase tracking-widest text-[10px]">
+                                Agotado
+                            </span>
+                        )}
+
                         {/* BOTÓN VISTA RÁPIDA */}
                         <button
                             type="button"
@@ -163,14 +169,14 @@ const ProductCard = ({ product }) => {
                                         ? handleOpenModal
                                         : handleAddToCart
                                 }
-                                disabled={totalStock === 0 || isAdded}
+                                disabled={isSoldOut || isAdded}
                                 className={`w-full py-2.5 flex items-center justify-center backdrop-blur-md transition-all duration-300 rounded-xl shadow-md sm:translate-y-12 sm:opacity-0 sm:group-hover:translate-y-0 sm:group-hover:opacity-100 ${
                                     isAdded
                                         ? 'bg-success text-success-content'
                                         : 'bg-base-100/95 text-base-content active:bg-primary active:text-primary-content sm:hover:bg-primary sm:hover:text-primary-content'
                                 }`}
                             >
-                                {totalStock === 0 ? (
+                                {isSoldOut ? (
                                     <span className="text-[11px] font-bold text-error uppercase tracking-widest">
                                         Agotado
                                     </span>

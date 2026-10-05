@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { useProduct } from '../../../entities/product'
+import { useProduct, hasStock } from '../../../entities/product'
 import {
     ProductList,
     ResultsToolbar,
@@ -107,6 +107,13 @@ const ShoppingPage = () => {
         } else if (sortOption === 'newest') {
             result.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
         }
+
+        // 6. Agotados (todas sus variantes sin stock) al final, respetando el
+        // orden de arriba dentro de cada grupo
+        result = [
+            ...result.filter((p) => hasStock(p)),
+            ...result.filter((p) => !hasStock(p)),
+        ]
 
         return result
     }, [

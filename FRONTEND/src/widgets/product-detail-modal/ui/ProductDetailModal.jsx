@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { Link } from 'react-router-dom' // 🔥 NUEVO: Importamos Link para viajar a la página
 import VariantSelector from '../../../entities/product/ui/VariantSelector'
+import { pickInitialVariant } from '../../../entities/product/lib/stock'
 
 const ProductDetailModal = ({ product, isOpen, onClose, onAddToCart }) => {
     const [quantity, setQuantity] = useState(1)
@@ -24,7 +25,8 @@ const ProductDetailModal = ({ product, isOpen, onClose, onAddToCart }) => {
             setQuantity(1)
             setSelectedImageIndex(0)
             setIsCopied(false) // Reseteamos el estado de copiado al abrir
-            setSelectedVariant(product?.variants?.[0] ?? null)
+            // La primera variante con stock (antes, siempre la primera)
+            setSelectedVariant(pickInitialVariant(product?.variants))
         }
     }, [isOpen])
 
@@ -196,7 +198,9 @@ const ProductDetailModal = ({ product, isOpen, onClose, onAddToCart }) => {
                                 onSelect={handleVariantSelect}
                             />
 
+                            {/* Sin stock: sin contador (antes mostraba un 1 junto a "Agotado") */}
                             <div className="flex items-center gap-3 sm:gap-4 mt-2">
+                                {(selectedVariant?.stock ?? 0) > 0 && (
                                 <div className="flex items-center border border-base-300 rounded-xl h-12 w-28 sm:w-32 bg-base-100 overflow-hidden shrink-0">
                                     <button
                                         type="button"
@@ -217,6 +221,7 @@ const ProductDetailModal = ({ product, isOpen, onClose, onAddToCart }) => {
                                         +
                                     </button>
                                 </div>
+                                )}
 
                                 <button
                                     type="button"
