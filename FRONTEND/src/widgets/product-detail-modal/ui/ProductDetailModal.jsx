@@ -130,9 +130,12 @@ const ProductDetailModal = ({ product, isOpen, onClose, onAddToCart }) => {
                             <span className="shrink-0">
                                 SKU: {selectedVariant?.sku || 'N/A'}
                             </span>
-                            <span className="truncate ml-4 text-right">
-                                {product.franchise_name || 'Novedad'}
-                            </span>
+                            {/* Franquicia; si no tiene, la categoría; si tampoco, nada */}
+                            {(product.franchise_name || product.product_category) && (
+                                <span className="truncate ml-4 text-right">
+                                    {product.franchise_name || product.product_category}
+                                </span>
+                            )}
                         </div>
 
                         {/* 🔥 NUEVO: Contenedor Flex para Título + Botón Compartir */}

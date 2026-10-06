@@ -218,9 +218,13 @@ const ProductCard = ({ product }) => {
 
                     {/* BLOQUE INFERIOR DE TEXTO */}
                     <div className="flex flex-col flex-grow items-center text-center p-4 w-full bg-base-100 rounded-b-2xl">
-                        <span className="text-[10px] font-bold text-secondary uppercase tracking-widest leading-none mb-2">
-                            {franchise_name || 'Novedad'}
-                        </span>
+                        {/* Franquicia; si no tiene, la categoría; si tampoco, nada
+                            (antes decía "Novedad", aunque el producto no fuera nuevo) */}
+                        {(franchise_name || product_category) && (
+                            <span className="text-[10px] font-bold text-secondary uppercase tracking-widest leading-none mb-2">
+                                {franchise_name || product_category}
+                            </span>
+                        )}
 
                         <h2 className="text-sm font-semibold text-base-content line-clamp-2 leading-tight w-full mb-3 group-hover:text-primary transition-colors">
                             {name}

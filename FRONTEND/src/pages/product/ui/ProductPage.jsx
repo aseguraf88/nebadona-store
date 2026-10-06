@@ -29,6 +29,43 @@ const SHIPPING_METHODS = [
     { icon: Warehouse, text: 'Retiro en bodega, sin costo' },
 ]
 
+// Valores de franquicia que en realidad significan "sin franquicia" (diseños
+// sueltos, que no pertenecen a ninguna familia). Para los relacionados se
+// tratan igual que null o ''. Van ya normalizados (ver normalizeKey: sin
+// tildes ni ñ). 'random' es el nombre anterior de "Diseños originales"; se
+// deja para que los productos funcionen igual antes y después de renombrarla
+const NO_FRANCHISE_VALUES = ['random', 'disenos originales']
+
+// Cuántos productos muestra "Explora más diseños" (2 páginas de 4 en desktop)
+const RELATED_LIMIT = 8
+
+// Para comparar franquicias y categorías: minúscula, sin tildes y con los
+// espacios unificados (por CSV podría entrar "pokémon" junto a "pokemon")
+const normalizeKey = (value) =>
+    (value || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .toLowerCase()
+
+const franchiseKey = (product) => {
+    const key = normalizeKey(product?.franchise_name)
+    return NO_FRANCHISE_VALUES.includes(key) ? '' : key
+}
+
+// Número fijo para el par (producto que se ve, candidato). Da un orden "al
+// azar" que no cambia con los re-renders (elegir talla, cantidad, recargar),
+// pero sí entre fichas. Es un hash FNV-1a del texto "idActual:idCandidato"
+const stableRank = (seed, id) => {
+    let hash = 2166136261
+    for (const char of `${seed}:${id}`) {
+        hash ^= char.charCodeAt(0)
+        hash = Math.imul(hash, 16777619)
+    }
+    return hash >>> 0
+}
+
 const useIsMdUp = () => {
     const getInitialValue = () => {
         if (typeof window === 'undefined') return true
@@ -137,16 +174,41 @@ const ProductPage = () => {
         return candidateImages.filter(Boolean)
     }, [product])
 
+    // "Explora más diseños": primero la misma franquicia, después la misma
+    // categoría y después el resto, hasta RELATED_LIMIT. Dentro de cada
+    // grupo, primero los que tienen stock y después un orden "al azar" fijo
+    // para esta ficha. Sin el producto actual y solo publicados
     const relatedProducts = useMemo(() => {
-        if (!product || !products) return []
+        if (!product?._id || !products) return []
+
+        const ownFranchise = franchiseKey(product)
+        const ownCategory = normalizeKey(product.product_category)
+        const groupOf = (p) => {
+            if (ownFranchise && franchiseKey(p) === ownFranchise) return 0
+            if (normalizeKey(p.product_category) === ownCategory) return 1
+            return 2
+        }
+
         return products
             .filter(
                 (p) =>
                     p._id !== product._id &&
-                    p.product_category === product.product_category &&
                     p.status?.trim().toUpperCase() === 'PUBLISHED',
             )
-            .slice(0, 8)
+            .map((p) => ({
+                p,
+                group: groupOf(p),
+                soldOut: hasStock(p) ? 0 : 1,
+                rank: stableRank(product._id, p._id),
+            }))
+            .sort(
+                (a, b) =>
+                    a.group - b.group ||
+                    a.soldOut - b.soldOut ||
+                    a.rank - b.rank,
+            )
+            .slice(0, RELATED_LIMIT)
+            .map(({ p }) => p)
     }, [products, product])
 
     const sizeGuide = product
@@ -398,10 +460,16 @@ const ProductPage = () => {
                                 <span>
                                     SKU: {selectedVariant?.sku || 'N/A'}
                                 </span>
-                                <span className="opacity-40 font-light">|</span>
-                                <span className="truncate text-primary">
-                                    {product.franchise_name || 'Novedad'}
-                                </span>
+                                {/* Franquicia; si no tiene, la categoría; si tampoco,
+                                    nada (ni el separador) */}
+                                {(product.franchise_name || product.product_category) && (
+                                    <>
+                                        <span className="opacity-40 font-light">|</span>
+                                        <span className="truncate text-primary">
+                                            {product.franchise_name || product.product_category}
+                                        </span>
+                                    </>
+                                )}
                             </div>
                             <button
                                 type="button"
