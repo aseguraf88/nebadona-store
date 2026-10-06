@@ -285,6 +285,13 @@ como punto de partida, en vez de diseñar a ciegas.
       producción automáticamente. Un build roto no tumba el sitio en
       vivo — sigue sirviendo la última versión buena hasta que se
       corrija.
+      Ojo: eso depende de la rama de producción de cada proyecto de Vercel
+      (Settings → Environments → Production → Branch Tracking). El
+      frontend la tenía en `main`, así que los pushes a `whatsapp-commerce`
+      salían como "Preview" y producción solo se actualizaba con
+      promociones manuales, por lo menos desde el paso 47. Corregido en el
+      paso 49: los dos proyectos usan `whatsapp-commerce` (ver "Sitio en
+      producción" en `CLAUDE.md`).
 - [x] Backend también en `api.nebadon.cl` y frontend de pruebas en
       `pruebas.nebadon.cl` (paso 47). Variables de entorno, dominios y DNS:
       ver "Sitio en producción" en `CLAUDE.md`.
@@ -480,25 +487,66 @@ octubre. Sin código todavía: cada grupo se convierte en uno o más pasos.
 
 ### Prioridad alta, antes del lanzamiento
 
-- [ ] **Acordeones de la página de producto independientes**: que cada
-      uno se abra y se cierre libremente; hoy solo uno puede estar abierto
-      a la vez. Es una queja de clientes reales. Tiene la misma causa y el
-      mismo arreglo que el **scroll que salta al abrir un acordeón**
-      (movido aquí desde "🔵 Baja prioridad"): `ProductPage.jsx` usa
-      `<input type="radio">` nativos, que funcionan como grupo (por eso
-      solo uno abierto) y reciben el foco del navegador, que intenta
-      centrarlos mientras el contenido se reacomoda (por eso el scroll
-      salta hasta "Explora más diseños"). El arreglo liviano
-      (`onClick={(e) => e.target.blur()}` en los 4 radios) no lo resolvió
-      del todo. Arreglo de fondo para los dos: reemplazar los radios por un
-      estado controlado con `useState`, uno por acordeón para que sean
-      independientes, sin depender del foco del navegador. Ojo: `CLAUDE.md`
-      todavía lista el scroll como "pausado a pedido del usuario";
-      actualizarlo al hacer este paso.
+- [x] ~~**Acordeones de la página de producto independientes**~~ —
+      resuelto (paso 49, commits `c3a14b2` y `21247cb`), junto con el
+      **scroll que saltaba al abrir un acordeón**. `ProductPage.jsx` usaba
+      `<input type="radio">` nativos, que funcionaban como grupo: solo uno
+      abierto, sin poder cerrarlo. Al abrir uno se cerraba el de arriba
+      (casi siempre "Descripción") y toda la página se corría, lo que
+      probablemente era la causa principal del salto. Ahora cada acordeón
+      es un `ProductAccordion` con su propio `useState` y las clases
+      `collapse-open`/`collapse-close` de DaisyUI (se ven igual que antes y
+      conservan la animación), con un `<button>` con `aria-expanded` y
+      `aria-controls`, y el contenido con `role="region"`. "Descripción del
+      Producto" empieza abierto. Se mantuvo el `min-w-0` en dos niveles para
+      las tablas. Efecto encontrado al probar: con varios acordeones
+      abiertos, en desktop, el recuadro de la galería se estiraba al alto de
+      la columna de información (el grid y el flex estiran a sus hijos por
+      defecto). Corregido con `lg:self-start` e `items-start`, y la galería
+      ahora queda fija (`lg:sticky lg:top-28`) mientras se baja por la
+      información; en mobile no cambia. Probado en local (varios abiertos a
+      la vez, cerrar cualquiera, sin salto, con teclado, tablas en 375 px,
+      galería fija con los cuatro abiertos y con varias fotos) y en
+      producción (`pruebas.nebadon.cl`: acordeones en el celular y galería
+      en desktop).
 
-- [ ] **Stock en 0**: un producto o una talla sin stock tiene que mostrar
-      "Agotado" y no dejar agregar al carrito. Hoy aparece un 1,
-      probablemente el selector de cantidad (por diagnosticar).
+- [x] ~~**Stock en 0**~~ — resuelto (paso 49, commit `c3a14b2`). El "1" era
+      el contador de cantidad, que seguía visible junto al botón "Agotado".
+      La causa de fondo: la ficha y el modal preseleccionaban
+      `variants[0]` aunque estuviera agotada, así que abrían en "Agotado"
+      aunque otras tallas tuvieran stock. Ahora preseleccionan la primera
+      variante con stock (`pickInitialVariant`, en
+      `entities/product/lib/stock.js`), y si la elegida no tiene stock el
+      contador no aparece. Se encontró además un **"agotado" falso** en
+      `VariantSelector`: en productos con talla y color, una talla salía
+      tachada si no existía en el color elegido, aunque tuviera stock en
+      otro. Ahora una talla (o un color) se marca agotada solo si ninguna
+      variante con ese valor tiene stock, y al tocarla se elige la del
+      color actual si tiene stock, o la primera de esa talla con stock. Un
+      producto sin stock en ninguna variante muestra un badge "Agotado"
+      siempre visible en la tarjeta (antes solo aparecía al pasar el mouse
+      en desktop) y en la ficha, y en `/shop` va al final, respetando el
+      orden dentro de cada grupo (el Home y "Explora más diseños" no
+      cambiaron). También se corrigió que la **cantidad se arrastraba entre
+      fichas**: al navegar de un producto a otro, el componente se
+      reutilizaba y mantenía la cantidad anterior. Probado en local con
+      productos `PRUEBA-P49-` (preselección, agotado falso con talla y
+      color, producto agotado en tarjeta, ficha, modal y `/shop`, tope de
+      cantidad, cantidad entre fichas y checkout).
+
+- [ ] **Unificar el botón de agregar al carrito** en `ProductCard`,
+      `ProductDetailModal` y `ProductPage`, que hoy se comportan distinto:
+      - en la tarjeta, la transición de color no es suave, el botón
+        desaparece al sacar el cursor aunque esté mostrando "Listo", y el
+        verde de "Listo" debería ser más fuerte y claro;
+      - en el modal, el botón no cambia de color ni dice "Listo": solo
+        tiene un efecto de zoom;
+      - en la ficha dice "Agregar al Carrito" (en vez de "Agregar"), y al
+        apretarlo cambia a un color neutro y dice "Agregado" en vez de
+        "Listo".
+      Meta: el mismo texto, el mismo estado de éxito ("Listo", en verde
+      fuerte), la misma animación, y en la tarjeta el botón visible
+      mientras muestra "Listo".
 
 - [ ] **Quitar el mensaje sobre impuestos del carrito**, y revisar que los
       precios mostrados sean siempre el total con IVA.

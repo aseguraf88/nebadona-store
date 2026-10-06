@@ -146,6 +146,11 @@ Desplegado y en vivo — dos dominios con propósitos distintos:
   - DNS: `nebadon.cl` usa los nameservers de Vercel (`ns1.vercel-dns.com`,
     `ns2.vercel-dns.com`), configurados en NIC Chile. Los registros se
     administran en Vercel (sección Domains de la cuenta), no en NIC Chile.
+  - Rama de producción: los dos proyectos de Vercel deben tener
+    `whatsapp-commerce` en Settings → Environments → Production → Branch
+    Tracking. Si un push aparece como "Preview" en vez de "Production",
+    es lo primero que hay que revisar (pasó con el frontend, que la tenía
+    en `main`, hasta el paso 49).
 
 ## Estado del proyecto
 Ver `BACKLOG.md` en la raíz del repo para la lista completa de pendientes,
@@ -261,15 +266,3 @@ categorías.
 ## 🔧 Tarea en curso ahora mismo
 
 Ninguna definida. Ver `BACKLOG.md` para elegir la siguiente.
-
-## 🟡 Pendiente, pausado a pedido del usuario (no resolver sin que lo pida)
-
-Scroll salta demasiado lejos al abrir un acordeón en `ProductPage.jsx`
-(pasa de la zona de acordeones hasta "Explora más diseños"). Causa:
-`<input type="radio">` nativo recibe foco al tocarlo, el navegador
-intenta centrarlo en pantalla mientras el layout todavía se reacomoda
-(contenido colapsando/expandiendo a la vez). Intento liviano ya probado
-y confirmado insuficiente: `onClick={(e) => e.target.blur()}` en los 4
-radios. Fix de fondo, no aplicado todavía: reemplazar los radios nativos
-por un `useState` controlado en React para los 4 acordeones, eliminando
-la dependencia del foco del navegador. Ver `BACKLOG.md` para el detalle.
