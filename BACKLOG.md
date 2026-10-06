@@ -544,8 +544,16 @@ octubre. Sin código todavía: cada grupo se convierte en uno o más pasos.
       la tarjeta queda visible mientras dice "Listo". Probado en local
       (desktop y 375 px) y en producción (`pruebas.nebadon.cl`).
 
-- [ ] **Quitar el mensaje sobre impuestos del carrito**, y revisar que los
-      precios mostrados sean siempre el total con IVA.
+- [x] ~~**Quitar el mensaje sobre impuestos del carrito**~~ — resuelto
+      (paso 51, commit `5d3c55f`): el pie del carrito decía "Los impuestos y
+      gastos de envío se calculan en el checkout", que era incorrecto dos
+      veces (los precios ya son finales y el envío se coordina por
+      WhatsApp). Ahora dice "El envío se coordina por WhatsApp.", con el
+      mismo estilo. El PDF del pedido pasó de "TOTAL ESTIMADO:" a "TOTAL
+      (sin envío):" (la "í" se ve bien en la fuente del PDF). Sobre el IVA:
+      en el código no hay ningún cálculo ni texto de impuestos; los precios
+      que se muestran son los que carga la dueña. Probado en local y en
+      producción.
 
 - [ ] **"Explora más diseños increíbles"**: mostrar primero los productos
       de la misma franquicia, y después el resto de la categoría. Hoy
@@ -558,12 +566,22 @@ octubre. Sin código todavía: cada grupo se convierte en uno o más pasos.
       Reemplazarlos por datos reales, incluido el contador de productos
       publicados.
 
-- [ ] **Esconder el registro y el link de iniciar sesión para los
-      clientes**: sin registro y sin link de login visible; `/login` queda
-      solo para el admin. Los clientes compran siempre como invitados. A
-      revisar en ese paso: "Historial de pedidos consultable por cliente"
-      (post-lanzamiento) supone cuentas de cliente, y el carrito guardado
-      de un cliente logueado (pasos 37 y 47) quedaría sin uso.
+- [x] ~~**Esconder el registro y el link de iniciar sesión para los
+      clientes**~~ — resuelto (paso 51, commit `5d3c55f`). La tienda ya no
+      tenía ningún enlace visible a `/login` ni a `/register`; faltaba
+      cerrar el registro: `/register` ahora redirige al inicio, y
+      `POST /api/auth/register` responde 403 ("El registro de cuentas no
+      está disponible."). Eso también cierra un riesgo latente: con la
+      colección de usuarios vacía, el primero en registrarse quedaba como
+      admin (`isFirstUser`). `registerUser`, `Register.jsx` y
+      `RegisterForm.jsx` quedan en el código sin usar, para reactivarlo si
+      hace falta. El login (`/login`, paso 47) no cambió: el admin entra
+      por esa URL. Además, "Ir al dashboard" quedó en el menú de las
+      iniciales del admin, solo en el celular (en desktop ya está el
+      engranaje del navbar); un cliente con sesión ve el menú igual que
+      antes. Las cuentas de cliente que ya existen siguen pudiendo entrar.
+      Probado en local y en producción, incluido el 403 en
+      `api.nebadon.cl/api/auth/register`.
 
 - [ ] **Google Analytics 4**, con aviso de privacidad. Revisar qué exige
       la ley chilena de datos personales.
@@ -1296,7 +1314,10 @@ Relacionado con "🎨 Pulido visual / UI-UX", más arriba:
 - [ ] Alertas de stock bajo
 - [ ] Reportes básicos de qué se vende más
 - [ ] Multiusuario con niveles de acceso
-- [ ] Historial de pedidos consultable por cliente
+- [ ] Historial de pedidos consultable por cliente. Ojo (paso 51): con el
+      registro de cuentas desactivado, los clientes compran como invitados
+      y no tienen cuenta donde ver su historial; queda para replantear (por
+      ejemplo, consultar por número de orden y teléfono).
 - [ ] Personalización visible del catálogo (branding/tema)
 
 ## ✅ Pasada de responsividad (mobile/tablet) — CERRADA
