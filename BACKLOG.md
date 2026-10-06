@@ -534,19 +534,15 @@ octubre. Sin código todavía: cada grupo se convierte en uno o más pasos.
       color, producto agotado en tarjeta, ficha, modal y `/shop`, tope de
       cantidad, cantidad entre fichas y checkout).
 
-- [ ] **Unificar el botón de agregar al carrito** en `ProductCard`,
-      `ProductDetailModal` y `ProductPage`, que hoy se comportan distinto:
-      - en la tarjeta, la transición de color no es suave, el botón
-        desaparece al sacar el cursor aunque esté mostrando "Listo", y el
-        verde de "Listo" debería ser más fuerte y claro;
-      - en el modal, el botón no cambia de color ni dice "Listo": solo
-        tiene un efecto de zoom;
-      - en la ficha dice "Agregar al Carrito" (en vez de "Agregar"), y al
-        apretarlo cambia a un color neutro y dice "Agregado" en vez de
-        "Listo".
-      Meta: el mismo texto, el mismo estado de éxito ("Listo", en verde
-      fuerte), la misma animación, y en la tarjeta el botón visible
-      mientras muestra "Listo".
+- [x] ~~**Unificar el botón de agregar al carrito**~~ — resuelto (paso 50,
+      commit `5e7f0ad`): hook compartido `useAddToCartFeedback` para la
+      tarjeta, el modal y la ficha (mismos textos "Agregar" / "Listo" /
+      "Agotado" y misma duración); "Listo" con fondo `#1FFF1F` y texto
+      `#052E16` (color elegido y editado a mano por el usuario, contraste
+      10,9:1); sin "Listo" si falla el agregado (`addToCart` ahora devuelve
+      `true` o `false`); sin doble agregado con un doble clic; y el botón de
+      la tarjeta queda visible mientras dice "Listo". Probado en local
+      (desktop y 375 px) y en producción (`pruebas.nebadon.cl`).
 
 - [ ] **Quitar el mensaje sobre impuestos del carrito**, y revisar que los
       precios mostrados sean siempre el total con IVA.
