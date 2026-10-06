@@ -204,7 +204,7 @@ const Checkout = () => {
         startY += 12
         doc.setFont('helvetica', 'bold')
         doc.setFontSize(12)
-        doc.text('TOTAL ESTIMADO:', 140, startY, { align: 'right' })
+        doc.text('TOTAL (sin envío):', 140, startY, { align: 'right' })
         doc.setTextColor(200, 40, 40)
         doc.text(formatPrice(total), 196, startY, { align: 'right' })
 

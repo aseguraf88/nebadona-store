@@ -1,4 +1,6 @@
 import { HiOutlineLogout } from 'react-icons/hi'
+import { TbLayoutDashboard } from 'react-icons/tb'
+import { Link } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { useUser } from '../../../entities/user'
 import { logoutService } from '../../../entities/user'
@@ -53,6 +55,18 @@ const UserDropDown = () => {
                 <li className="menu-title">
                     <span>Administración</span>
                 </li>
+                {/* Solo para el admin y solo en el celular: desde 640 px ya está el
+                    engranaje del navbar. Un cliente con sesión ve el menú igual que antes */}
+                {userInfo?.isAdmin && (
+                    <li className="sm:hidden">
+                        <Link to="/admin/dashboard/products">
+                            <span className="flex items-center gap-2">
+                                <TbLayoutDashboard className="h-5 w-5" />
+                                Ir al dashboard
+                            </span>
+                        </Link>
+                    </li>
+                )}
                 <li>
                     <button
                         onClick={handleLogout}

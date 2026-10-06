@@ -265,8 +265,7 @@ const CartDrawer = () => {
                             </span>
                         </div>
                         <p className="text-xs text-base-content/50 text-center mb-4">
-                            Los impuestos y gastos de envío se calculan en el
-                            checkout.
+                            El envío se coordina por WhatsApp.
                         </p>
                         <Link
                             to="/checkout"

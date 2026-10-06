@@ -81,7 +81,7 @@ const MobileMenuDrawer = ({ isOpen, onClose }) => {
                     </ul>
                 </div>
 
-                {/* Footer del Menú (Enlaces de contacto o cuenta) */}
+                {/* Pie del menú: solo el nombre de la tienda */}
                 <div className="p-4 border-t border-base-200 bg-base-200/40">
                     <p className="text-xs text-center text-base-content/60 font-medium">
                         Retro Socks & Accesorios

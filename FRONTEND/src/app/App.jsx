@@ -1,7 +1,6 @@
-import { Routes, Route, useLocation } from 'react-router-dom'
+import { Routes, Route, useLocation, Navigate } from 'react-router-dom'
 import { Layout } from '../widgets/layouts'
 import { Home } from '../pages/home'
-import { Register } from '../pages/register'
 import { Login } from '../pages/login'
 import { UserContextProvider } from '../entities/user'
 import { Toaster } from 'react-hot-toast'
@@ -50,7 +49,11 @@ function App() {
                         <Route element={<Layout />}>
                             <Route path="/" element={<Home />} />
                             <Route path="/shop" element={<ShoppingPage key={location.key} />} />
-                            <Route path="/register" element={<Register />} />
+                            {/* Registro desactivado: los clientes compran como invitados.
+                                El backend también lo rechaza (403). Register.jsx y
+                                RegisterForm.jsx quedan sin usar, para reactivarlo si
+                                hace falta */}
+                            <Route path="/register" element={<Navigate to="/" replace />} />
                             <Route path="/login" element={<Login />} />
                             <Route path="/checkout" element={<Checkout />} />
                             <Route path="/guia-cuidados" element={<GuiaCuidados />} />
