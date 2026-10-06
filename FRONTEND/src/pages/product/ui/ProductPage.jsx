@@ -292,7 +292,12 @@ const ProductPage = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 mb-20">
                     {/* ZONA IZQUIERDA: GALERÍA */}
                     {isMdUp ? (
-                        <div className="flex flex-row gap-6">
+                        // self-start: sin esto, el grid estira la galería al alto de la
+                        // columna de información (crece al abrir los acordeones);
+                        // items-start: la imagen conserva su forma cuadrada aunque
+                        // la columna de miniaturas sea más alta; sticky: la galería
+                        // queda a la vista mientras se baja por la información
+                        <div className="flex flex-row items-start gap-6 lg:self-start lg:sticky lg:top-28">
                             {images.length > 1 && (
                                 <div className="flex flex-col gap-4 overflow-y-auto w-24 shrink-0 scrollbar-hide snap-y">
                                     {images.map((img, idx) => (
