@@ -1,7 +1,9 @@
+import { INSTAGRAM_URL } from '../../../shared/config/contact'
+
 const ComingSoon = () => {
     return (
         <a
-            href="https://www.instagram.com/nebadon_a/"
+            href={INSTAGRAM_URL}
             target="_blank"
             rel="noreferrer"
             className="fixed inset-0 block"

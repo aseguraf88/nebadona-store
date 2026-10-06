@@ -82,32 +82,21 @@ const FilterGroups = ({
     </div>
 )
 
-const FilterHeader = ({ selectedFranchises, selectedTypes, selectedCategories, setSelectedFranchises, setSelectedTypes, setSelectedCategories, topMargin }) => {
-    const hasActiveFilters =
-        selectedFranchises.length > 0 ||
-        selectedTypes.length > 0 ||
-        selectedCategories.length > 0
-
-    const clearAllFilters = () => {
-        setSelectedFranchises([])
-        setSelectedTypes([])
-        setSelectedCategories([])
-    }
-
-    return (
+// hasActiveFilters y onClearAll vienen de ShoppingPage: incluyen la temática
+// del menú, y limpian todo en una sola navegación
+const FilterHeader = ({ hasActiveFilters, onClearAll, topMargin }) => (
         <div className={`flex items-center justify-between mb-8 ${topMargin || ''}`}>
             <h2 className="text-lg font-bold tracking-tight uppercase">Filtros</h2>
             {hasActiveFilters && (
                 <button
-                    onClick={clearAllFilters}
+                    onClick={onClearAll}
                     className="text-xs font-bold text-primary hover:underline uppercase tracking-widest"
                 >
                     Limpiar
                 </button>
             )}
         </div>
-    )
-}
+)
 
 export const ShopSidebarMobile = (props) => (
     <div className="drawer-side z-[100] lg:hidden">

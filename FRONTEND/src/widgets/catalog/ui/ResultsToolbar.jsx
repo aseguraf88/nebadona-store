@@ -1,4 +1,4 @@
-const ResultsToolbar = ({ totalProducts, onSortChange }) => {
+const ResultsToolbar = ({ totalProducts, sortOption, onSortChange }) => {
     return (
         <div className="flex flex-row justify-between items-center mb-6 pb-4 border-b border-base-300">
             {/* Lado izquierdo: Contador */}
@@ -18,7 +18,7 @@ const ResultsToolbar = ({ totalProducts, onSortChange }) => {
                     id="sort-select"
                     className="select select-bordered select-sm w-40 bg-base-200"
                     onChange={(e) => onSortChange(e.target.value)}
-                    defaultValue="relevant"
+                    value={sortOption}
                 >
                     <option value="relevant">Relevancia</option>
                     <option value="price-asc">Menor Precio</option>

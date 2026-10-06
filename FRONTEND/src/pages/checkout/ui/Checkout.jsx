@@ -6,6 +6,7 @@ import { useUser } from '../../../entities/user'
 import toast from 'react-hot-toast'
 import { FiTruck, FiMapPin, FiArrowLeft, FiCheckCircle } from 'react-icons/fi'
 import { jsPDF } from 'jspdf'
+import { WHATSAPP_URL } from '../../../shared/config/contact'
 
 const Checkout = () => {
     const { cart, total, loading: cartLoading, openModal, clearCart } = useCart()
@@ -279,8 +280,6 @@ const Checkout = () => {
             // ==========================================
             // MENSAJE DE WHATSAPP (ESTILO MATRICIAL)
             // ==========================================
-            const phoneNumber = '56968048987'
-
             let message = `┌────────────────────────┐\n`
             message += `│    NEBADON STORE       │\n`
             message += `│   ORDEN DE COMPRA      │\n`
@@ -324,7 +323,7 @@ const Checkout = () => {
             message += `Hola, acabo de emitir la orden #ORD-${folio} desde la web y descargué mi PDF. Quedo atento(a) a las instrucciones.`
 
             const encodedMessage = encodeURIComponent(message)
-            const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`
+            const whatsappUrl = `${WHATSAPP_URL}?text=${encodedMessage}`
             window.open(whatsappUrl, '_blank')
 
             toast.success(`¡Orden #ORD-${folio} registrada exitosamente!`)

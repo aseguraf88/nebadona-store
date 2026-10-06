@@ -1,5 +1,6 @@
 import { FaInstagram } from 'react-icons/fa'
 import { Link } from 'react-router-dom'
+import { INSTAGRAM_URL } from '../../../shared/config/contact'
 
 const Footer = () => {
     return (
@@ -26,7 +27,7 @@ const Footer = () => {
                     Síguenos en Instagram
                 </p>
                 <a
-                    href="https://www.instagram.com/nebadon_a/"
+                    href={INSTAGRAM_URL}
                     target="_blank"
                     rel="noreferrer"
                     className="btn btn-ghost btn-sm gap-2 normal-case"

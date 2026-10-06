@@ -1,23 +1,12 @@
 import { HiOutlineLogout } from 'react-icons/hi'
-import { TbLayoutDashboard } from 'react-icons/tb'
-import { Link } from 'react-router-dom'
-import toast from 'react-hot-toast'
 import { useUser } from '../../../entities/user'
-import { logoutService } from '../../../entities/user'
+import { useLogout } from '../model/useLogout'
 
+// Solo desktop (el Navbar lo oculta bajo 1024 px): en mobile, "Ir al
+// dashboard" y "Cerrar sesión" están en el menú hamburguesa
 const UserDropDown = () => {
-    const { userInfo, loading, setUserInfo } = useUser()
-
-    const handleLogout = async () => {
-        try {
-            await logoutService()
-            setUserInfo({})
-            toast.success('Sesión cerrada correctamente.')
-        } catch (error) {
-            console.error('Error al cerrar sesión.', error)
-            toast.error('Error al cerrar sesión. Intente más tarde.')
-        }
-    }
+    const { userInfo, loading } = useUser()
+    const handleLogout = useLogout()
 
     const getInitials = () => {
         const fullName = userInfo?.name || userInfo?.username || ''
@@ -55,18 +44,6 @@ const UserDropDown = () => {
                 <li className="menu-title">
                     <span>Administración</span>
                 </li>
-                {/* Solo para el admin y solo en el celular: desde 640 px ya está el
-                    engranaje del navbar. Un cliente con sesión ve el menú igual que antes */}
-                {userInfo?.isAdmin && (
-                    <li className="sm:hidden">
-                        <Link to="/admin/dashboard/products">
-                            <span className="flex items-center gap-2">
-                                <TbLayoutDashboard className="h-5 w-5" />
-                                Ir al dashboard
-                            </span>
-                        </Link>
-                    </li>
-                )}
                 <li>
                     <button
                         onClick={handleLogout}

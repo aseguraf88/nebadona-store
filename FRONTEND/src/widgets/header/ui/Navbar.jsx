@@ -5,7 +5,6 @@ import UserDropDown from '../../../features/auth/ui/UserDropDown'
 import SearchBar from '../../../shared/ui/SearchBar'
 import MobileMenuDrawer from './MobileMenuDrawer'
 import { useUser } from '../../../entities/user'
-import { HiOutlineBuildingStorefront } from 'react-icons/hi2'
 
 const Navbar = ({ children }) => {
     // 1. Contextos y Hooks de Terceros
@@ -42,9 +41,13 @@ const Navbar = ({ children }) => {
                         : 'bg-base-100'
                 }`}
             >
-                <div className="navbar w-full max-w-[1200px] mx-auto px-2 sm:px-6 lg:px-8 min-h-[4rem]">
+                {/* Mismo ancho que /shop y Home (1800 px). Grilla de 3
+                    columnas: los costados miden lo mismo, así el logo (mobile)
+                    y el buscador (desktop) quedan centrados aunque a la
+                    derecha haya más íconos, y nada se les monta encima */}
+                <div className="navbar w-full max-w-[1800px] mx-auto px-2 sm:px-6 lg:px-8 min-h-[4rem] grid grid-cols-[1fr_auto_1fr] gap-2 lg:grid-cols-[1fr_minmax(0,42rem)_1fr] lg:gap-4">
                     {/* IZQUIERDA (Start) */}
-                    <div className="navbar-start w-1/3 lg:w-1/4 flex items-center">
+                    <div className="navbar-start w-auto flex items-center">
                         {/* Menú Sandwich (SOLO MOBILE) */}
                         {!isDashboardProductsRoute && (
                             <button
@@ -70,17 +73,6 @@ const Navbar = ({ children }) => {
                             </button>
                         )}
 
-                        {/* Botón Tienda (SOLO MOBILE) - Actualizado con icono simétrico */}
-                        {!isDashboardProductsRoute && (
-                            <Link
-                                to="/shop"
-                                className="h-10 w-10 flex items-center justify-center rounded-full text-base-content transition-transform duration-300 hover:scale-110 outline-none cursor-pointer lg:hidden"
-                                aria-label="Ver Tienda"
-                            >
-                                <HiOutlineBuildingStorefront className="h-6 w-6" />
-                            </Link>
-                        )}
-
                         {/* Logo (SOLO DESKTOP) */}
                         <Link
                             to="/"
@@ -97,7 +89,7 @@ const Navbar = ({ children }) => {
                     </div>
 
                     {/* CENTRO (Center) */}
-                    <div className="navbar-center w-1/3 lg:w-auto lg:flex-1 flex justify-center">
+                    <div className="navbar-center w-full flex justify-center">
                         {/* Logo (SOLO MOBILE) */}
                         <Link
                             to="/"
@@ -112,29 +104,20 @@ const Navbar = ({ children }) => {
                             </span>
                         </Link>
 
-                        {/* SearchBar Completa (SOLO DESKTOP) */}
+                        {/* SearchBar Completa (SOLO DESKTOP). El ícono de tienda
+                            se reemplazó por "Tienda" en el submenú */}
                         {!isDashboardProductsRoute && (
-                            <div className="hidden lg:flex w-full items-center px-4 gap-2">
-                                {/* Botón Tienda Desktop - Actualizado con icono simétrico */}
-                                <Link
-                                    to="/shop"
-                                    className="h-10 w-10 flex items-center justify-center rounded-full text-base-content transition-transform duration-300 hover:scale-110 outline-none cursor-pointer"
-                                    aria-label="Catálogo"
-                                    title="Ver catálogo completo"
-                                >
-                                    <HiOutlineBuildingStorefront className="h-6 w-6" />
-                                </Link>
-
-                                <div className="flex-1 w-full">
-                                    <SearchBar />
-                                </div>
+                            <div className="hidden lg:flex w-full items-center">
+                                <SearchBar />
                             </div>
                         )}
                     </div>
 
-                    {/* DERECHA (End) */}
+                    {/* DERECHA (End). lg:pr-0: en desktop el carrito queda en
+                        el mismo borde derecho que la grilla de /shop (el
+                        padding ya lo da el contenedor, lg:px-8) */}
                     {!isDashboardProductsRoute && (
-                        <div className="navbar-end w-1/3 lg:w-1/4 flex justify-end items-center gap-1 sm:gap-4 pr-2">
+                        <div className="navbar-end w-auto col-start-3 flex justify-end items-center gap-1 sm:gap-4 pr-2 lg:pr-0">
                             {/* Botón lupa (SOLO MOBILE) */}
                             <button
                                 type="button"
@@ -164,11 +147,12 @@ const Navbar = ({ children }) => {
                                 </svg>
                             </button>
 
-                            {/* Botón Dashboard Administrador - Ícono de engranaje con tooltip */}
+                            {/* Botón Dashboard Administrador - Ícono de engranaje con tooltip.
+                                Solo desktop: en mobile está en el menú hamburguesa */}
                             {userInfo?.isAdmin && (
                                 <Link
                                     to="/admin/dashboard/products"
-                                    className="hidden sm:flex btn btn-ghost btn-circle text-base-content/70 hover:text-primary tooltip tooltip-bottom"
+                                    className="hidden lg:flex btn btn-ghost btn-circle text-base-content/70 hover:text-primary tooltip tooltip-bottom"
                                     data-tip="Dashboard"
                                 >
                                     <svg
@@ -194,8 +178,14 @@ const Navbar = ({ children }) => {
                                 </Link>
                             )}
 
-                            {/* EL ENROQUE */}
-                            {!loading && <UserDropDown />}
+                            {/* EL ENROQUE. Solo desktop: en mobile no cabía junto a
+                                la lupa y el carrito; la sesión está en el menú
+                                hamburguesa */}
+                            {!loading && (
+                                <div className="hidden lg:block">
+                                    <UserDropDown />
+                                </div>
+                            )}
                             <Cart />
                         </div>
                     )}
@@ -220,7 +210,10 @@ const Navbar = ({ children }) => {
             {/* PISO 2: SUB-HEADER DE CATEGORÍAS (SOLO DESKTOP) */}
             {!isDashboardProductsRoute && (
                 <div className="hidden lg:flex w-full border-b border-base-200 bg-base-100">
-                    <div className="max-w-[1200px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-2 flex justify-center items-center">
+                    {/* Mismo contenedor que la fila de arriba, centrado: queda
+                        simétrico bajo el buscador. Sin overflow-hidden en ningún
+                        nivel, para que el panel de cada temática no se corte */}
+                    <div className="max-w-[1800px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-2 flex justify-center items-center">
                         {children}
                     </div>
                 </div>

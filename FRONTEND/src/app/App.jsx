@@ -1,4 +1,4 @@
-import { Routes, Route, useLocation, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import { Layout } from '../widgets/layouts'
 import { Home } from '../pages/home'
 import { Login } from '../pages/login'
@@ -32,8 +32,6 @@ import { ScrollToTop } from '../shared/ui'
 const COMING_SOON_HOSTNAMES = ['nebadon.cl', 'www.nebadon.cl']
 
 function App() {
-    const location = useLocation()
-
     if (COMING_SOON_HOSTNAMES.includes(window.location.hostname)) {
         return <ComingSoon />
     }
@@ -48,7 +46,9 @@ function App() {
                         {/* 🌍 RUTAS PÚBLICAS (Con Navbar, Footer y decoración) */}
                         <Route element={<Layout />}>
                             <Route path="/" element={<Home />} />
-                            <Route path="/shop" element={<ShoppingPage key={location.key} />} />
+                            {/* Sin key: los filtros salen de la URL, y ShoppingPage
+                                reinicia el orden al llegar desde fuera del panel */}
+                            <Route path="/shop" element={<ShoppingPage />} />
                             {/* Registro desactivado: los clientes compran como invitados.
                                 El backend también lo rechaza (403). Register.jsx y
                                 RegisterForm.jsx quedan sin usar, para reactivarlo si
