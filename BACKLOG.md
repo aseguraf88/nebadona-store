@@ -646,6 +646,15 @@ octubre. Sin código todavía: cada grupo se convierte en uno o más pasos.
 - [ ] **Google Analytics 4**, con aviso de privacidad. Revisar qué exige
       la ley chilena de datos personales.
 
+- [ ] **No se puede cerrar sesión desde el dashboard**: en el menú del
+      avatar de `AdminLayout.jsx`, "Cerrar Sesión" (y "Configuración") son
+      `<a>` sin `onClick` ni destino, así que no hacen nada; además, las
+      iniciales están fijas ("NS"). Hoy la única forma de cerrar sesión es
+      volver a la tienda. Arreglo chico: reutilizar `useLogout` (paso 53).
+      **Prioridad alta** porque es un botón visible que no funciona, y
+      porque la sesión del admin tiene que poder cerrarse en un equipo
+      compartido (y más adelante con las vendedoras de la feria).
+
 ### Prioridad alta, antes de la feria navideña (meta: probado a mediados de noviembre)
 
 - [ ] **Ventas en la feria: aplicación de venta rápida.**
@@ -724,7 +733,16 @@ octubre. Sin código todavía: cada grupo se convierte en uno o más pasos.
       mejora posterior. Falta el usuario de Telegram de la tienda.
 
 - [ ] **Buscador**: que busque también por categoría, franquicia y tema,
-      además del nombre (por confirmar).
+      además del nombre. Hoy (`ShoppingPage.jsx`) ya busca en el nombre y
+      en la franquicia; faltan la **categoría** (pedida en octubre) y el
+      tema (por confirmar).
+
+- [ ] **`/login` en mobile**: las cajas de usuario y contraseña no tienen
+      margen y tocan los bordes laterales. El formulario
+      (`LoginForm.jsx`) tiene `max-w-[500px]` pero ningún padding
+      horizontal, y la página tampoco. **Prioridad media**: desde el paso
+      51 solo entra el admin por esa URL (no hay enlace visible para los
+      clientes), así que no lo ve ningún cliente.
 
 - [x] ~~**Menú de categorías del navbar**~~ — reemplazado por el paso 53
       (commit `d98726b`): los menús se organizan por temática, no por
@@ -737,7 +755,15 @@ octubre. Sin código todavía: cada grupo se convierte en uno o más pasos.
       - color de franquicia igual en `ProductCard`, `ProductDetailModal` y
         `ProductPage`;
       - botón de compartir visible sobre la imagen en mobile, y galería a
-        pantalla completa estilo Shein/AliExpress.
+        pantalla completa estilo Shein/AliExpress. Mínimo: el botón arriba
+        a la derecha de la imagen; esas tiendas usan la imagen a todo el
+        ancho, ocupando la mitad superior de la pantalla. Ver opciones
+        antes de implementar;
+      - títulos de los acordeones redundantes: "Descripción del
+        Producto", "Detalles del Producto y Cuidados", "Tallas y Medidas" y
+        "Detalles de Envío y Entregas" repiten "del Producto" y "Detalles"
+        dentro de la propia ficha (por ejemplo, "Descripción", "Detalles y
+        cuidados", "Tallas" y "Envíos").
 
 - [ ] **Guía de tallas**: tablas de tallas universales, dejando claro qué
       cubre cada tabla (sobre todo si se entra desde el footer), e imágenes
@@ -755,6 +781,13 @@ Relacionado con "🎨 Pulido visual / UI-UX", más arriba:
       reutilizando el enfoque de `ProductCarousel.jsx` (scroll nativo con
       `overflow-x-auto` + `snap-x`, ya probado en celular). Se suma al ítem
       del Hero "poco atractivo" de esa sección.
+
+- [ ] **Logo en el menú hamburguesa**: el encabezado del menú lateral de
+      mobile (`MobileMenuDrawer.jsx`) muestra "NEBADON" con la fuente común
+      y un círculo con la "N", distinto del navbar y el footer, que usan la
+      fuente del logo (`font-logo`). Alcanza con usar esa misma fuente
+      `font-logo` del navbar, sin una imagen. **Pulido visual**: no
+      bloquea nada.
 
 - [ ] **Dashboard con estilos uniformes** (bordes de inputs, badges,
       etc.), usando `informe-consistencia-ui-ux.md`, que ya tiene los
