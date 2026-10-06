@@ -479,6 +479,13 @@ como punto de partida, en vez de diseñar a ciegas.
       (0 de 245, según la consulta del paso 48). Hay que cargarlo por CSV
       (desde el paso 48, exportar y reimportar lo conserva) o desde el
       campo "Costo Bodega" del dashboard.
+      Actualizado en el paso 53, para la misma revisión del catálogo:
+      - renombrar la franquicia "Donkey kong" a "Donkey Kong" en
+        Configuración (el renombre se propaga a sus productos);
+      - decidir qué hacer con la franquicia "Dragon Ball", sin productos,
+        que convive con "Dragon Ball Super";
+      - revisar el borrador con tema "otros", un valor que no está en la
+        lista de temas de Configuración.
 
 ## 📝 Lista de la dueña y usuarios (octubre)
 
@@ -574,6 +581,41 @@ octubre. Sin código todavía: cada grupo se convierte en uno o más pasos.
       (`pruebas.nebadon.cl`), incluido el renombrado de "Random" a "Diseños
       originales" en Configuración.
 
+- [x] ~~**Menús por temática y navbar equilibrado**~~ — resuelto (paso 53,
+      commit `d98726b`). El submenú de desktop y el menú hamburguesa eran
+      listas fijas que llevaban a categorías que no existen
+      (`/shop?category=anime`, etc.) o a `?filter=new`/`?filter=sale`, que
+      `/shop` ignoraba. Ahora se arman con el **tema** (`design_theme`, el
+      campo que ya existía en el producto) de los productos publicados: cada
+      franquicia va bajo el tema más común entre sus productos, y el orden
+      sale de `THEME_ORDER` (`entities/product/lib/themes.js`): Anime,
+      Videojuegos, Cartoons, Cine y terror, Música y Diseños originales. Un
+      tema o una franquicia sin productos publicados no aparece. **Desktop:**
+      "Tienda" más un botón por tema, con un panel de franquicias que se
+      abre con el cursor, con un clic o con el teclado, centrado bajo el
+      buscador. **Mobile:** la sesión (si hay), Tienda, los temas en
+      acordeón y "Ayuda" (envíos, tallas, cuidados, WhatsApp e Instagram).
+      Se eliminaron "Lo Nuevo" y "Ofertas" de los dos menús. Los filtros de
+      `/shop` ahora viven en la URL (`tematica`, `franquicia`, `tipo` y
+      `category`, con slugs; un valor que no existe se ignora), así que se
+      pueden compartir y "atrás" funciona. Se quitó `key={location.key}` de
+      la ruta, y el orden se reinicia solo al llegar desde fuera del panel.
+      El navbar es una grilla de 3 columnas en el mismo contenedor de
+      1800 px que `/shop`: logo, buscador centrado y carrito, sin el ícono
+      de tienda. En mobile, el menú de iniciales y el engranaje se ocultan
+      (no cabían junto a la lupa y el carrito); "Ir al dashboard" y
+      "Cerrar sesión" pasaron al menú hamburguesa, con un `useLogout`
+      compartido. WhatsApp e Instagram quedaron en
+      `shared/config/contact.js`, y la marquesina nombra las temáticas
+      nuevas. Datos: los temas se ajustaron en Configuración antes del
+      deploy (Cartoon → Cartoons, Peliculas de Terror → Cine y Terror,
+      tema "Diseños Originales" nuevo, Dragon Ball Super a Anime y Zelda a
+      Videojuegos). Después se borraron los temas Manga, Nintendo, Disney,
+      Pixar y Cartoon Network (el borrador que tenía Cartoon Network pasó
+      antes a Cartoons); quedan Anime, Cartoons, Cine y Terror, Diseños
+      Originales, Música y Videojuegos. Probado en local y en producción
+      (`pruebas.nebadon.cl`).
+
 - [ ] **Inicio del dashboard (`AdminHome.jsx`) con números reales**: hoy
       los números están fijos en el código (`salesToday`, `salesCount`,
       `ticketMedio`, `totalCustomers`; confirmado en el paso 46).
@@ -592,8 +634,12 @@ octubre. Sin código todavía: cada grupo se convierte en uno o más pasos.
       hace falta. El login (`/login`, paso 47) no cambió: el admin entra
       por esa URL. Además, "Ir al dashboard" quedó en el menú de las
       iniciales del admin, solo en el celular (en desktop ya está el
-      engranaje del navbar); un cliente con sesión ve el menú igual que
-      antes. Las cuentas de cliente que ya existen siguen pudiendo entrar.
+      engranaje del navbar). **Actualizado en el paso 53:** bajo 1024 px el
+      menú de iniciales y el engranaje ya no se muestran; "Ir al dashboard"
+      y "Cerrar sesión" están arriba en el menú hamburguesa (un cliente con
+      sesión ve solo "Cerrar sesión"). Desde 1024 px siguen el engranaje y
+      el menú de iniciales, que ya no tiene "Ir al dashboard". Las cuentas
+      de cliente que ya existen siguen pudiendo entrar.
       Probado en local y en producción, incluido el 403 en
       `api.nebadon.cl/api/auth/register`.
 
@@ -680,9 +726,10 @@ octubre. Sin código todavía: cada grupo se convierte en uno o más pasos.
 - [ ] **Buscador**: que busque también por categoría, franquicia y tema,
       además del nombre (por confirmar).
 
-- [ ] **Menú de categorías del navbar**: listar las categorías reales,
-      cada una llevando a `/shop?category=` (por confirmar; alternativa:
-      menú hamburguesa también en desktop).
+- [x] ~~**Menú de categorías del navbar**~~ — reemplazado por el paso 53
+      (commit `d98726b`): los menús se organizan por temática, no por
+      categoría. Las categorías siguen en el filtro de `/shop` y en los
+      enlaces del Home (`/shop?category=`).
 
 - [ ] **Página de producto, en un solo paso de diseño:**
       - SKU y franquicia amontonados sobre el título (evaluar sacar el SKU
