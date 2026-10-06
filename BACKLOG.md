@@ -555,10 +555,24 @@ octubre. Sin código todavía: cada grupo se convierte en uno o más pasos.
       que se muestran son los que carga la dueña. Probado en local y en
       producción.
 
-- [ ] **"Explora más diseños increíbles"**: mostrar primero los productos
-      de la misma franquicia, y después el resto de la categoría. Hoy
-      muestra solo los de la misma categoría (ver el ítem resuelto de esa
-      sección en "🔵 Baja prioridad").
+- [x] ~~**"Explora más diseños increíbles"**~~ — resuelto (paso 52, commit
+      `569973d`). Antes mostraba solo productos de la misma categoría, en el
+      orden en que llegaban de la API, y desde una camisa o un polerón
+      podía quedar vacía. Ahora se calcula en el navegador (`ProductPage.jsx`,
+      con la lista pública que ya está cargada, sin peticiones extra), en
+      tres grupos hasta 8 productos: **misma franquicia → misma categoría →
+      el resto**. Dentro de cada grupo, primero los que tienen stock (los
+      agotados al final, como en `/shop`) y después un orden "al azar" fijo
+      para cada ficha: no cambia al elegir talla, cambiar la cantidad o
+      recargar, pero sí entre fichas. Las franquicias se comparan sin
+      tildes ni espacios extra. "Diseños originales" (antes "random") cuenta
+      como **sin franquicia** en los relacionados (`NO_FRANCHISE_VALUES`,
+      con los dos nombres). Además, la tarjeta, el modal y la ficha muestran
+      la **categoría** cuando el producto no tiene franquicia, en vez de
+      "Novedad" (y nada si tampoco tiene categoría); un producto de "Diseños
+      originales" muestra su franquicia. Probado en local y en producción
+      (`pruebas.nebadon.cl`), incluido el renombrado de "Random" a "Diseños
+      originales" en Configuración.
 
 - [ ] **Inicio del dashboard (`AdminHome.jsx`) con números reales**: hoy
       los números están fijos en el código (`salesToday`, `salesCount`,
