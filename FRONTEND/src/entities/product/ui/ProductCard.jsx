@@ -1,5 +1,10 @@
 import { useMemo, useState } from 'react'
 import { useCart } from '../../cart/model/CartContext'
+import {
+    useAddToCartFeedback,
+    ADD_TO_CART_LABELS,
+    ADD_TO_CART_CLASSES,
+} from '../../cart/lib/useAddToCartFeedback'
 import { Link } from 'react-router-dom'
 import ProductDetailModal from '../../../widgets/product-detail-modal/ui/ProductDetailModal'
 import { hasStock } from '../lib/stock'
@@ -19,7 +24,6 @@ const ProductCard = ({ product }) => {
 
     const { addToCart } = useCart()
     const [isModalOpen, setIsModalOpen] = useState(false)
-    const [isAdded, setIsAdded] = useState(false)
 
     const images = useMemo(() => {
         const candidateImages = Array.isArray(imageUrls)
@@ -34,20 +38,10 @@ const ProductCard = ({ product }) => {
 
     const isSoldOut = !hasStock(product)
 
-    const handleAddToCart = async (
-        event,
-        quantityFromModal = 1,
-        variantFromModal = null,
-    ) => {
-        if (event) {
-            event.preventDefault()
-            event.stopPropagation()
-        }
-
-        const variant = variantFromModal ?? product.variants?.[0] ?? null
-
-        // 🔥 Payload blindado con los nombres oficiales
-        await addToCart(
+    // Agrega una variante y devuelve true o false. La usan el botón de la
+    // tarjeta y el del modal, cada uno con su propio estado "Listo"
+    const addVariant = (quantity = 1, variant = null) =>
+        addToCart(
             {
                 _id,
                 name,
@@ -58,12 +52,18 @@ const ProductCard = ({ product }) => {
                 variants: product.variants,
                 product_category: product_category || 'Sin categoría',
             },
-            quantityFromModal,
-            variant,
+            quantity,
+            variant ?? product.variants?.[0] ?? null,
         )
 
-        setIsAdded(true)
-        setTimeout(() => setIsAdded(false), 1000)
+    const cardFeedback = useAddToCartFeedback(addVariant)
+    const showFeedback = cardFeedback.status !== 'idle'
+
+    const handleCardAdd = (event) => {
+        // El botón está dentro del <Link> de la tarjeta
+        event.preventDefault()
+        event.stopPropagation()
+        cardFeedback.trigger()
     }
 
     const handleOpenModal = (e) => {
@@ -164,28 +164,40 @@ const ProductCard = ({ product }) => {
                         {/* 🔥 BOTÓN AGREGAR */}
                         <div className="absolute bottom-3 left-3 right-3 z-20 overflow-hidden rounded-xl">
                             <button
+                                type="button"
                                 onClick={
                                     product.variants?.length > 1
                                         ? handleOpenModal
-                                        : handleAddToCart
+                                        : handleCardAdd
                                 }
-                                disabled={isSoldOut || isAdded}
-                                className={`w-full py-2.5 flex items-center justify-center backdrop-blur-md transition-all duration-300 rounded-xl shadow-md sm:translate-y-12 sm:opacity-0 sm:group-hover:translate-y-0 sm:group-hover:opacity-100 ${
-                                    isAdded
-                                        ? 'bg-success text-success-content'
-                                        : 'bg-base-100/95 text-base-content active:bg-primary active:text-primary-content sm:hover:bg-primary sm:hover:text-primary-content'
+                                disabled={isSoldOut}
+                                aria-disabled={showFeedback}
+                                // Mientras agrega o muestra "Listo" queda visible en desktop
+                                // aunque se saque el cursor (antes se escondía). Transición
+                                // del color (300 ms, igual que el modal y la ficha) y de la
+                                // aparición, sin el filtro de desenfoque
+                                className={`w-full py-2.5 flex items-center justify-center backdrop-blur-md rounded-xl shadow-md transition-[color,background-color,transform,opacity] duration-300 ${
+                                    showFeedback
+                                        ? 'sm:translate-y-0 sm:opacity-100'
+                                        : 'sm:translate-y-12 sm:opacity-0 sm:group-hover:translate-y-0 sm:group-hover:opacity-100'
+                                } ${
+                                    isSoldOut
+                                        ? ADD_TO_CART_CLASSES.soldOut
+                                        : cardFeedback.status === 'added'
+                                          ? ADD_TO_CART_CLASSES.added
+                                          : 'bg-base-100/95 text-base-content active:bg-primary active:text-primary-content sm:hover:bg-primary sm:hover:text-primary-content'
                                 }`}
                             >
                                 {isSoldOut ? (
-                                    <span className="text-[11px] font-bold text-error uppercase tracking-widest">
-                                        Agotado
+                                    <span className="text-[11px] font-bold uppercase tracking-widest">
+                                        {ADD_TO_CART_LABELS.soldOut}
                                     </span>
-                                ) : isAdded ? (
+                                ) : cardFeedback.status === 'added' ? (
                                     <span className="text-[11px] font-bold uppercase tracking-widest flex items-center gap-2">
                                         <span className="text-sm leading-none font-normal">
                                             ✓
                                         </span>{' '}
-                                        Listo
+                                        {ADD_TO_CART_LABELS.added}
                                     </span>
                                 ) : (
                                     <span className="text-[11px] font-bold uppercase tracking-widest flex items-center gap-2">
@@ -194,10 +206,13 @@ const ProductCard = ({ product }) => {
                                         </span>{' '}
                                         {product.variants?.length > 1
                                             ? 'Elegir'
-                                            : 'Agregar'}
+                                            : ADD_TO_CART_LABELS.idle}
                                     </span>
                                 )}
                             </button>
+                            <span className="sr-only" aria-live="polite">
+                                {cardFeedback.status === 'added' ? 'Agregado al carrito' : ''}
+                            </span>
                         </div>
                     </figure>
 
@@ -222,7 +237,7 @@ const ProductCard = ({ product }) => {
                 isOpen={isModalOpen}
                 onClose={handleCloseModal}
                 product={{ ...product, imageUrls: images }}
-                onAddToCart={handleAddToCart}
+                onAddToCart={addVariant}
             />
         </>
     )

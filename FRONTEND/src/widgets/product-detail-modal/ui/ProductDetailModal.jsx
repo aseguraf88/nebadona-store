@@ -2,7 +2,13 @@ import { useState, useEffect, useMemo, useCallback } from 'react'
 import { Link } from 'react-router-dom' // 🔥 NUEVO: Importamos Link para viajar a la página
 import VariantSelector from '../../../entities/product/ui/VariantSelector'
 import { pickInitialVariant } from '../../../entities/product/lib/stock'
+import {
+    useAddToCartFeedback,
+    ADD_TO_CART_LABELS,
+    ADD_TO_CART_CLASSES,
+} from '../../../entities/cart/lib/useAddToCartFeedback'
 
+// onAddToCart(quantity, variant) devuelve true si se agregó (ProductCard)
 const ProductDetailModal = ({ product, isOpen, onClose, onAddToCart }) => {
     const [quantity, setQuantity] = useState(1)
     const [selectedImageIndex, setSelectedImageIndex] = useState(0)
@@ -34,6 +40,9 @@ const ProductDetailModal = ({ product, isOpen, onClose, onAddToCart }) => {
         setSelectedVariant(variant)
         setQuantity(1)
     }, [])
+
+    const feedback = useAddToCartFeedback(onAddToCart)
+    const isSoldOut = (selectedVariant?.stock ?? 0) === 0
 
     const handleDecrement = () => setQuantity((prev) => Math.max(1, prev - 1))
     const handleIncrement = () =>
@@ -225,14 +234,26 @@ const ProductDetailModal = ({ product, isOpen, onClose, onAddToCart }) => {
 
                                 <button
                                     type="button"
-                                    className="btn btn-primary flex-1 h-12 rounded-xl text-xs sm:text-sm uppercase tracking-widest font-bold border-none shadow-sm hover:shadow-md transition-all"
-                                    onClick={(e) => onAddToCart(e, quantity, selectedVariant)}
-                                    disabled={(selectedVariant?.stock ?? 0) === 0}
+                                    className={`btn flex-1 h-12 rounded-xl text-xs sm:text-sm uppercase tracking-widest font-bold border-none shadow-sm hover:shadow-md ${ADD_TO_CART_CLASSES.transition} ${
+                                        isSoldOut
+                                            ? ADD_TO_CART_CLASSES.soldOut
+                                            : feedback.status === 'added'
+                                              ? ADD_TO_CART_CLASSES.added
+                                              : 'btn-primary'
+                                    }`}
+                                    onClick={() => feedback.trigger(quantity, selectedVariant)}
+                                    disabled={isSoldOut}
+                                    aria-disabled={feedback.isBusy}
                                 >
-                                    {(selectedVariant?.stock ?? 0) === 0
-                                        ? 'Agotado'
-                                        : 'Agregar'}
+                                    {isSoldOut
+                                        ? ADD_TO_CART_LABELS.soldOut
+                                        : feedback.status === 'added'
+                                          ? `✓ ${ADD_TO_CART_LABELS.added}`
+                                          : ADD_TO_CART_LABELS.idle}
                                 </button>
+                                <span className="sr-only" aria-live="polite">
+                                    {feedback.status === 'added' ? 'Agregado al carrito' : ''}
+                                </span>
                             </div>
                         </div>
 

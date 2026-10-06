@@ -207,10 +207,13 @@ export const CartContextProvider = ({ children }) => {
     // --------------------------------------------------------
     // ACCIONES DEL CARRITO (AÑADIR, QUITAR, ACTUALIZAR, LIMPIAR)
     // --------------------------------------------------------
+    // Devuelve true si se agregó y false si no (sin variante, sin stock
+    // suficiente o error). Los botones solo muestran "Listo" con true; los
+    // avisos de error siguen saliendo como toast, igual que antes
     const addToCart = async (product, quantity = 1, variant = null) => {
         if (!variant) {
             toast.error('Selecciona una variante antes de agregar al carrito')
-            return
+            return false
         }
         const sku = variant.sku
 
@@ -220,11 +223,13 @@ export const CartContextProvider = ({ children }) => {
                 const userId = getUserId()
                 await addToCartService(userId, product._id, sku, quantity)
                 await loadCart()
+                return true
             } catch (error) {
                 logError('Error al agregar al carrito:', error)
                 toast.error(
                     error.message || 'Error al agregar producto al carrito',
                 )
+                return false
             } finally {
                 setLoading(false)
             }
@@ -259,7 +264,7 @@ export const CartContextProvider = ({ children }) => {
                         toast.error(
                             `Solo hay ${variant.stock} unidades disponibles`,
                         )
-                        return
+                        return false
                     }
                     currentCart[existingIndex].quantity = newQty
                     currentCart[existingIndex].product_category =
@@ -270,16 +275,18 @@ export const CartContextProvider = ({ children }) => {
                         toast.error(
                             `Solo hay ${variant.stock} unidades disponibles`,
                         )
-                        return
+                        return false
                     }
                     currentCart.push(productToSave)
                 }
 
                 setCart(currentCart)
                 saveLocalCart(currentCart)
+                return true
             } catch (error) {
                 logError('Error al agregar al carrito local:', error)
                 toast.error('Error al agregar producto al carrito')
+                return false
             }
         }
     }

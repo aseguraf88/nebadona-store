@@ -2,7 +2,12 @@ import { useState, useEffect, useMemo, useCallback, useRef, useId } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { Share2, Truck, Zap, Handshake, Warehouse } from 'lucide-react'
-import { useCart } from '../../../entities/cart'
+import {
+    useCart,
+    useAddToCartFeedback,
+    ADD_TO_CART_LABELS,
+    ADD_TO_CART_CLASSES,
+} from '../../../entities/cart'
 import {
     useProduct,
     isSockCategory,
@@ -97,7 +102,6 @@ const ProductPage = () => {
 
     const [quantity, setQuantity] = useState(1)
     const [selectedImageIndex, setSelectedImageIndex] = useState(0)
-    const [isAdded, setIsAdded] = useState(false)
     const [selectedVariant, setSelectedVariant] = useState(null)
 
     useEffect(() => {
@@ -205,11 +209,9 @@ const ProductPage = () => {
     const handleIncrement = () =>
         setQuantity((prev) => Math.min(selectedVariant?.stock ?? 1, prev + 1))
 
-    const handleAddToCart = async () => {
-        await addToCart(product, quantity, selectedVariant)
-        setIsAdded(true)
-        setTimeout(() => setIsAdded(false), 1500)
-    }
+    const feedback = useAddToCartFeedback(() =>
+        addToCart(product, quantity, selectedVariant),
+    )
 
     // Sincroniza el índice de imagen con el scroll táctil en mobile
     const handleMainScroll = () => {
@@ -476,20 +478,29 @@ const ProductPage = () => {
                                 )}
 
                                 <button
-                                    onClick={handleAddToCart}
-                                    disabled={!selectedHasStock || isAdded}
-                                    className={`btn flex-1 h-14 rounded-2xl text-sm uppercase tracking-widest font-bold border-none transition-all w-full ${
-                                        isAdded
-                                            ? 'bg-success text-success-content hover:bg-success'
-                                            : 'btn-primary shadow-lg hover:shadow-xl'
+                                    type="button"
+                                    onClick={() => feedback.trigger()}
+                                    // Ya no se desactiva en "Listo" (DaisyUI lo pintaba gris);
+                                    // el hook ignora los clics mientras tanto
+                                    disabled={!selectedHasStock}
+                                    aria-disabled={feedback.isBusy}
+                                    className={`btn flex-1 h-14 rounded-2xl text-sm uppercase tracking-widest font-bold border-none w-full ${ADD_TO_CART_CLASSES.transition} ${
+                                        !selectedHasStock
+                                            ? ADD_TO_CART_CLASSES.soldOut
+                                            : feedback.status === 'added'
+                                              ? ADD_TO_CART_CLASSES.added
+                                              : 'btn-primary shadow-lg hover:shadow-xl'
                                     }`}
                                 >
                                     {!selectedHasStock
-                                        ? 'Agotado'
-                                        : isAdded
-                                          ? '✓ Agregado'
-                                          : 'Agregar al Carrito'}
+                                        ? ADD_TO_CART_LABELS.soldOut
+                                        : feedback.status === 'added'
+                                          ? `✓ ${ADD_TO_CART_LABELS.added}`
+                                          : ADD_TO_CART_LABELS.idle}
                                 </button>
+                                <span className="sr-only" aria-live="polite">
+                                    {feedback.status === 'added' ? 'Agregado al carrito' : ''}
+                                </span>
                             </div>
                         </div>
 
