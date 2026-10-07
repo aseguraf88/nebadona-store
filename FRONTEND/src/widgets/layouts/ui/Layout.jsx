@@ -1,11 +1,15 @@
 import { Outlet, useLocation } from 'react-router-dom'
 import { Navbar, ThemeMenu } from '../../header'
 import { Footer } from '../../footer'
+import { WhatsAppFloatingButton } from '../../../shared/ui'
 
 const Layout = () => {
     const location = useLocation()
 
     const isShopRoute = location.pathname.startsWith('/shop')
+    // En el checkout la acción principal ya es WhatsApp: un segundo botón
+    // podría hacer que el cliente escriba sin generar la orden
+    const isCheckoutRoute = location.pathname.startsWith('/checkout')
 
     return (
         <div className="min-h-screen bg-base-100">
@@ -13,7 +17,8 @@ const Layout = () => {
                 <div className="bg-error/90 py-2 text-xs md:text-sm font-bold uppercase tracking-widest text-primary-content overflow-hidden flex items-center">
                     {/* El texto que se mueve */}
                     <div className="animate-marquee whitespace-nowrap inline-block w-full">
-                        🎉🎉🎉 GRAN APERTURA GRAN 🎉🎉🎉CATÁLOGO COMPLETO DE
+                        🎉🎉🎉 GRAN APERTURA GRAN 🎉🎉🎉 COMPRA POR WHATSAPP ·
+                        ENVÍOS A TODO CHILE - CATÁLOGO COMPLETO DE
                         CALCETAS Y ACCESORIOS - ANIME - VIDEOJUEGOS - CARTOONS -
                         CINE Y TERROR - MÚSICA - DISEÑOS ORIGINALES - ❤️ 🔥 🧦 🔥 🧦
                         🔥 👣 🎁 🛍️ 🎁 🛍️ ❤️
@@ -40,6 +45,8 @@ const Layout = () => {
             </div>
 
             <Footer />
+
+            {!isCheckoutRoute && <WhatsAppFloatingButton />}
         </div>
     )
 }

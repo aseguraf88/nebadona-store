@@ -265,7 +265,7 @@ const CartDrawer = () => {
                             </span>
                         </div>
                         <p className="text-xs text-base-content/50 text-center mb-4">
-                            El envío se coordina por WhatsApp.
+                            Pagas después de que confirmemos tu pedido por WhatsApp.
                         </p>
                         <Link
                             to="/checkout"

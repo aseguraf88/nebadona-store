@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { ProductSection } from '../../../widgets/catalog'
 import { useProduct } from '../../../entities/product'
 import { HeroCarousel } from '../../../widgets/hero'
+import { HowToBuy } from '../../../widgets/how-to-buy'
 
 const Home = () => {
     const { products, productsLoading, error } = useProduct()
@@ -27,6 +28,12 @@ const Home = () => {
     return (
         <div>
             <HeroCarousel />
+
+            {/* Antes de los productos: el cliente sabe desde el inicio que el
+                pedido va por WhatsApp y que todavía no paga nada */}
+            <div className="mx-auto max-w-[1800px] w-full px-4 sm:px-6 lg:px-8 mt-8 sm:mt-10">
+                <HowToBuy showLink />
+            </div>
 
             <div
                 id="catalogo"

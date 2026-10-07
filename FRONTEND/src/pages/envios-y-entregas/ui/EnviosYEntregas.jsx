@@ -1,4 +1,7 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { HowToBuy } from '../../../widgets/how-to-buy'
+
+const sectionTitleClass = 'text-lg font-semibold text-base-content mb-3'
 
 const EnviosYEntregas = () => {
     const location = useLocation()
@@ -23,63 +26,92 @@ const EnviosYEntregas = () => {
                     Envíos y Entregas
                 </h1>
 
-                <div className="text-sm text-base-content/80 space-y-4">
+                <div className="text-sm text-base-content/80 space-y-10">
                     <p>
-                        Para brindarte el mejor servicio y adaptarnos a tu
-                        disponibilidad, todas las entregas y envíos se coordinan
-                        directamente por interno (WhatsApp) al momento de
-                        confirmar tu compra. Contamos con las siguientes
-                        modalidades para que elijas la que más te acomode:
+                        En Nebadon compras por WhatsApp: armas tu pedido en la
+                        web, nos lo envías sin pagar y te respondemos para
+                        confirmar el stock, la forma de entrega y el pago.
                     </p>
 
-                    <ul className="space-y-3">
-                        <li>
-                            📦{' '}
-                            <strong className="text-base-content">
-                                Envíos por Agencia (Todo el país):
-                            </strong>{' '}
-                            Despachamos a través de Starken, Chilexpress o
-                            Bluexpress. Los envíos se realizan en modalidad por
-                            pagar (pagas el envío al recibir) o sumando el costo
-                            al total de tu pedido, según la agencia.
-                        </li>
-                        <li>
-                            🛵{' '}
-                            <strong className="text-base-content">
-                                Envíos Express (Solo Santiago):
-                            </strong>{' '}
-                            Si necesitas tu pedido el mismo día o de forma
-                            rápida, podemos enviarlo a través de aplicaciones de
-                            delivery como Uber Entregas o DiDi Entregas. El
-                            costo dependerá de la tarifa de la app en el
-                            momento.
-                        </li>
-                        <li>
-                            🤝{' '}
-                            <strong className="text-base-content">
-                                Entregas Presenciales:
-                            </strong>{' '}
-                            Coordinamos en las estaciones de metro Ciudad del
-                            Niño (Línea 2) o Mirador (Línea 5), en un horario
-                            que nos acomode a ambos.
-                        </li>
-                        <li>
-                            🏠{' '}
-                            <strong className="text-base-content">
-                                Retiro en Bodega/Domicilio:
-                            </strong>{' '}
-                            Si prefieres, puedes venir a retirar tu pedido
-                            directamente a nuestras instalaciones ubicadas en La
-                            Granja de manera gratuita, previa coordinación de
-                            día y hora.
-                        </li>
-                    </ul>
+                    {/* Los mismos 4 pasos del Home (shared/config/shipping.js) */}
+                    <HowToBuy />
 
-                    <p>
-                        Una vez que agregues tus productos al carrito y nos
-                        contactes por WhatsApp, acordaremos juntos el método que
-                        prefieras.
-                    </p>
+                    <section>
+                        <h2 className={sectionTitleClass}>Formas de entrega</h2>
+                        <ul className="space-y-3">
+                            <li>
+                                📦{' '}
+                                <strong className="text-base-content">
+                                    Envío por agencia (todo Chile):
+                                </strong>{' '}
+                                despachamos por Starken (también por Blue
+                                Express). Si prefieres Chilexpress o Correos de
+                                Chile, lo vemos contigo.{' '}
+                                <strong className="text-base-content">
+                                    Tus productos los pagas por transferencia
+                                    antes del despacho
+                                </strong>
+                                , y despachamos el día hábil siguiente de
+                                recibida la transferencia.{' '}
+                                <strong className="text-base-content">
+                                    El envío es por pagar:
+                                </strong>{' '}
+                                el costo del envío se lo pagas directamente a la
+                                agencia al recibir el paquete o al retirarlo en
+                                la sucursal. Te informamos un valor aproximado
+                                por WhatsApp.
+                            </li>
+                            <li>
+                                🛵{' '}
+                                <strong className="text-base-content">
+                                    Envío Express (solo Santiago):
+                                </strong>{' '}
+                                por Uber o DiDi, el mismo día. Te cotizamos el
+                                viaje por WhatsApp y haces una sola transferencia
+                                por el total (productos + envío). Apenas la
+                                recibimos, pedimos tu envío.
+                            </li>
+                            <li>
+                                🤝{' '}
+                                <strong className="text-base-content">
+                                    Entrega en Metro:
+                                </strong>{' '}
+                                en las estaciones Ciudad del Niño (Línea 2) o
+                                Mirador (Línea 5), en un horario que nos acomode a
+                                ambos. Puedes pagar en efectivo o por
+                                transferencia.
+                            </li>
+                            <li>
+                                🏠{' '}
+                                <strong className="text-base-content">
+                                    Retiro en bodega (La Granja):
+                                </strong>{' '}
+                                gratis. De lunes a viernes de 19:00 a 22:00, y
+                                fines de semana de 10:00 a 20:00. Si necesitas
+                                otro horario, lo coordinamos. Te damos la
+                                dirección por WhatsApp. Puedes pagar en efectivo
+                                o por transferencia.
+                            </li>
+                        </ul>
+                    </section>
+
+                    <section>
+                        <h2 className={sectionTitleClass}>Pago</h2>
+                        <p>
+                            Transferencia bancaria. En el retiro en bodega y en
+                            la entrega en Metro también puedes pagar en
+                            efectivo. No pagues nada antes de que te confirmemos
+                            el pedido.
+                        </p>
+                    </section>
+
+                    <section>
+                        <h2 className={sectionTitleClass}>Atención</h2>
+                        <p>
+                            Te respondemos por WhatsApp en menos de 1 hora,
+                            todos los días de 12:00 a 22:00.
+                        </p>
+                    </section>
                 </div>
 
                 {cameFromProduct && (

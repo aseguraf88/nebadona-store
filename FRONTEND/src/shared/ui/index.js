@@ -2,3 +2,4 @@
 export { default as ConfirmationModal } from './ConfirmationModal'
 export { default as SearchBar } from './SearchBar'
 export { default as ScrollToTop } from './ScrollToTop'
+export { default as WhatsAppFloatingButton } from './WhatsAppFloatingButton'

@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback, useRef, useId } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import toast from 'react-hot-toast'
-import { Share2, Truck, Zap, Handshake, Warehouse } from 'lucide-react'
+import { Share2 } from 'lucide-react'
 import {
     useCart,
     useAddToCartFeedback,
@@ -19,15 +19,9 @@ import { ProductSection } from '../../../widgets/catalog'
 import { getSizeGuideByCategory } from '../../../entities/product/config/sizeGuides'
 import { getCareGuideByCategory } from '../../../entities/product/config/careGuides'
 import { getSizeStandardById } from '../../../entities/product/config/sizeStandardOptions'
+import { DELIVERY_METHODS } from '../../../shared/config/shipping'
 
 const MD_MEDIA_QUERY = '(min-width: 1024px)'
-
-const SHIPPING_METHODS = [
-    { icon: Truck, text: 'Envío por agencia, a todo Chile' },
-    { icon: Zap, text: 'Express en Santiago' },
-    { icon: Handshake, text: 'Entrega presencial coordinada' },
-    { icon: Warehouse, text: 'Retiro en bodega, sin costo' },
-]
 
 // Valores de franquicia que en realidad significan "sin franquicia" (diseños
 // sueltos, que no pertenecen a ninguna familia). Para los relacionados se
@@ -570,6 +564,18 @@ const ProductPage = () => {
                                     {feedback.status === 'added' ? 'Agregado al carrito' : ''}
                                 </span>
                             </div>
+
+                            {/* Debajo del botón. -mt-3: más cerca que el gap-6 del
+                                bloque. sm:pl-40 (contador w-36 + gap-4): centrado
+                                bajo el botón y no bajo la fila; sin stock no hay
+                                contador y el botón ocupa todo el ancho */}
+                            <p
+                                className={`-mt-3 text-center text-xs text-base-content/50 ${
+                                    selectedHasStock ? 'sm:pl-40' : ''
+                                }`}
+                            >
+                                Pides por WhatsApp · pagas después de confirmar
+                            </p>
                         </div>
 
                         <div className="mt-8 flex flex-col gap-3 border-t border-base-200 pt-8">
@@ -753,15 +759,27 @@ const ProductPage = () => {
                                 className="min-w-0"
                                 contentClassName="text-sm text-base-content/80 space-y-4 min-w-0"
                             >
+                                    <p>
+                                        Compras por WhatsApp: nos envías tu pedido sin
+                                        pagar y coordinamos contigo la entrega y el pago.
+                                    </p>
                                     <div className="overflow-x-auto rounded-lg border border-base-content/10">
                                         <table className="table table-xs">
                                             <tbody>
-                                                {SHIPPING_METHODS.map((method) => (
-                                                    <tr key={method.text} className="border-base-content/10">
-                                                        <td className="w-8">
+                                                {DELIVERY_METHODS.map((method) => (
+                                                    <tr key={method.id} className="border-base-content/10">
+                                                        <td className="w-8 align-top">
                                                             <method.icon className="h-4 w-4 text-primary" />
                                                         </td>
-                                                        <td className="text-base-content/70">{method.text}</td>
+                                                        {/* Nombre y, debajo, su condición (shared/config/shipping.js) */}
+                                                        <td className="break-words">
+                                                            <span className="block font-semibold text-base-content/80">
+                                                                {method.name}
+                                                            </span>
+                                                            <span className="block text-base-content/60">
+                                                                {method.condition}
+                                                            </span>
+                                                        </td>
                                                     </tr>
                                                 ))}
                                             </tbody>

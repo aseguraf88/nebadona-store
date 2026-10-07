@@ -5,8 +5,10 @@ import { useCart } from '../../../entities/cart'
 import { useUser } from '../../../entities/user'
 import toast from 'react-hot-toast'
 import { FiTruck, FiMapPin, FiArrowLeft, FiCheckCircle } from 'react-icons/fi'
+import { FaWhatsapp } from 'react-icons/fa'
 import { jsPDF } from 'jspdf'
 import { WHATSAPP_URL } from '../../../shared/config/contact'
+import { CHECKOUT_DELIVERY_OPTIONS } from '../../../shared/config/shipping'
 
 const Checkout = () => {
     const { cart, total, loading: cartLoading, openModal, clearCart } = useCart()
@@ -75,9 +77,32 @@ const Checkout = () => {
                 </h1>
                 <p className="text-base-content/70 mb-8">
                     Descargamos tu comprobante en PDF y abrimos WhatsApp con el
-                    detalle de tu pedido. Si no se abrió, puedes reabrirlo con
-                    el botón de abajo.
+                    detalle de tu pedido.
                 </p>
+
+                {/* Qué pasa después: la orden queda registrada (no reservada:
+                    el stock se descuenta recién al aprobarla) y sin pagar */}
+                <div className="text-left bg-base-200/40 rounded-box p-5 sm:p-6 mb-8">
+                    <h2 className="text-lg font-bold text-base-content mb-3">
+                        ¿Qué sigue?
+                    </h2>
+                    <ol className="list-decimal pl-5 space-y-2 text-sm text-base-content/80">
+                        <li>
+                            Envía el mensaje que se abrió en WhatsApp. Si no se
+                            abrió, usa el botón de abajo.
+                        </li>
+                        <li>
+                            Te responderemos en menos de 1 hora (de 12:00 a
+                            22:00) para confirmar el stock, la entrega y el pago.
+                        </li>
+                        <li>
+                            No pagues nada hasta que te confirmemos. Tus
+                            productos se pagan por transferencia antes del
+                            despacho; si eliges envío por agencia, el envío se lo
+                            pagas a la agencia al recibir.
+                        </li>
+                    </ol>
+                </div>
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
                     <a
                         href={completedOrder.whatsappUrl}
@@ -209,6 +234,25 @@ const Checkout = () => {
         doc.setTextColor(200, 40, 40)
         doc.text(formatPrice(total), 196, startY, { align: 'right' })
 
+        // --- Condiciones de pago ---
+        // La fuente va antes de splitTextToSize: el corte depende del tamaño
+        startY += 12
+        doc.setFont('helvetica', 'normal')
+        doc.setFontSize(9)
+        doc.setTextColor(100, 100, 100)
+        const paymentLines = doc.splitTextToSize(
+            'Los productos se pagan por transferencia una vez confirmado el pedido por WhatsApp. Envío por agencia: el envío se paga a la agencia al recibir.',
+            182,
+        )
+        // Si no entra antes del margen inferior (15 mm), pasa a una hoja nueva
+        const lineHeight = doc.getLineHeight() / doc.internal.scaleFactor
+        const pageBottom = doc.internal.pageSize.getHeight() - 15
+        if (startY + paymentLines.length * lineHeight > pageBottom) {
+            doc.addPage()
+            startY = 20
+        }
+        doc.text(paymentLines, 14, startY)
+
         doc.save(`Nebadon-Orden-${folio}.pdf`)
     }
 
@@ -318,9 +362,9 @@ const Checkout = () => {
                 message += `├────────────────────────┤\n`
             })
 
-            message += `│ *TOTAL: ${formatPrice(total)}*\n`
+            message += `│ *TOTAL (sin envío): ${formatPrice(total)}*\n`
             message += `└────────────────────────┘\n\n`
-            message += `Hola, acabo de emitir la orden #ORD-${folio} desde la web y descargué mi PDF. Quedo atento(a) a las instrucciones.`
+            message += `Hola, acabo de enviar la orden #ORD-${folio} desde la web y descargué mi PDF. Quedo atento(a) a la confirmación.`
 
             const encodedMessage = encodeURIComponent(message)
             const whatsappUrl = `${WHATSAPP_URL}?text=${encodedMessage}`
@@ -345,8 +389,9 @@ const Checkout = () => {
                     Orden de Compra
                 </h1>
                 <p className="text-xs sm:text-sm text-base-content/60 mt-2">
-                    Selecciona tu modalidad, generaremos tu orden y abriremos el
-                    chat seguro.
+                    Elige cómo quieres recibir tu pedido. Lo enviarás por
+                    WhatsApp y te responderemos para confirmar la entrega y el
+                    pago.
                 </p>
             </div>
 
@@ -376,10 +421,10 @@ const Checkout = () => {
                                                 <FiTruck size={26} />
                                             </div>
                                             <span className="font-bold text-base-content">
-                                                Despacho a Domicilio
+                                                {CHECKOUT_DELIVERY_OPTIONS.delivery.name}
                                             </span>
                                             <span className="text-xs text-base-content/60 mt-1">
-                                                Recibe en tu dirección
+                                                {CHECKOUT_DELIVERY_OPTIONS.delivery.condition}
                                             </span>
                                         </button>
 
@@ -394,10 +439,10 @@ const Checkout = () => {
                                                 <FiMapPin size={26} />
                                             </div>
                                             <span className="font-bold text-base-content">
-                                                Coordinar Retiro
+                                                {CHECKOUT_DELIVERY_OPTIONS.pickup.name}
                                             </span>
                                             <span className="text-xs text-base-content/60 mt-1">
-                                                Acuerdo por chat
+                                                {CHECKOUT_DELIVERY_OPTIONS.pickup.condition}
                                             </span>
                                         </button>
                                     </div>
@@ -571,18 +616,27 @@ const Checkout = () => {
                                         </div>
                                     )}
 
+                                    <p className="mt-4 text-center text-xs sm:text-sm text-base-content/70">
+                                        Todavía no pagas nada. Te escribiremos por
+                                        WhatsApp para confirmar el stock, la entrega
+                                        y los datos de transferencia.
+                                    </p>
+
                                     <button
                                         type="submit"
                                         disabled={loading || cart.length === 0}
-                                        className="btn mt-4 w-full h-14 rounded-2xl border-none text-white shadow-md hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center justify-center gap-2.5 disabled:opacity-50"
+                                        className="btn w-full h-14 rounded-2xl border-none text-white shadow-md hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center justify-center gap-2.5 disabled:opacity-50"
                                         style={{ backgroundColor: '#25D366' }}
                                     >
                                         {loading ? (
                                             <span className="loading loading-spinner loading-sm" />
                                         ) : (
-                                            <span className="text-sm md:text-base font-extrabold tracking-tight uppercase">
-                                                Generar Orden y WhatsApp
-                                            </span>
+                                            <>
+                                                <FaWhatsapp aria-hidden="true" className="h-6 w-6" />
+                                                <span className="text-sm md:text-base font-extrabold tracking-tight uppercase">
+                                                    Enviar pedido por WhatsApp
+                                                </span>
+                                            </>
                                         )}
                                     </button>
                                 </form>
@@ -649,7 +703,7 @@ const Checkout = () => {
 
                         <div className="pt-4 mt-1 border-t border-base-200">
                             <div className="flex items-center justify-between text-lg sm:text-xl font-black">
-                                <span>Total:</span>
+                                <span>Total (sin envío):</span>
                                 <span className="text-primary">
                                     {formatPrice(total)}
                                 </span>
