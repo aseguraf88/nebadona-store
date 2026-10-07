@@ -19,7 +19,7 @@ import { ProductSection } from '../../../widgets/catalog'
 import { getSizeGuideByCategory } from '../../../entities/product/config/sizeGuides'
 import { getCareGuideByCategory } from '../../../entities/product/config/careGuides'
 import { getSizeStandardById } from '../../../entities/product/config/sizeStandardOptions'
-import { DELIVERY_METHODS } from '../../../shared/config/shipping'
+import { PRODUCT_DELIVERY_HIGHLIGHTS } from '../../../shared/config/shipping'
 
 const MD_MEDIA_QUERY = '(min-width: 1024px)'
 
@@ -565,22 +565,43 @@ const ProductPage = () => {
                                 </span>
                             </div>
 
-                            {/* Debajo del botón. -mt-3: más cerca que el gap-6 del
-                                bloque. sm:pl-40 (contador w-36 + gap-4): centrado
-                                bajo el botón y no bajo la fila; sin stock no hay
-                                contador y el botón ocupa todo el ancho */}
-                            <p
-                                className={`-mt-3 text-center text-xs text-base-content/50 ${
-                                    selectedHasStock ? 'sm:pl-40' : ''
-                                }`}
-                            >
-                                Pides por WhatsApp · pagas después de confirmar
-                            </p>
+                            {/* Franja de entrega (shared/config/shipping.js): cada
+                                línea con su ícono y su texto, nunca íconos solos,
+                                una debajo de la otra en todos los anchos. -mt-2:
+                                más cerca que el gap-6 del bloque */}
+                            <div className="-mt-2 flex flex-col gap-3">
+                                <ul className="flex flex-col gap-2">
+                                    {PRODUCT_DELIVERY_HIGHLIGHTS.map((item) => (
+                                        <li
+                                            key={item.strong}
+                                            className="flex items-center gap-2 text-xs text-base-content/70"
+                                        >
+                                            <item.icon
+                                                aria-hidden="true"
+                                                className="h-4 w-4 shrink-0 text-primary"
+                                            />
+                                            <span>
+                                                <strong className="font-semibold text-base-content">
+                                                    {item.strong}
+                                                </strong>{' '}
+                                                {item.rest}
+                                            </span>
+                                        </li>
+                                    ))}
+                                </ul>
+                                <Link
+                                    to="/envios-y-entregas"
+                                    state={{ from: 'product' }}
+                                    className="link link-primary text-xs font-semibold self-start"
+                                >
+                                    ¿Cómo recibo mi pedido? →
+                                </Link>
+                            </div>
                         </div>
 
                         <div className="mt-8 flex flex-col gap-3 border-t border-base-200 pt-8">
                             <ProductAccordion
-                                title="Descripción del Producto"
+                                title="Descripción"
                                 defaultOpen
                                 contentClassName="text-sm text-base-content/80 leading-relaxed"
                             >
@@ -605,7 +626,7 @@ const ProductPage = () => {
 
                             {(productDetails.length > 0 || careGuide) && (
                                 <ProductAccordion
-                                    title="Detalles del Producto y Cuidados"
+                                    title="Detalles y cuidados"
                                     className="min-w-0"
                                     contentClassName="text-sm text-base-content/80 min-w-0"
                                 >
@@ -666,7 +687,7 @@ const ProductPage = () => {
 
                             {sizeGuide && (
                                 <ProductAccordion
-                                    title="Tallas y Medidas"
+                                    title="Tallas"
                                     className="min-w-0"
                                     contentClassName="text-sm text-base-content/80 min-w-0"
                                 >
@@ -753,46 +774,6 @@ const ProductPage = () => {
                                         )}
                                 </ProductAccordion>
                             )}
-
-                            <ProductAccordion
-                                title="Detalles de Envío y Entregas"
-                                className="min-w-0"
-                                contentClassName="text-sm text-base-content/80 space-y-4 min-w-0"
-                            >
-                                    <p>
-                                        Compras por WhatsApp: nos envías tu pedido sin
-                                        pagar y coordinamos contigo la entrega y el pago.
-                                    </p>
-                                    <div className="overflow-x-auto rounded-lg border border-base-content/10">
-                                        <table className="table table-xs">
-                                            <tbody>
-                                                {DELIVERY_METHODS.map((method) => (
-                                                    <tr key={method.id} className="border-base-content/10">
-                                                        <td className="w-8 align-top">
-                                                            <method.icon className="h-4 w-4 text-primary" />
-                                                        </td>
-                                                        {/* Nombre y, debajo, su condición (shared/config/shipping.js) */}
-                                                        <td className="break-words">
-                                                            <span className="block font-semibold text-base-content/80">
-                                                                {method.name}
-                                                            </span>
-                                                            <span className="block text-base-content/60">
-                                                                {method.condition}
-                                                            </span>
-                                                        </td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                    <Link
-                                        to="/envios-y-entregas"
-                                        state={{ from: 'product' }}
-                                        className="link link-primary text-sm font-semibold"
-                                    >
-                                        Ver detalles de envíos y entregas →
-                                    </Link>
-                            </ProductAccordion>
                         </div>
                     </div>
                 </div>

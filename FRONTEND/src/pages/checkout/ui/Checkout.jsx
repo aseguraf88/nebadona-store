@@ -88,19 +88,11 @@ const Checkout = () => {
                     </h2>
                     <ol className="list-decimal pl-5 space-y-2 text-sm text-base-content/80">
                         <li>
-                            Envía el mensaje que se abrió en WhatsApp. Si no se
-                            abrió, usa el botón de abajo.
+                            Envía el mensaje que se abrió en WhatsApp (o usa el
+                            botón de abajo).
                         </li>
-                        <li>
-                            Te responderemos en menos de 1 hora (de 12:00 a
-                            22:00) para confirmar el stock, la entrega y el pago.
-                        </li>
-                        <li>
-                            No pagues nada hasta que te confirmemos. Tus
-                            productos se pagan por transferencia antes del
-                            despacho; si eliges envío por agencia, el envío se lo
-                            pagas a la agencia al recibir.
-                        </li>
+                        <li>Te respondemos en menos de 1 hora (de 12:00 a 22:00).</li>
+                        <li>Pagas cuando confirmemos tu pedido.</li>
                     </ol>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">

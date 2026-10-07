@@ -1,7 +1,47 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Wallet, MessageCircle } from 'lucide-react'
 import { HowToBuy } from '../../../widgets/how-to-buy'
+import { DELIVERY_METHODS } from '../../../shared/config/shipping'
 
-const sectionTitleClass = 'text-lg font-semibold text-base-content mb-3'
+const sectionTitleClass = 'text-lg font-semibold text-base-content mb-4'
+
+// Tarjetas de pago y atención: solo se usan en esta página
+const INFO_CARDS = [
+    {
+        title: 'Pago',
+        icon: Wallet,
+        details: [
+            'Transferencia bancaria.',
+            'Efectivo, si retiras en bodega o en el punto de encuentro.',
+        ],
+    },
+    {
+        title: 'Atención',
+        icon: MessageCircle,
+        details: [
+            'Por WhatsApp, todos los días de 12:00 a 22:00.',
+            'Te respondemos en menos de 1 hora.',
+        ],
+    },
+]
+
+// Tarjeta con ícono, título y viñetas cortas (formas de entrega, pago y
+// atención: mismo formato)
+const InfoCard = ({ icon: Icon, title, details }) => (
+    <li className="rounded-box bg-base-200/40 p-5">
+        <div className="flex items-center gap-3 mb-3">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                <Icon aria-hidden="true" className="h-5 w-5" />
+            </span>
+            <h3 className="text-sm font-bold text-base-content">{title}</h3>
+        </div>
+        <ul className="list-disc space-y-1 pl-5">
+            {details.map((detail) => (
+                <li key={detail}>{detail}</li>
+            ))}
+        </ul>
+    </li>
+)
 
 const EnviosYEntregas = () => {
     const location = useLocation()
@@ -22,96 +62,39 @@ const EnviosYEntregas = () => {
                     </ul>
                 </div>
 
-                <h1 className="text-3xl sm:text-4xl font-bold text-base-content mb-10">
+                <h1 className="text-3xl sm:text-4xl font-bold text-base-content mb-4">
                     Envíos y Entregas
                 </h1>
 
                 <div className="text-sm text-base-content/80 space-y-10">
                     <p>
-                        En Nebadon compras por WhatsApp: armas tu pedido en la
-                        web, nos lo envías sin pagar y te respondemos para
-                        confirmar el stock, la forma de entrega y el pago.
+                        Haces tu pedido en la web y lo coordinamos por WhatsApp.
+                        No pagas nada hasta que te confirmemos.
                     </p>
 
-                    {/* Los mismos 4 pasos del Home (shared/config/shipping.js) */}
+                    {/* Las mismas 4 tarjetas del Home (shared/config/shipping.js) */}
                     <HowToBuy />
 
                     <section>
                         <h2 className={sectionTitleClass}>Formas de entrega</h2>
-                        <ul className="space-y-3">
-                            <li>
-                                📦{' '}
-                                <strong className="text-base-content">
-                                    Envío por agencia (todo Chile):
-                                </strong>{' '}
-                                despachamos por Starken (también por Blue
-                                Express). Si prefieres Chilexpress o Correos de
-                                Chile, lo vemos contigo.{' '}
-                                <strong className="text-base-content">
-                                    Tus productos los pagas por transferencia
-                                    antes del despacho
-                                </strong>
-                                , y despachamos el día hábil siguiente de
-                                recibida la transferencia.{' '}
-                                <strong className="text-base-content">
-                                    El envío es por pagar:
-                                </strong>{' '}
-                                el costo del envío se lo pagas directamente a la
-                                agencia al recibir el paquete o al retirarlo en
-                                la sucursal. Te informamos un valor aproximado
-                                por WhatsApp.
-                            </li>
-                            <li>
-                                🛵{' '}
-                                <strong className="text-base-content">
-                                    Envío Express (solo Santiago):
-                                </strong>{' '}
-                                por Uber o DiDi, el mismo día. Te cotizamos el
-                                viaje por WhatsApp y haces una sola transferencia
-                                por el total (productos + envío). Apenas la
-                                recibimos, pedimos tu envío.
-                            </li>
-                            <li>
-                                🤝{' '}
-                                <strong className="text-base-content">
-                                    Entrega en Metro:
-                                </strong>{' '}
-                                en las estaciones Ciudad del Niño (Línea 2) o
-                                Mirador (Línea 5), en un horario que nos acomode a
-                                ambos. Puedes pagar en efectivo o por
-                                transferencia.
-                            </li>
-                            <li>
-                                🏠{' '}
-                                <strong className="text-base-content">
-                                    Retiro en bodega (La Granja):
-                                </strong>{' '}
-                                gratis. De lunes a viernes de 19:00 a 22:00, y
-                                fines de semana de 10:00 a 20:00. Si necesitas
-                                otro horario, lo coordinamos. Te damos la
-                                dirección por WhatsApp. Puedes pagar en efectivo
-                                o por transferencia.
-                            </li>
+                        {/* Una tarjeta por modalidad, desde DELIVERY_METHODS */}
+                        <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            {DELIVERY_METHODS.map((method) => (
+                                <InfoCard
+                                    key={method.id}
+                                    icon={method.icon}
+                                    title={method.name}
+                                    details={method.details}
+                                />
+                            ))}
                         </ul>
                     </section>
 
-                    <section>
-                        <h2 className={sectionTitleClass}>Pago</h2>
-                        <p>
-                            Transferencia bancaria. En el retiro en bodega y en
-                            la entrega en Metro también puedes pagar en
-                            efectivo. No pagues nada antes de que te confirmemos
-                            el pedido.
-                        </p>
-                    </section>
-
-                    <section>
-                        <h2 className={sectionTitleClass}>Atención</h2>
-                        <p>
-                            Te respondemos por WhatsApp en menos de 1 hora,
-                            todos los días de 12:00 a 22:00.
-                        </p>
-                    </section>
+                    <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        {INFO_CARDS.map((card) => (
+                            <InfoCard key={card.title} {...card} />
+                        ))}
+                    </ul>
                 </div>
 
                 {cameFromProduct && (
