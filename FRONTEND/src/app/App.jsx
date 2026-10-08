@@ -27,6 +27,7 @@ import { CustomersPage } from '../pages/admin/customers'
 import ProtectedRoute from '../app/routes/ProtectedRoute'
 import { ShoppingPage } from '../pages/shopping'
 import { ProductPage } from '../pages/product'
+import { NotFound } from '../pages/not-found'
 import { ScrollToTop } from '../shared/ui'
 
 const COMING_SOON_HOSTNAMES = ['nebadon.cl', 'www.nebadon.cl']
@@ -75,6 +76,7 @@ function App() {
                                 path="/product/:id"
                                 element={<ProductPage />}
                             />
+                            <Route path="*" element={<NotFound />} />
                         </Route>
 
                         {/* 🔒 RUTAS PRIVADAS / ADMIN (El Cascarón Maestro) */}
