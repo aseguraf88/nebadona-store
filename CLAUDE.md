@@ -95,8 +95,11 @@ manual. MercadoPago fue eliminado del código por completo (no reintroducir).
   sin `!important`. Sin `table-zebra` ni separadores verticales por
   defecto. Encabezado oscuro (`bg-neutral text-neutral-content` en el
   `<tr>` del `<thead>`) solo si la tabla tiene una fila de encabezado
-  real con texto (`/guia-cuidados`, Tallas y Medidas); las tablas sin
-  encabezado (Detalles, Cuidados y Envíos de la ficha) no lo llevan.
+  real con texto (`/guia-cuidados`, la tabla del acordeón "Tallas"); las
+  tablas sin encabezado (Detalles y Cuidados de la ficha) no lo llevan.
+  La tabla de envíos de la ficha ya no existe: el acordeón de envíos se
+  quitó en el paso 54 y su información quedó en la franja bajo el botón
+  "Agregar" y en `/envios-y-entregas` (tarjetas, no tablas).
   Radio según dónde vive la tabla: anidada dentro de un acordeón
   (`rounded-xl`, 12px) → `rounded-lg` (8px), más chico que su contenedor
   y además igual a `--rounded-btn` del tema, así que no suma un valor

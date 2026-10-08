@@ -616,6 +616,47 @@ octubre. Sin código todavía: cada grupo se convierte en uno o más pasos.
       Originales, Música y Videojuegos. Probado en local y en producción
       (`pruebas.nebadon.cl`).
 
+- [x] ~~**Comunicar que la compra es por WhatsApp**~~ — resuelto (paso
+      54, commits `d4a37c0`, `dea88d9` y `057fa36`). Lo detectó la dueña:
+      la tienda nunca explicaba que el pedido se envía por WhatsApp sin
+      pagar, que el pago se coordina después y que el envío por agencia
+      lo paga el cliente al recibir; el cliente lo descubría recién en
+      WhatsApp. Las condiciones viven en un solo lugar,
+      `shared/config/shipping.js` (formas de entrega, franja de la ficha y
+      pasos de "¿Cómo comprar?"), y los textos siguen dos reglas: títulos
+      cortos con íconos de `lucide-react`, y nunca "por pagar" a secas
+      ("el envío lo pagas al recibir"). En tres commits:
+      1. `d4a37c0`: "¿Cómo comprar?" en el Home; botón flotante de
+         WhatsApp en toda la tienda menos `/checkout` (el footer suma
+         `pb-24` en mobile); marquesina con "COMPRA POR WHATSAPP · ENVÍOS A
+         TODO CHILE"; textos nuevos en el carrito y el checkout ("Todavía
+         no pagas nada…", "Enviar pedido por WhatsApp", "Total (sin
+         envío):", "¿Qué sigue?"); el mensaje de WhatsApp dice "TOTAL (sin
+         envío)"; el PDF suma la línea de condiciones de pago (con salto de
+         página propio); `/envios-y-entregas` corregida (Starken siempre por
+         pagar a la agencia, horarios de retiro, pago y atención).
+      2. `dea88d9`: textos cortos e íconos. "¿Cómo comprar?" en 4
+         tarjetas; en la ficha, una franja de 3 líneas con ícono bajo
+         "Agregar" (envío, retiro y pago) con el enlace "¿Cómo recibo mi
+         pedido? →", y se quitó el acordeón de envíos; los acordeones
+         pasaron a "Descripción", "Detalles y cuidados" y "Tallas";
+         `/envios-y-entregas` en tarjetas con viñetas; "Retiro en bodega" y
+         "Punto de encuentro" como nombres de las modalidades.
+      3. `057fa36`: las 4 modalidades en el checkout (Envío a todo Chile,
+         Express en Santiago, Punto de encuentro y Retiro en bodega), con
+         `deliveryMethod` en la orden (opcional, `null` en las anteriores).
+         `deliveryType` se sigue guardando, derivado de la modalidad, y el
+         backend lo deriva él mismo y rechaza un valor que no esté en la
+         lista (400). La dirección se pide solo en las de despacho; el
+         punto de encuentro no pide estación. El panel de órdenes, el PDF y
+         el mensaje de WhatsApp muestran el nombre de la modalidad (y la
+         dirección cuando corresponde); las órdenes anteriores se ven como
+         siempre ("Despacho" o "Retiro").
+      Las órdenes no reservan stock: los textos dicen "registrado", no
+      "reservado" (el stock se descuenta recién al aprobar). Probado en
+      local y en producción (`pruebas.nebadon.cl`), incluidos los pedidos
+      de prueba hasta WhatsApp (cancelados después desde el panel).
+
 - [ ] **Inicio del dashboard (`AdminHome.jsx`) con números reales**: hoy
       los números están fijos en el código (`salesToday`, `salesCount`,
       `ticketMedio`, `totalCustomers`; confirmado en el paso 46).
@@ -744,6 +785,14 @@ octubre. Sin código todavía: cada grupo se convierte en uno o más pasos.
       51 solo entra el admin por esa URL (no hay enlace visible para los
       clientes), así que no lo ve ningún cliente.
 
+- [ ] **PDF del pedido sin salto de página** (encontrado en el paso 54):
+      en `generatePDF` (`Checkout.jsx`), las filas de productos y el total
+      se dibujan siempre en la primera hoja, sin `addPage()`. Desde unos 22
+      productos, las últimas filas y el total quedan fuera de la hoja. La
+      línea de condiciones de pago del paso 54 sí pasa a una hoja nueva si
+      no cabe. **Prioridad media**: con los pedidos de hoy no pasa, pero un
+      pedido grande saldría con el PDF cortado.
+
 - [x] ~~**Menú de categorías del navbar**~~ — reemplazado por el paso 53
       (commit `d98726b`): los menús se organizan por temática, no por
       categoría. Las categorías siguen en el filtro de `/shop` y en los
@@ -759,11 +808,11 @@ octubre. Sin código todavía: cada grupo se convierte en uno o más pasos.
         a la derecha de la imagen; esas tiendas usan la imagen a todo el
         ancho, ocupando la mitad superior de la pantalla. Ver opciones
         antes de implementar;
-      - títulos de los acordeones redundantes: "Descripción del
-        Producto", "Detalles del Producto y Cuidados", "Tallas y Medidas" y
-        "Detalles de Envío y Entregas" repiten "del Producto" y "Detalles"
-        dentro de la propia ficha (por ejemplo, "Descripción", "Detalles y
-        cuidados", "Tallas" y "Envíos").
+      - ~~títulos de los acordeones redundantes~~ — resuelto en el paso 54
+        (commit `dea88d9`): ahora son "Descripción", "Detalles y cuidados"
+        y "Tallas", y el acordeón "Detalles de Envío y Entregas" se quitó
+        (su información quedó en la franja bajo "Agregar" y en
+        `/envios-y-entregas`).
 
 - [ ] **Guía de tallas**: tablas de tallas universales, dejando claro qué
       cubre cada tabla (sobre todo si se entra desde el footer), e imágenes
