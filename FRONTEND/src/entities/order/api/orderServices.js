@@ -15,6 +15,19 @@ export const getOrders = async () => {
     }
 }
 
+// Números del inicio del dashboard: ventas de hoy y del mes y pedidos por
+// revisar (GET /api/orders/summary, solo admin)
+export const getOrdersSummary = async () => {
+    try {
+        const response = await axios.get(`${API_URL}/summary`)
+        return response.data
+    } catch (error) {
+        throw new Error(
+            error.response?.data?.message || 'Error al obtener el resumen de ventas',
+        )
+    }
+}
+
 export const updateOrderStatus = async (orderId, status) => {
     try {
         const response = await axios.patch(`${API_URL}/${orderId}/status`, {

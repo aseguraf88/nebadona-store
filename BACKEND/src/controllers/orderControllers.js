@@ -300,3 +300,112 @@ export const updateOrderStatus = async (req, res) => {
         })
     }
 }
+
+// Resumen para el inicio del dashboard (paso 57). Venta = orden 'approved',
+// contada según la fecha del pedido (createdAt), no la de aprobación: un
+// pedido aprobado días después suma en el día en que se hizo. "Hoy" y "este
+// mes" son en hora de Chile: se comparan etiquetas de fecha local
+// ($dateToString con timezone) en vez de calcular la medianoche, que en el
+// cambio de horario de septiembre no existe. totalAmount no incluye el envío
+const SUMMARY_TIMEZONE = 'America/Santiago'
+// Pedidos que la dueña todavía no aprobó, canceló ni rechazó
+const PENDING_REVIEW_STATUSES = ['whatsapp_pending', 'pending', 'in_process']
+
+const localDate = (format, date) => ({
+    $dateToString: { format, date, timezone: SUMMARY_TIMEZONE },
+})
+
+// { revenue, count } del primer grupo, o ceros si no hubo ventas, más el
+// ticket medio redondeado a pesos (null sin ventas)
+const toSalesTotals = ([group]) => {
+    const revenue = group?.revenue ?? 0
+    const count = group?.count ?? 0
+    return {
+        revenue,
+        count,
+        avgTicket: count > 0 ? Math.round(revenue / count) : null,
+    }
+}
+
+export const getOrdersSummary = async (req, res) => {
+    try {
+        const [result] = await OrderModel.aggregate([
+            {
+                $match: {
+                    status: { $in: ['approved', ...PENDING_REVIEW_STATUSES] },
+                },
+            },
+            {
+                $addFields: {
+                    localDay: localDate('%Y-%m-%d', '$createdAt'),
+                    localMonth: localDate('%Y-%m', '$createdAt'),
+                },
+            },
+            {
+                $facet: {
+                    today: [
+                        {
+                            $match: {
+                                status: 'approved',
+                                $expr: {
+                                    $eq: [
+                                        '$localDay',
+                                        localDate('%Y-%m-%d', '$$NOW'),
+                                    ],
+                                },
+                            },
+                        },
+                        {
+                            $group: {
+                                _id: null,
+                                revenue: { $sum: '$totalAmount' },
+                                count: { $sum: 1 },
+                            },
+                        },
+                    ],
+                    month: [
+                        {
+                            $match: {
+                                status: 'approved',
+                                $expr: {
+                                    $eq: [
+                                        '$localMonth',
+                                        localDate('%Y-%m', '$$NOW'),
+                                    ],
+                                },
+                            },
+                        },
+                        {
+                            $group: {
+                                _id: null,
+                                revenue: { $sum: '$totalAmount' },
+                                count: { $sum: 1 },
+                            },
+                        },
+                    ],
+                    pendingReview: [
+                        {
+                            $match: {
+                                status: { $in: PENDING_REVIEW_STATUSES },
+                            },
+                        },
+                        { $count: 'count' },
+                    ],
+                },
+            },
+        ])
+
+        res.status(200).json({
+            success: true,
+            today: toSalesTotals(result.today),
+            month: toSalesTotals(result.month),
+            pendingReview: result.pendingReview[0]?.count ?? 0,
+        })
+    } catch (error) {
+        console.error('Error en getOrdersSummary:', error)
+        res.status(500).json({
+            success: false,
+            message: 'Error interno del servidor',
+        })
+    }
+}
