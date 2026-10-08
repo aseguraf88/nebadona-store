@@ -1,5 +1,5 @@
 import { HiOutlineLogout } from 'react-icons/hi'
-import { useUser } from '../../../entities/user'
+import { useUser, getInitials } from '../../../entities/user'
 import { useLogout } from '../model/useLogout'
 
 // Solo desktop (el Navbar lo oculta bajo 1024 px): en mobile, "Ir al
@@ -7,18 +7,6 @@ import { useLogout } from '../model/useLogout'
 const UserDropDown = () => {
     const { userInfo, loading } = useUser()
     const handleLogout = useLogout()
-
-    const getInitials = () => {
-        const fullName = userInfo?.name || userInfo?.username || ''
-        if (!fullName) return 'A' // 'A' de Admin por defecto
-
-        return fullName
-            .split(/\s+/)
-            .filter(Boolean)
-            .slice(0, 2)
-            .map((part) => part[0].toUpperCase())
-            .join('')
-    }
 
     const isAuthenticated = Boolean(userInfo?.id) && !loading
 
@@ -34,7 +22,7 @@ const UserDropDown = () => {
                 className="h-10 w-10 flex items-center justify-center rounded-full bg-primary text-primary-content shadow-sm transition-transform duration-300 hover:scale-110 outline-none cursor-pointer"
                 aria-label="Menú de administrador"
             >
-                <span className="text-sm font-bold">{getInitials()}</span>
+                <span className="text-sm font-bold">{getInitials(userInfo)}</span>
             </div>
 
             <ul

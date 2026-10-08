@@ -11,3 +11,4 @@ export {
     registerService,
     logoutService,
 } from './api/authServices' // <-- Ajustado al nombre real de tu archivo
+export { getInitials } from './lib/getInitials'

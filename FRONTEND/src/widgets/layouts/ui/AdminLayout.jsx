@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Outlet, Link, useLocation } from 'react-router-dom'
 import { useProduct } from '../../../entities/product'
+import { useUser, getInitials } from '../../../entities/user'
+import { useLogout } from '../../../features/auth/model/useLogout'
 import {
     TbMenu2,
     TbChartBar,
@@ -17,6 +19,8 @@ const AdminLayout = () => {
     const [isDrawerOpen, setIsDrawerOpen] = useState(false)
     const location = useLocation()
     const { getAdminProducts } = useProduct()
+    const { userInfo } = useUser()
+    const handleLogout = useLogout()
 
     // Catálogo completo (con borradores) para todas las pantallas del
     // dashboard. ProtectedRoute ya garantiza que el usuario es admin
@@ -118,11 +122,13 @@ const AdminLayout = () => {
                         <div className="dropdown dropdown-end">
                             <label
                                 tabIndex={0}
-                                className="btn btn-ghost btn-circle avatar border border-base-300 shadow-sm"
+                                role="button"
+                                aria-label="Menú de administrador"
+                                className="btn btn-ghost btn-circle avatar placeholder border border-base-300 shadow-sm"
                             >
                                 <div className="w-9 rounded-full bg-neutral text-neutral-content flex items-center justify-center">
                                     <span className="text-sm font-bold">
-                                        NS
+                                        {getInitials(userInfo)}
                                     </span>
                                 </div>
                             </label>
@@ -131,16 +137,14 @@ const AdminLayout = () => {
                                 className="mt-3 z-[1] p-2 shadow-lg menu menu-sm dropdown-content bg-base-100 rounded-box w-48 border border-base-200"
                             >
                                 <li>
-                                    <a className="py-3">
-                                        <TbSettings className="text-lg opacity-70" />
-                                        Configuración
-                                    </a>
-                                </li>
-                                <li>
-                                    <a className="py-3 text-error">
+                                    <button
+                                        type="button"
+                                        onClick={handleLogout}
+                                        className="py-3 text-error"
+                                    >
                                         <TbLogout className="text-lg" />
                                         Cerrar Sesión
-                                    </a>
+                                    </button>
                                 </li>
                             </ul>
                         </div>

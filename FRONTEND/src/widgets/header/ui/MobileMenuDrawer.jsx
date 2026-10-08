@@ -81,14 +81,9 @@ const MobileMenuDrawer = ({ isOpen, onClose }) => {
                         <FiX className="h-6 w-6" />
                     </button>
 
-                    <div className="flex items-center gap-2">
-                        <span className="font-extrabold tracking-wider text-base">
-                            NEBADON
-                        </span>
-                        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-primary-content font-bold text-sm">
-                            N
-                        </span>
-                    </div>
+                    <span className="font-logo text-3xl text-black leading-none">
+                        NEBADON
+                    </span>
                 </div>
 
                 {/* Lista de Navegación */}
