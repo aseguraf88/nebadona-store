@@ -487,6 +487,16 @@ como punto de partida, en vez de diseñar a ciegas.
       - revisar el borrador con tema "otros", un valor que no está en la
         lista de temas de Configuración.
 
+- [ ] **Página en blanco en cualquier URL desconocida** (encontrado en
+      el paso 55): `App.jsx` no tiene ruta catch-all (`path="*"`), así
+      que cualquier URL que no exista (`/cualquier-cosa`, `/logn`,
+      `/admin`, rutas inexistentes bajo `/admin/dashboard/`) muestra una
+      página en blanco, sin navbar ni footer. Confirmado en producción
+      con `/logn`. No es Vercel: el rewrite `/(.*)` → `/index.html`
+      entrega la app, y es `<Routes>` (React Router 7) el que no muestra
+      nada. Arreglo propuesto, como paso propio: una página "No
+      encontramos esta página" con un botón a la tienda.
+
 ## 📝 Lista de la dueña y usuarios (octubre)
 
 Pedidos de la dueña del negocio y de usuarios reales, recibidos en
@@ -687,14 +697,27 @@ octubre. Sin código todavía: cada grupo se convierte en uno o más pasos.
 - [ ] **Google Analytics 4**, con aviso de privacidad. Revisar qué exige
       la ley chilena de datos personales.
 
-- [ ] **No se puede cerrar sesión desde el dashboard**: en el menú del
-      avatar de `AdminLayout.jsx`, "Cerrar Sesión" (y "Configuración") son
-      `<a>` sin `onClick` ni destino, así que no hacen nada; además, las
-      iniciales están fijas ("NS"). Hoy la única forma de cerrar sesión es
-      volver a la tienda. Arreglo chico: reutilizar `useLogout` (paso 53).
-      **Prioridad alta** porque es un botón visible que no funciona, y
-      porque la sesión del admin tiene que poder cerrarse en un equipo
-      compartido (y más adelante con las vendedoras de la feria).
+- [x] ~~**No se puede cerrar sesión desde el dashboard**~~ — resuelto
+      (paso 55, commit `47edec7`). En el menú del avatar de
+      `AdminLayout.jsx`, "Cerrar Sesión" y "Configuración" eran `<a>` sin
+      `onClick` ni destino, y las iniciales estaban fijas ("NS"). Ahora
+      "Cerrar Sesión" es un `<button>` con el `useLogout` compartido (paso
+      53): al vaciarse `userInfo`, `ProtectedRoute` redirige al inicio
+      (`/`), sin doble navegación ni peticiones de admin después. Las
+      iniciales salen de `getInitials`, que se movió de `UserDropDown.jsx`
+      a `entities/user/lib/getInitials.js` y ahora la usan los dos menús
+      (mismo comportamiento: hasta dos palabras del `username`, 'A' si
+      falta). "Configuración" se quitó del menú del avatar porque
+      duplicaba el link del sidebar. El avatar suma `role="button"` y
+      `aria-label="Menú de administrador"`, como `UserDropDown`, y el
+      menú funciona con Tab y Enter. Además, la letra del avatar no
+      estaba centrada a lo alto (ya pasaba con "NS"): `.avatar > div` de
+      DaisyUI 4 fuerza `display: block` y le gana a `flex`; se corrigió
+      con la clase `placeholder` en el contenedor `avatar` (ver la regla
+      de DaisyUI en `CLAUDE.md`). Probado en local y en producción
+      (`pruebas.nebadon.cl` en incógnito), incluido el 401 en
+      `/api/products/admin` después del logout y la redirección de
+      `/admin/dashboard` por URL.
 
 ### Prioridad alta, antes de la feria navideña (meta: probado a mediados de noviembre)
 
@@ -778,12 +801,15 @@ octubre. Sin código todavía: cada grupo se convierte en uno o más pasos.
       en la franquicia; faltan la **categoría** (pedida en octubre) y el
       tema (por confirmar).
 
-- [ ] **`/login` en mobile**: las cajas de usuario y contraseña no tienen
-      margen y tocan los bordes laterales. El formulario
-      (`LoginForm.jsx`) tiene `max-w-[500px]` pero ningún padding
-      horizontal, y la página tampoco. **Prioridad media**: desde el paso
-      51 solo entra el admin por esa URL (no hay enlace visible para los
-      clientes), así que no lo ve ningún cliente.
+- [x] ~~**`/login` en mobile**~~ — resuelto (paso 55, commit `47edec7`).
+      Las cajas de usuario y contraseña tocaban los bordes laterales:
+      `LoginForm.jsx` tiene `max-w-[500px]` pero ningún padding
+      horizontal, y la página tampoco. Ahora `Login.jsx` lleva `px-4`
+      (el margen es de la página, no del formulario); en desktop no
+      cambia nada. Los errores de validación quedan dentro del margen, y
+      los avisos de credenciales y de sesión bloqueada son toasts, con su
+      propio margen. Probado en local y en producción
+      (`pruebas.nebadon.cl`, en el celular).
 
 - [ ] **PDF del pedido sin salto de página** (encontrado en el paso 54):
       en `generatePDF` (`Checkout.jsx`), las filas de productos y el total
@@ -831,12 +857,14 @@ Relacionado con "🎨 Pulido visual / UI-UX", más arriba:
       `overflow-x-auto` + `snap-x`, ya probado en celular). Se suma al ítem
       del Hero "poco atractivo" de esa sección.
 
-- [ ] **Logo en el menú hamburguesa**: el encabezado del menú lateral de
-      mobile (`MobileMenuDrawer.jsx`) muestra "NEBADON" con la fuente común
-      y un círculo con la "N", distinto del navbar y el footer, que usan la
-      fuente del logo (`font-logo`). Alcanza con usar esa misma fuente
-      `font-logo` del navbar, sin una imagen. **Pulido visual**: no
-      bloquea nada.
+- [x] ~~**Logo en el menú hamburguesa**~~ — resuelto (paso 55, commit
+      `47edec7`). El encabezado de `MobileMenuDrawer.jsx` mostraba
+      "NEBADON" con la fuente común y un círculo con la "N". Ahora usa
+      el mismo `span` que el navbar en mobile (`font-logo text-3xl
+      text-black leading-none`), sin el círculo, centrado a lo alto con
+      el botón de cerrar. El encabezado sigue sin llevar a ningún lado
+      al tocarlo. Probado en local y en producción (`pruebas.nebadon.cl`,
+      en el celular).
 
 - [ ] **Dashboard con estilos uniformes** (bordes de inputs, badges,
       etc.), usando `informe-consistencia-ui-ux.md`, que ya tiene los

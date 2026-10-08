@@ -74,7 +74,11 @@ manual. MercadoPago fue eliminado del código por completo (no reintroducir).
   tanto en el `.collapse` exterior como en `.collapse-content` interior).
   Pasó 3 veces (banner de `InventoryPage.jsx`, sidebar de filtros, tabla
   de Tallas y Medidas). Si algo se desborda del contenedor en mobile sin
-  causa obvia, sospechar esto antes de inventar otra explicación.
+  causa obvia, sospechar esto antes de inventar otra explicación. Con los
+  avatares con texto pasa algo parecido: `.avatar > div` fuerza
+  `display: block` (especificidad 0,1,1) y le gana a `flex`, así que el
+  texto queda arriba; se centra con la clase `placeholder` en el
+  contenedor `avatar` (paso 55).
 - **Los `estructura.txt` pueden estar desactualizados.** Pasó con el de
   `BACKEND/src`: mostraba archivos de MercadoPago ya borrados y no mostraba
   `app.js` ni `config/env.js`. Antes de confiar en uno, regenerarlo desde
