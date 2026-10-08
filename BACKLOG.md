@@ -487,15 +487,26 @@ como punto de partida, en vez de diseñar a ciegas.
       - revisar el borrador con tema "otros", un valor que no está en la
         lista de temas de Configuración.
 
-- [ ] **Página en blanco en cualquier URL desconocida** (encontrado en
-      el paso 55): `App.jsx` no tiene ruta catch-all (`path="*"`), así
-      que cualquier URL que no exista (`/cualquier-cosa`, `/logn`,
-      `/admin`, rutas inexistentes bajo `/admin/dashboard/`) muestra una
-      página en blanco, sin navbar ni footer. Confirmado en producción
-      con `/logn`. No es Vercel: el rewrite `/(.*)` → `/index.html`
-      entrega la app, y es `<Routes>` (React Router 7) el que no muestra
-      nada. Arreglo propuesto, como paso propio: una página "No
-      encontramos esta página" con un botón a la tienda.
+- [x] ~~**Página en blanco en cualquier URL desconocida**~~ — resuelto
+      (paso 56, commit `a4c3fa5`). Encontrado en el paso 55: `App.jsx` no
+      tenía ruta catch-all, así que cualquier URL que no existiera
+      (`/cualquier-cosa`, `/logn`, `/admin`, rutas inexistentes bajo
+      `/admin/dashboard/`) mostraba una página en blanco, sin navbar ni
+      footer. Ahora hay una página `NotFound` en `pages/not-found/`, con
+      la ruta `path="*"` como última hija del `Layout` de la tienda
+      (navbar, footer y botón flotante de WhatsApp). Mismo estilo que
+      "Producto no disponible" de la ficha, más `px-4` y `text-center`:
+      título "No encontramos esta página", un texto corto y un solo
+      botón, "Ir a la tienda" (`/shop`). `/admin` y las rutas
+      inexistentes bajo `/admin/dashboard/` muestran la misma página,
+      con o sin sesión: decidido así para no dar pistas del dashboard.
+      `/product/<id inexistente>` sigue mostrando "Producto no
+      disponible", y `nebadon.cl` sigue en "Próxima apertura" (ese
+      chequeo corre antes de `<Routes>`). Límite conocido: como es una
+      SPA, Vercel sigue respondiendo 200 para una URL desconocida; solo
+      cambia lo que se ve. Probado en local y en producción
+      (`pruebas.nebadon.cl` en incógnito, y `nebadon.cl` y
+      `www.nebadon.cl`).
 
 ## 📝 Lista de la dueña y usuarios (octubre)
 
@@ -895,6 +906,12 @@ Relacionado con "🎨 Pulido visual / UI-UX", más arriba:
       Queda una sola copia a mano: `CATEGORY_ALIASES` en `sizeGuides.js`,
       que además traduce `camisa`/`poleron`. Si se suma un sinónimo nuevo,
       hay que agregarlo en los dos lugares.
+
+- [ ] "Producto no disponible" (`ProductPage.jsx`) no tiene `px-4` ni
+      `text-center`, a diferencia de `NotFound.jsx`: con un texto más
+      largo, en mobile podría quedar pegado a los bordes y alineado a la
+      izquierda. Con el texto actual probablemente no se note. Encontrado
+      en el paso 56.
 
 - [x] ~~El listado de productos del dashboard (`ProductsListPage.jsx`) no
       muestra el Handle~~ — resuelto (paso 42). Encontrado en una prueba
