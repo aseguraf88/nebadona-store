@@ -4,18 +4,25 @@ import { useForm } from 'react-hook-form'
 import { useCart } from '../../../entities/cart'
 import { useUser } from '../../../entities/user'
 import toast from 'react-hot-toast'
-import { FiTruck, FiMapPin, FiArrowLeft, FiCheckCircle } from 'react-icons/fi'
+import { FiArrowLeft, FiCheckCircle } from 'react-icons/fi'
 import { FaWhatsapp } from 'react-icons/fa'
 import { jsPDF } from 'jspdf'
 import { WHATSAPP_URL } from '../../../shared/config/contact'
-import { CHECKOUT_DELIVERY_OPTIONS } from '../../../shared/config/shipping'
+import {
+    DELIVERY_METHODS,
+    getDeliveryMethod,
+} from '../../../shared/config/shipping'
 
 const Checkout = () => {
     const { cart, total, loading: cartLoading, openModal, clearCart } = useCart()
     const { userInfo } = useUser()
 
     const [loading, setLoading] = useState(false)
-    const [deliveryType, setDeliveryType] = useState(null)
+    // La modalidad elegida (shared/config/shipping.js). deliveryType sale de
+    // ella: 'delivery' (pide dirección) o 'pickup'; null si no hay elegida
+    const [deliveryMethodId, setDeliveryMethodId] = useState(null)
+    const deliveryMethod = getDeliveryMethod(deliveryMethodId)
+    const deliveryType = deliveryMethod?.deliveryType ?? null
     const [completedOrder, setCompletedOrder] = useState(null)
 
     const fieldClass = (hasError) =>
@@ -157,13 +164,13 @@ const Checkout = () => {
         doc.setFont('helvetica', 'normal')
         doc.setFontSize(10)
 
+        // Nombre de la modalidad; la dirección solo en las de despacho
+        doc.text(deliveryMethod.name, 105, 48)
         if (deliveryType === 'delivery') {
-            doc.text('Despacho a Domicilio', 105, 48)
             doc.text(`${data.street} #${data.number}, ${data.city}`, 105, 54)
             doc.text(`Región: ${data.state}`, 105, 60)
         } else {
-            doc.text('Retiro / Coordinación', 105, 48)
-            doc.text('A convenir por chat interno', 105, 54)
+            doc.text('Día y hora a convenir por WhatsApp', 105, 54)
         }
 
         // --- Tabla de Productos ---
@@ -256,7 +263,10 @@ const Checkout = () => {
 
         try {
             const orderPayload = {
+                // deliveryType se sigue mandando: un backend anterior al paso
+                // 54 ignora deliveryMethod y guarda la orden con este
                 deliveryType,
+                deliveryMethod: deliveryMethod.id,
                 customer: {
                     firstName: data.firstName,
                     lastName: data.lastName,
@@ -334,7 +344,7 @@ const Checkout = () => {
             message += `\n`
 
             message += `🚚 *ENTREGA*\n`
-            message += `└ ${deliveryType === 'delivery' ? `Despacho: ${data.street} #${data.number}, ${data.city}` : 'Retiro / Coordinación por chat'}\n\n`
+            message += `└ ${deliveryMethod.name}${deliveryType === 'delivery' ? `: ${data.street} #${data.number}, ${data.city}` : ''}\n\n`
 
             message += `📦 *DETALLE DE ÍTEMS*\n`
             message += `┌────────────────────────┐\n`
@@ -401,42 +411,31 @@ const Checkout = () => {
                                         Elige una opción para continuar.
                                     </p>
 
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <button
-                                            type="button"
-                                            onClick={() =>
-                                                setDeliveryType('delivery')
-                                            }
-                                            className="flex flex-col items-center justify-center p-6 rounded-2xl border-2 border-base-200 hover:border-primary hover:bg-primary/5 transition-all text-center group"
-                                        >
-                                            <div className="h-14 w-14 rounded-full bg-primary/10 text-primary flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                                                <FiTruck size={26} />
-                                            </div>
-                                            <span className="font-bold text-base-content">
-                                                {CHECKOUT_DELIVERY_OPTIONS.delivery.name}
-                                            </span>
-                                            <span className="text-xs text-base-content/60 mt-1">
-                                                {CHECKOUT_DELIVERY_OPTIONS.delivery.condition}
-                                            </span>
-                                        </button>
-
-                                        <button
-                                            type="button"
-                                            onClick={() =>
-                                                setDeliveryType('pickup')
-                                            }
-                                            className="flex flex-col items-center justify-center p-6 rounded-2xl border-2 border-base-200 hover:border-primary hover:bg-primary/5 transition-all text-center group"
-                                        >
-                                            <div className="h-14 w-14 rounded-full bg-primary/10 text-primary flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                                                <FiMapPin size={26} />
-                                            </div>
-                                            <span className="font-bold text-base-content">
-                                                {CHECKOUT_DELIVERY_OPTIONS.pickup.name}
-                                            </span>
-                                            <span className="text-xs text-base-content/60 mt-1">
-                                                {CHECKOUT_DELIVERY_OPTIONS.pickup.condition}
-                                            </span>
-                                        </button>
+                                    {/* Una tarjeta compacta por modalidad: ícono a la
+                                        izquierda, nombre y condición a la derecha */}
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        {DELIVERY_METHODS.map((method) => (
+                                            <button
+                                                key={method.id}
+                                                type="button"
+                                                onClick={() =>
+                                                    setDeliveryMethodId(method.id)
+                                                }
+                                                className="flex items-center gap-3 p-4 rounded-2xl border-2 border-base-200 hover:border-primary hover:bg-primary/5 transition-all text-left group"
+                                            >
+                                                <span className="h-11 w-11 shrink-0 rounded-full bg-primary/10 text-primary flex items-center justify-center group-hover:scale-110 transition-transform">
+                                                    <method.icon aria-hidden="true" className="h-5 w-5" />
+                                                </span>
+                                                <span className="min-w-0">
+                                                    <span className="block text-sm font-bold text-base-content">
+                                                        {method.name}
+                                                    </span>
+                                                    <span className="block text-xs text-base-content/60 mt-0.5">
+                                                        {method.condition}
+                                                    </span>
+                                                </span>
+                                            </button>
+                                        ))}
                                     </div>
                                 </div>
                             ) : (
@@ -444,12 +443,13 @@ const Checkout = () => {
                                     onSubmit={handleSubmit(onSubmit)}
                                     className="flex flex-col gap-5 animate-fadeIn"
                                 >
-                                    <div className="flex items-center justify-between border-b border-base-200 pb-3">
-                                        <div className="flex items-center gap-2">
+                                    <div className="flex items-center justify-between gap-3 border-b border-base-200 pb-3">
+                                        {/* flex-wrap: en 375 px el nombre de la
+                                            modalidad y el título pueden no caber
+                                            en una línea */}
+                                        <div className="flex flex-wrap items-center gap-2">
                                             <span className="badge badge-primary badge-sm font-semibold">
-                                                {deliveryType === 'delivery'
-                                                    ? 'Despacho'
-                                                    : 'Retiro'}
+                                                {deliveryMethod.name}
                                             </span>
                                             <h2 className="text-base font-bold text-base-content">
                                                 Datos de contacto
@@ -458,7 +458,7 @@ const Checkout = () => {
                                         <button
                                             type="button"
                                             onClick={() =>
-                                                setDeliveryType(null)
+                                                setDeliveryMethodId(null)
                                             }
                                             className="text-xs font-bold text-primary hover:underline flex items-center gap-1"
                                         >

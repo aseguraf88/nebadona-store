@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, Fragment } from 'react'
 import toast from 'react-hot-toast'
 import { getOrders, updateOrderStatus } from '../../../../entities/order'
 import { useProduct } from '../../../../entities/product'
+import { getDeliveryMethod } from '../../../../shared/config/shipping'
 
 // Metadata de los estados reales del backend (OrderModel).
 // 'shipped' y 'completed' NO existen en el schema real — eran de la maqueta vieja.
@@ -43,6 +44,21 @@ const getCustomerName = (order) => {
     const name =
         `${order.shippingInfo?.firstName ?? ''} ${order.shippingInfo?.lastName ?? ''}`.trim()
     return name || order.shippingInfo?.phone || 'Sin nombre'
+}
+
+// Modalidad de la orden (paso 54). Las órdenes anteriores no la tienen y se
+// ven como siempre: "Despacho" o "Retiro", según deliveryType
+const getDeliveryLabel = (order) =>
+    getDeliveryMethod(order.deliveryMethod)?.name ??
+    (order.deliveryType === 'delivery' ? '🚚 Despacho' : '📍 Retiro')
+
+// Dirección guardada (solo en las de despacho); null si no hay
+const getShippingAddress = (order) => {
+    const address = order.shippingInfo?.address
+    if (!address?.street) return null
+    return `${address.street} #${address.number}, ${address.city}${
+        address.state ? `, ${address.state}` : ''
+    }`
 }
 
 // Entrar a 'approved' descuenta stock. Salir de 'approved' lo restaura.
@@ -259,9 +275,7 @@ const OrdersPage = () => {
                                             </td>
                                             <td>
                                                 <div className="flex items-center gap-2 text-sm">
-                                                    {order.deliveryType === 'delivery'
-                                                        ? '🚚 Despacho'
-                                                        : '📍 Retiro'}
+                                                    {getDeliveryLabel(order)}
                                                 </div>
                                             </td>
                                             <td className="font-bold">
@@ -308,6 +322,14 @@ const OrdersPage = () => {
                                                     className="bg-base-200/30"
                                                 >
                                                     <div className="flex flex-col gap-2 py-2">
+                                                        <p className="text-sm">
+                                                            <span className="font-semibold">
+                                                                Entrega:
+                                                            </span>{' '}
+                                                            {getDeliveryLabel(order)}
+                                                            {getShippingAddress(order) &&
+                                                                ` · ${getShippingAddress(order)}`}
+                                                        </p>
                                                         {order.products.map(
                                                             (item) => (
                                                                 <div

@@ -2,10 +2,25 @@ import mongoose from 'mongoose'
 import OrderModel from '../models/OrderModel.js'
 import ProductModel from '../models/ProductModel.js'
 
+// Modalidad de entrega (paso 54) → deliveryType, que se sigue guardando para
+// el panel, los filtros y las órdenes anteriores
+const DELIVERY_TYPE_BY_METHOD = {
+    agency: 'delivery',
+    express: 'delivery',
+    meetup: 'pickup',
+    warehouse: 'pickup',
+}
+
 export const createWhatsAppOrder = async (req, res) => {
     try {
-        const { items, customer, deliveryType, shippingInfo, totalAmount } =
-            req.body
+        const {
+            items,
+            customer,
+            deliveryType: requestedDeliveryType,
+            deliveryMethod: requestedDeliveryMethod,
+            shippingInfo,
+            totalAmount,
+        } = req.body
 
         // 1. Validaciones de seguridad
         if (!items || items.length === 0) {
@@ -18,6 +33,24 @@ export const createWhatsAppOrder = async (req, res) => {
                 .status(400)
                 .json({ success: false, message: 'Faltan datos de contacto' })
         }
+
+        // 1a. Modalidad: opcional (el checkout anterior no la manda). Si
+        // viene, tiene que ser una de las 4 (un texto, no un arreglo ni un
+        // número), y deliveryType se deriva de ella, no del navegador
+        const deliveryMethod = requestedDeliveryMethod ?? null
+        if (
+            deliveryMethod !== null &&
+            (typeof deliveryMethod !== 'string' ||
+                !Object.hasOwn(DELIVERY_TYPE_BY_METHOD, deliveryMethod))
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: 'Forma de entrega no válida',
+            })
+        }
+        const deliveryType = deliveryMethod
+            ? DELIVERY_TYPE_BY_METHOD[deliveryMethod]
+            : requestedDeliveryType
 
         // 1b. Cantidad, stock y precio real de cada variante pedida (una sola
         // consulta). Si algo no cuadra, se rechaza la orden completa: el PDF
@@ -145,6 +178,7 @@ export const createWhatsAppOrder = async (req, res) => {
             userId: req.user?._id || null,
             orderNumber,
             deliveryType,
+            deliveryMethod,
             products: items.map((item, i) => ({
                 productId: item._id || item.id, // Compatibilidad por si pasas _id o id
                 name: item.name,

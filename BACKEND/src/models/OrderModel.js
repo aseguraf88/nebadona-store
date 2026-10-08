@@ -20,6 +20,15 @@ const OrderSchema = new mongoose.Schema(
             required: true,
             default: 'pickup',
         },
+        // Modalidad exacta (paso 54). deliveryType se sigue guardando, derivado
+        // de esta: agency y express → delivery; meetup y warehouse → pickup.
+        // Opcional: las órdenes anteriores no la tienen y se muestran con
+        // deliveryType ("Despacho" o "Retiro")
+        deliveryMethod: {
+            type: String,
+            enum: ['agency', 'express', 'meetup', 'warehouse'],
+            default: null,
+        },
         products: [
             {
                 productId: {
