@@ -486,6 +486,9 @@ como punto de partida, en vez de diseñar a ciegas.
         que convive con "Dragon Ball Super";
       - revisar el borrador con tema "otros", un valor que no está en la
         lista de temas de Configuración.
+      Actualizado en el paso 57: buena parte de esta tarea queda
+      reemplazada por "Reiniciar los datos antes del lanzamiento" (más
+      abajo), que borra el catálogo actual para cargar el inventario real.
 
 - [x] ~~**Página en blanco en cualquier URL desconocida**~~ — resuelto
       (paso 56, commit `a4c3fa5`). Encontrado en el paso 55: `App.jsx` no
@@ -507,6 +510,22 @@ como punto de partida, en vez de diseñar a ciegas.
       cambia lo que se ve. Probado en local y en producción
       (`pruebas.nebadon.cl` en incógnito, y `nebadon.cl` y
       `www.nebadon.cl`).
+
+- [ ] **Reiniciar los datos antes del lanzamiento**: borrar las órdenes
+      de prueba y el catálogo actual (el stock no es real) para cargar el
+      inventario real. Al cierre del paso 57 hay 86 órdenes, todas de
+      prueba: 64 `whatsapp_pending`, 2 `pending`, 5 `approved` y 15
+      `cancelled`. Las 66 sin revisar aparecen hoy en "Pedidos por
+      revisar" del inicio del dashboard. Como paso propio:
+      - respaldo previo de la base;
+      - confirmación de la dueña;
+      - decidir qué se conserva (la cuenta de admin; categorías,
+        franquicias y temas);
+      - decidir qué hacer con las imágenes de Cloudinary de los productos
+        borrados (quedarían huérfanas) y con los carritos guardados que
+        apuntan a esos productos;
+      - recordar que local y producción usan la misma base
+        (`ecommerceDB`): borrar desde local borra producción.
 
 ## 📝 Lista de la dueña y usuarios (octubre)
 
@@ -678,11 +697,37 @@ octubre. Sin código todavía: cada grupo se convierte en uno o más pasos.
       local y en producción (`pruebas.nebadon.cl`), incluidos los pedidos
       de prueba hasta WhatsApp (cancelados después desde el panel).
 
-- [ ] **Inicio del dashboard (`AdminHome.jsx`) con números reales**: hoy
-      los números están fijos en el código (`salesToday`, `salesCount`,
-      `ticketMedio`, `totalCustomers`; confirmado en el paso 46).
-      Reemplazarlos por datos reales, incluido el contador de productos
-      publicados.
+- [x] ~~**Inicio del dashboard (`AdminHome.jsx`) con números reales**~~ —
+      resuelto (paso 57, commit `ca9924f`). Los números estaban fijos en
+      el código (`salesToday`, `salesCount`, `ticketMedio`,
+      `totalCustomers`), con tendencias inventadas. Ahora salen de
+      `GET /api/orders/summary` (`authenticate` + `requireAdmin`,
+      declarada antes de las rutas con `/:id`), una agregación de
+      MongoDB. Venta = orden `approved`, contada según la fecha del
+      pedido (`createdAt`). "Hoy" y "Este mes" son en hora de Chile: se
+      comparan etiquetas de fecha local (`$dateToString` con `timezone:
+      'America/Santiago'`) en vez de calcular la medianoche, que en el
+      cambio de horario de septiembre no existe. Tarjetas: Facturación,
+      Ventas y Ticket medio (Hoy y Este mes; montos sin envío, porque
+      `totalAmount` no lo incluye; ticket "—" sin ventas), "Pedidos por
+      revisar" en lugar de clientes (`whatsapp_pending`, `pending` e
+      `in_process`, sin período; con el registro desactivado, "clientes"
+      ya no tenía sentido) y Productos publicados (contados con
+      `adminProducts`, mismo criterio que `/shop`). Se quitaron las
+      tendencias, el gráfico de relleno, la tabla de horas, la píldora
+      "Este año" y los íconos `ti ti-*` (Tabler nunca estuvo cargado).
+      Mientras carga se ven puntos; si la petición falla, un aviso con
+      "Reintentar" y sin las tarjetas de ventas, para que un error no
+      parezca "no vendiste nada". Los números se piden al entrar al
+      inicio, no en vivo. Límite conocido: no existe fecha de
+      aprobación, así que el número de un día pasado cambia si un pedido
+      de ese día se aprueba después (las tarjetas lo aclaran: "según la
+      fecha del pedido"). Probado en local, con una comparación de solo
+      lectura por otro camino (`find` + `Intl` contra el controlador:
+      $9.000, 2 ventas, $4.500 con #1082 y #1083 aprobadas), y en
+      producción (`pruebas.nebadon.cl` en incógnito: 401 sin sesión,
+      mismos números que en local, una orden de prueba aprobada y
+      cancelada, 375 px).
 
 - [x] ~~**Esconder el registro y el link de iniciar sesión para los
       clientes**~~ — resuelto (paso 51, commit `5d3c55f`). La tienda ya no
@@ -912,6 +957,17 @@ Relacionado con "🎨 Pulido visual / UI-UX", más arriba:
       largo, en mobile podría quedar pegado a los bordes y alineado a la
       izquierda. Con el texto actual probablemente no se note. Encontrado
       en el paso 56.
+
+- [ ] El login del admin lleva a `/admin/dashboard/products`
+      (`LoginForm.jsx`), no al inicio del dashboard: los números del
+      paso 57 solo se ven entrando a "Estadísticas" en el sidebar.
+      Encontrado en el paso 57.
+
+- [ ] Si falla la carga de `adminProducts` (`getAdminProducts` en
+      `ProductContext.jsx`), el contexto solo hace `console.error` y no
+      expone el error: se ve 0 en "Productos publicados" del inicio y una
+      lista vacía en el listado de productos, como si no hubiera
+      productos. Encontrado en el paso 57.
 
 - [x] ~~El listado de productos del dashboard (`ProductsListPage.jsx`) no
       muestra el Handle~~ — resuelto (paso 42). Encontrado en una prueba
