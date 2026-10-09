@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback, useRef, useId } from 'react'
+import { useState, useEffect, useMemo, useCallback, useId } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { Share2 } from 'lucide-react'
@@ -20,6 +20,7 @@ import { getSizeGuideByCategory } from '../../../entities/product/config/sizeGui
 import { getCareGuideByCategory } from '../../../entities/product/config/careGuides'
 import { getSizeStandardById } from '../../../entities/product/config/sizeStandardOptions'
 import { PRODUCT_DELIVERY_HIGHLIGHTS } from '../../../shared/config/shipping'
+import MobileGallery from './MobileGallery'
 
 const MD_MEDIA_QUERY = '(min-width: 1024px)'
 
@@ -127,7 +128,6 @@ const ProductPage = () => {
     const { id } = useParams()
     const { addToCart } = useCart()
     const isMdUp = useIsMdUp()
-    const mainScrollRef = useRef(null)
 
     const { getProductById, product, productLoading, products } = useProduct()
 
@@ -144,6 +144,9 @@ const ProductPage = () => {
         // Producto nuevo: la cantidad vuelve a 1 (al navegar de una ficha a
         // otra, el componente se reutiliza y arrastraba la cantidad anterior)
         setQuantity(1)
+        // Y la galería de desktop vuelve a la primera foto: si no, al pasar de
+        // un producto con 2 fotos (viendo la 2) a uno con 1, quedaba vacía
+        setSelectedImageIndex(0)
     }, [product])
 
     const handleVariantSelect = useCallback((variant) => {
@@ -275,23 +278,6 @@ const ProductPage = () => {
         addToCart(product, quantity, selectedVariant),
     )
 
-    // Sincroniza el índice de imagen con el scroll táctil en mobile
-    const handleMainScroll = () => {
-        const el = mainScrollRef.current
-        if (!el) return
-        const index = Math.round(el.scrollLeft / el.clientWidth)
-        setSelectedImageIndex(index)
-    }
-
-    // Miniatura tocada: cambia el índice Y desliza la imagen grande hasta ahí
-    const goToImageMobile = (idx) => {
-        setSelectedImageIndex(idx)
-        const el = mainScrollRef.current
-        if (el) {
-            el.scrollTo({ left: idx * el.clientWidth, behavior: 'smooth' })
-        }
-    }
-
     const handleShare = async () => {
         const shareData = {
             title: product.name,
@@ -337,9 +323,9 @@ const ProductPage = () => {
     }
 
     return (
-        <main className="min-h-screen bg-base-100 py-8">
+        <main className="min-h-screen bg-base-100 pb-8 lg:pt-8">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="text-sm breadcrumbs text-base-content/60 mb-8">
+                <div className="hidden lg:block text-sm breadcrumbs text-base-content/60 mb-8">
                     <ul>
                         <li>
                             <Link to="/">Inicio</Link>
@@ -402,55 +388,11 @@ const ProductPage = () => {
                             </figure>
                         </div>
                     ) : (
-                        <div className="flex flex-col-reverse gap-4">
-                            {images.length > 1 && (
-                                <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide snap-x">
-                                    {images.map((img, idx) => (
-                                        <button
-                                            key={idx}
-                                            type="button"
-                                            onClick={() => goToImageMobile(idx)}
-                                            className={`relative aspect-square w-20 shrink-0 snap-start rounded-xl overflow-hidden border-2 transition-all duration-300 ${
-                                                selectedImageIndex === idx
-                                                    ? 'border-primary opacity-100 ring-4 ring-primary/10'
-                                                    : 'border-transparent opacity-50 hover:opacity-100 hover:border-base-300'
-                                            }`}
-                                        >
-                                            <img
-                                                src={img}
-                                                alt={`Vista ${idx + 1}`}
-                                                className="w-full h-full object-cover"
-                                            />
-                                        </button>
-                                    ))}
-                                </div>
-                            )}
-
-                            {images.length > 0 ? (
-                                <div
-                                    ref={mainScrollRef}
-                                    onScroll={handleMainScroll}
-                                    className="flex aspect-square w-full bg-base-200/50 rounded-3xl overflow-x-auto snap-x snap-mandatory scrollbar-hide"
-                                >
-                                    {images.map((img, idx) => (
-                                        <div
-                                            key={idx}
-                                            className="w-full shrink-0 snap-start flex items-center justify-center p-4"
-                                        >
-                                            <img
-                                                src={img}
-                                                alt={`${product.name} ${idx + 1}`}
-                                                className="w-full h-full object-contain"
-                                            />
-                                        </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <div className="aspect-square w-full bg-base-200/50 rounded-3xl flex items-center justify-center text-base-content/50">
-                                    Sin imagen
-                                </div>
-                            )}
-                        </div>
+                        <MobileGallery
+                            key={product._id}
+                            images={images}
+                            productName={product.name}
+                        />
                     )}
 
                     {/* ZONA DERECHA: INFO Y COMPRA */}
