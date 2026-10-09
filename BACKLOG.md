@@ -881,20 +881,47 @@ octubre. Sin código todavía: cada grupo se convierte en uno o más pasos.
       enlaces del Home (`/shop?category=`).
 
 - [ ] **Página de producto, en un solo paso de diseño:**
-      - SKU y franquicia amontonados sobre el título (evaluar sacar el SKU
-        de esa zona);
+      - ~~SKU y franquicia amontonados sobre el título~~ — resuelto en el
+        paso 58 (commit `077dee9`): sobre el título va solo la franquicia
+        (si no tiene, la categoría; si tampoco, nada), en `text-primary`,
+        con `min-w-0 break-words` en vez de `truncate`: si no cabe pasa a
+        dos líneas en vez de cortarse. "Diseños originales" se muestra
+        como franquicia (`NO_FRANCHISE_VALUES` es solo para "Explora más
+        diseños"). El SKU pasó a ser la fila "Código", la última de la
+        tabla de Detalles, con el `sku` de la variante seleccionada (cambia
+        al elegir talla o color). Probado en local y en producción
+        (pruebas.nebadon.cl, celular y desktop);
+      - Sin probar con datos reales (paso 58): "sin franquicia" (muestra
+        la categoría) y "categoría sin guía de cuidados" (sin link). No hay
+        productos publicados así. Es la misma lógica de antes, pero no se
+        verificó;
       - color de franquicia igual en `ProductCard`, `ProductDetailModal` y
-        `ProductPage`;
-      - botón de compartir visible sobre la imagen en mobile, y galería a
-        pantalla completa estilo Shein/AliExpress. Mínimo: el botón arriba
-        a la derecha de la imagen; esas tiendas usan la imagen a todo el
-        ancho, ocupando la mitad superior de la pantalla. Ver opciones
-        antes de implementar;
+        `ProductPage`. Hallazgo del paso 58: hoy difiere en los tres
+        (ficha `text-primary`, tarjeta `text-secondary`, modal gris por el
+        `text-base-content/50` heredado);
+      - `ProductDetailModal` corta la franquicia con `truncate`, en la
+        misma fila que el SKU: el mismo problema que tenía la ficha antes
+        del paso 58. Encontrado en el paso 58, a corregir en otro paso;
+      - Plan de los pasos siguientes (definido en el paso 58; reemplaza el
+        punto anterior "botón de compartir sobre la imagen y galería a
+        pantalla completa estilo Shein/AliExpress"):
+        - 59: galería a todo el ancho en mobile, con deslizamiento nativo
+          y contador "1/4"; breadcrumb fuera en mobile;
+        - 60: botones redondos de volver y compartir sobre la foto;
+        - 61: franja fija inferior con precio y "Agregar" (a decidir tras
+          ver el 59; si no gusta, rollback);
+        - 62: "volver" coherente en todo el proyecto;
       - ~~títulos de los acordeones redundantes~~ — resuelto en el paso 54
         (commit `dea88d9`): ahora son "Descripción", "Detalles y cuidados"
         y "Tallas", y el acordeón "Detalles de Envío y Entregas" se quitó
         (su información quedó en la franja bajo "Agregar" y en
-        `/envios-y-entregas`).
+        `/envios-y-entregas`). En el paso 58 (commit `077dee9`) "Detalles
+        y cuidados" pasó a "Detalles": tabla de detalles más el link "Ver
+        guía de cuidados →" a `/guia-cuidados#<categoría>` con
+        `state={{ from: 'product' }}` ("← Volver al producto" sigue tras
+        F5), solo si la categoría tiene guía en `careGuides.js`. La mini
+        tabla de cuidados (ícono + instrucción) se quitó de la ficha; la
+        guía completa sigue en `/guia-cuidados`.
 
 - [ ] **Guía de tallas**: tablas de tallas universales, dejando claro qué
       cubre cada tabla (sobre todo si se entra desde el footer), e imágenes

@@ -100,7 +100,7 @@ manual. MercadoPago fue eliminado del código por completo (no reintroducir).
   defecto. Encabezado oscuro (`bg-neutral text-neutral-content` en el
   `<tr>` del `<thead>`) solo si la tabla tiene una fila de encabezado
   real con texto (`/guia-cuidados`, la tabla del acordeón "Tallas"); las
-  tablas sin encabezado (Detalles y Cuidados de la ficha) no lo llevan.
+  tablas sin encabezado (la de Detalles de la ficha) no lo llevan.
   La tabla de envíos de la ficha ya no existe: el acordeón de envíos se
   quitó en el paso 54 y su información quedó en la franja bajo el botón
   "Agregar" y en `/envios-y-entregas` (tarjetas, no tablas).
@@ -208,7 +208,8 @@ bien). Ver `BACKLOG.md` para los ítems sueltos de "baja prioridad" y
 ## ✅ Tarea cerrada: Materiales del Producto (Fase 2)
 
 La ficha de producto (`ProductPage.jsx`) tenía, en el acordeón "Detalles
-del Producto y Cuidados", 3 bullets fijos pensados solo para calcetas
+del Producto y Cuidados" (hoy "Detalles", desde el paso 58), 3 bullets
+fijos pensados solo para calcetas
 ("Algodón peinado premium...", etc.), sin sentido para camisas o
 polerones. La parte de Cuidados se había resuelto antes (movida a
 `/guia-cuidados`, con resumen corto + link en la ficha). Esta fase
@@ -241,20 +242,24 @@ Material, en la tarjeta "Organización") y `ProductPage.jsx`. Para los
 cuidados: `careGuides.js`, `GuiaCuidados.jsx`, `package.json` y
 `package-lock.json`.
 
-**Comportamiento en la ficha:** los 4 detalles se muestran como **tabla de
-dos columnas** (etiqueta / valor), en orden fijo (Material, Tipo de Calce,
-Técnica de Decoración, Especificaciones); solo aparecen las filas con
-valor, y la tabla se oculta si los cuatro están vacíos. `whitespace-pre-line`
-y `break-words` van solo en la celda del valor.
+**Comportamiento en la ficha (actualizado en el paso 58):** el acordeón
+"Detalles" muestra una **tabla de dos columnas** (etiqueta / valor), en
+orden fijo (Material, Tipo de Calce, Técnica de Decoración,
+Especificaciones y **Código**, el `sku` de la variante seleccionada, que
+cambia al elegir talla o color); solo aparecen las filas con valor.
+`whitespace-pre-line` y `break-words` van solo en la celda del valor.
+Como todo producto tiene al menos una variante con `sku`, la fila Código
+casi siempre existe y el acordeón casi siempre aparece.
 
-Debajo, los cuidados se muestran como **mini tabla ícono + instrucción
-corta** (`item.text`), con `item.label` como nombre accesible del ícono
-(`aria-label` + `role="img"`), más el link "Ver guía completa de
-cuidados". El margen superior de ese bloque es condicional: solo aparece
-si hay tabla de detalles arriba. Solo hay guía de cuidados para las
-categorías de `careGuides.js` (calcetines, camisas, polerones); si un
-producto no tiene ni detalles ni guía de cuidados, el acordeón completo
-no se renderiza.
+Debajo de la tabla va el link "Ver guía de cuidados →" a
+`/guia-cuidados#<categoría>` con `state={{ from: 'product' }}` (hace
+aparecer "← Volver al producto" en la guía, también tras F5), con
+`mt-3` solo si hay tabla arriba. El link solo aparece si la categoría
+tiene guía en `careGuides.js` (calcetines, camisas, polerones). La mini
+tabla de cuidados (ícono + instrucción) se quitó de la ficha en el paso
+58; los íconos y textos de `careGuides.js` los sigue usando
+`/guia-cuidados`. El acordeón no se renderiza solo si no hay ninguna
+fila (ni siquiera Código) y la categoría no tiene guía.
 
 `/guia-cuidados` pasó de tarjetas a **tabla por categoría** (ícono /
 acción / instrucción).
