@@ -923,16 +923,37 @@ octubre. Sin código todavía: cada grupo se convierte en uno o más pasos.
           franjas grises son del fondo a propósito, y la segunda foto de
           Luffy tiene una banda negra en el borde superior del propio
           archivo, confirmado viendo el archivo (ver la tarea de catálogo
-          "Banda negra en la segunda foto de Luffy"). Probado en local y en
+          "Fotos con borde oscuro en el archivo"). Probado en local y en
           producción (celular);
-        - 60: botones redondos de volver y compartir sobre la foto, y
-          reducir los ~70 px de aire entre la foto y la franquicia en
-          mobile (`gap-12` de la grilla más `pt-4` de la columna,
-          detectado en la prueba en celular del 59);
+        - ~~60: botones de volver y compartir sobre la foto~~ — resuelto
+          (commit `8685326`): botones redondos de **volver** (arriba a la
+          izquierda) y **compartir** (arriba a la derecha) sobre la foto,
+          solo en mobile (`PhotoActionButton.jsx`, 40 px, colores fijos,
+          no del tema). Hook `useGoBack` en `shared/lib/`: lee
+          `window.history.state.idx` **al hacer clic**; si es un número
+          mayor que 0 vuelve atrás (`navigate(-1)`), y si no (link
+          directo, Google, pestaña nueva) va a `/shop` con `replace`;
+          nunca saca al cliente de la tienda. La etiqueta de franquicia
+          queda sola en mobile, y hay unos 20 px de aire entre la foto y
+          la franquicia (`gap-5 lg:gap-16` y `lg:pt-4`, desktop sin
+          cambios). Decisión de desktop: se probó el compartir sobre la
+          foto grande y se **descartó** (se sentía como una acción de la
+          foto y no de la ficha); desktop conserva el botón a la derecha
+          de la franquicia, idéntico a antes. Limitaciones conocidas: un
+          dedo que empieza sobre un botón no desliza la galería; al volver
+          a `/shop` no se recupera la posición de scroll. Probado en local
+          y en producción (celular);
         - 61: franja fija inferior con precio y "Agregar". La prueba en
           celular del 59 lo justifica: el botón "Agregar" **no cabe** sin
-          scroll (el precio queda en el borde inferior de la pantalla);
-        - 62: "volver" coherente en todo el proyecto;
+          scroll (el precio queda en el borde inferior de la pantalla). En
+          la captura del celular tras el paso 60 (ficha de "Dexter"), el
+          botón "Agregar" sigue sin verse sin scroll: el precio queda
+          cerca del borde inferior y debajo faltan el selector, la
+          cantidad y el botón (estimado: unos 200 px por debajo de lo
+          visible). Esto confirma el paso 61;
+        - 62: "volver" coherente en todo el proyecto. Incluye restaurar la
+          posición de scroll al volver a `/shop` (`ScrollToTop` sube al
+          inicio en cada cambio de ruta, también al volver);
       - Hallazgos de los pasos 59 y 59b, sin tocar:
         - `scrollbar-hide` no está definida en ningún lado (ni plugin ni
           `index.css`) y no hace nada en `ProductCarousel`, `CartDrawer`,
@@ -961,14 +982,19 @@ octubre. Sin código todavía: cada grupo se convierte en uno o más pasos.
         tabla de cuidados (ícono + instrucción) se quitó de la ficha; la
         guía completa sigue en `/guia-cuidados`.
 
-- [ ] **Banda negra en la segunda foto de Luffy** (tarea de catálogo, no
-      de código; encontrada en el paso 59b): la segunda foto de "Luffy One
-      Piece" (`CAM-OP-LUF`) tiene una banda negra de unos 12 a 15 px en el
-      borde superior del propio archivo, confirmado viendo el archivo. La
-      primera foto está limpia. Se arregla recortando la foto y volviéndola
-      a subir desde el dashboard, sin tocar el código. Se resuelve sola si
-      el producto se borra en el reinicio de datos previo al lanzamiento;
-      al cargar el catálogo real, revisar que las fotos no traigan bandas.
+- [ ] **Fotos con borde oscuro en el archivo** (tarea de catálogo, no de
+      código). Dos casos, los dos confirmados viendo el archivo original:
+      - la segunda foto de "Luffy One Piece" (`CAM-OP-LUF`) trae una banda
+        negra de unos 12 a 15 px en el borde superior (encontrada en el
+        paso 59b); la primera foto está limpia;
+      - la primera foto de "Dexter" (`CAL-LABDEX-DEX`) trae una línea negra
+        fina (1 a 2 px) en el borde superior. Como la foto va pegada al
+        navbar en mobile, se ve como una línea del navbar. No es un error
+        del código ni del paso 59b.
+      Se arregla recortando las fotos y volviéndolas a subir desde el
+      dashboard, sin tocar el código. Se resuelve sola si los productos se
+      borran en el reinicio de datos previo al lanzamiento; al cargar el
+      catálogo real, revisar que ninguna foto traiga bordes oscuros.
 
 - [ ] **Guía de tallas**: tablas de tallas universales, dejando claro qué
       cubre cada tabla (sobre todo si se entra desde el footer), e imágenes
@@ -1188,7 +1214,9 @@ Relacionado con "🎨 Pulido visual / UI-UX", más arriba:
       ancla a la sección de la categoría del producto (`#calcetines`,
       etc.), con scroll directo a esa sección. Los dos links nuevos
       agregados al footer. Confirmado con productos reales de las tres
-      categorías.
+      categorías. Actualización (paso 58): la mini tabla de cuidados se
+      quitó de la ficha; queda solo el link "Ver guía de cuidados →"
+      dentro del acordeón "Detalles".
 - [x] **Footer desktop: separadores desbordados a la izquierda** — el
       `<footer>` era `flex flex-col` sin ancho máximo, así que los 3
       `divider` (`w-full`) se estiraban hasta el borde de la pantalla en

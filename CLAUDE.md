@@ -115,6 +115,9 @@ manual. MercadoPago fue eliminado del código por completo (no reintroducir).
   en `index.css`): la clase no hace nada. Para ocultar una barra de scroll,
   usar `[scrollbar-width:none] [&::-webkit-scrollbar]:hidden` (paso 59b).
   Definirla en `index.css` cambiaría los 6 lugares que ya la usan.
+- **Para "volver" se usa `useGoBack`** (`shared/lib/`, paso 60): lee
+  `window.history.state.idx` al hacer clic; si es mayor que 0 vuelve atrás,
+  si no va a `/shop` con `replace`. Nunca saca al cliente de la tienda.
 
 ## Sitio en producción
 Desplegado y en vivo — dos dominios con propósitos distintos:
