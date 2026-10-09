@@ -111,6 +111,10 @@ manual. MercadoPago fue eliminado del código por completo (no reintroducir).
   Aplicado en `ProductPage.jsx` y `GuiaCuidados.jsx`. Si la tabla va
   dentro de un acordeón, sumar también el `min-w-0` en dos niveles de la
   regla de DaisyUI de más arriba.
+- **`scrollbar-hide` no existe en este proyecto** (no hay plugin ni regla
+  en `index.css`): la clase no hace nada. Para ocultar una barra de scroll,
+  usar `[scrollbar-width:none] [&::-webkit-scrollbar]:hidden` (paso 59b).
+  Definirla en `index.css` cambiaría los 6 lugares que ya la usan.
 
 ## Sitio en producción
 Desplegado y en vivo — dos dominios con propósitos distintos:

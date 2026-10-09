@@ -905,12 +905,50 @@ octubre. Sin código todavía: cada grupo se convierte en uno o más pasos.
       - Plan de los pasos siguientes (definido en el paso 58; reemplaza el
         punto anterior "botón de compartir sobre la imagen y galería a
         pantalla completa estilo Shein/AliExpress"):
-        - 59: galería a todo el ancho en mobile, con deslizamiento nativo
-          y contador "1/4"; breadcrumb fuera en mobile;
-        - 60: botones redondos de volver y compartir sobre la foto;
-        - 61: franja fija inferior con precio y "Agregar" (a decidir tras
-          ver el 59; si no gusta, rollback);
+        - ~~59: galería a todo el ancho en mobile~~ — resuelto (commit
+          `e1f8683`): galería mobile a todo el ancho y cuadrada
+          (`MobileGallery.jsx`, bajo 1024 px), deslizamiento nativo con
+          encaje, contador "1/N" abajo a la derecha (sin contador con una
+          foto), sin miniaturas en mobile, breadcrumb solo en desktop, y
+          la galería de desktop vuelve a la primera foto al cambiar de
+          producto (antes podía quedar vacía). Probado en local y en
+          producción (celular);
+        - ~~59b: línea gris entre el navbar y la foto~~ — resuelto (commit
+          `18db205`): se quitó el borde inferior del navbar solo en la
+          ficha en mobile (`isProductRoute` en `Navbar.jsx`; `lg:border-b`
+          conserva el de desktop; el resto de la tienda no cambió), y se
+          ocultó la barra de desplazamiento de la galería con
+          `[scrollbar-width:none] [&::-webkit-scrollbar]:hidden`. La
+          opción C (fondo blanco de la galería) quedó descartada: las
+          franjas grises son del fondo a propósito, y la segunda foto de
+          Luffy tiene una banda negra en el borde superior del propio
+          archivo, confirmado viendo el archivo (ver la tarea de catálogo
+          "Banda negra en la segunda foto de Luffy"). Probado en local y en
+          producción (celular);
+        - 60: botones redondos de volver y compartir sobre la foto, y
+          reducir los ~70 px de aire entre la foto y la franquicia en
+          mobile (`gap-12` de la grilla más `pt-4` de la columna,
+          detectado en la prueba en celular del 59);
+        - 61: franja fija inferior con precio y "Agregar". La prueba en
+          celular del 59 lo justifica: el botón "Agregar" **no cabe** sin
+          scroll (el precio queda en el borde inferior de la pantalla);
         - 62: "volver" coherente en todo el proyecto;
+      - Hallazgos de los pasos 59 y 59b, sin tocar:
+        - `scrollbar-hide` no está definida en ningún lado (ni plugin ni
+          `index.css`) y no hace nada en `ProductCarousel`, `CartDrawer`,
+          el modal, los filtros de `/shop` y las miniaturas de desktop.
+          Verificado en celular: el carrusel del Home en mobile **no**
+          muestra barra. Sin verificar: el carrito con muchos productos y
+          los lugares de desktop. Prioridad baja; definirla en `index.css`
+          cambiaría todos esos lugares y sería un paso aparte;
+        - las fotos se sirven desde Cloudinary en su original (1080 px,
+          31-127 KB), sin `f_auto,q_auto` ni ancho fijo;
+        - `useIsMdUp` de `ProductPage.jsx` se llama "Md" pero corta en
+          `lg` (1024 px);
+        - la galería del modal usa `object-cover` (recorta un poco), con
+          miniaturas y sin deslizamiento;
+        - el contador "1/N" no se pudo probar con 3 o más fotos: no hay
+          productos publicados así (máximo 2);
       - ~~títulos de los acordeones redundantes~~ — resuelto en el paso 54
         (commit `dea88d9`): ahora son "Descripción", "Detalles y cuidados"
         y "Tallas", y el acordeón "Detalles de Envío y Entregas" se quitó
@@ -922,6 +960,15 @@ octubre. Sin código todavía: cada grupo se convierte en uno o más pasos.
         F5), solo si la categoría tiene guía en `careGuides.js`. La mini
         tabla de cuidados (ícono + instrucción) se quitó de la ficha; la
         guía completa sigue en `/guia-cuidados`.
+
+- [ ] **Banda negra en la segunda foto de Luffy** (tarea de catálogo, no
+      de código; encontrada en el paso 59b): la segunda foto de "Luffy One
+      Piece" (`CAM-OP-LUF`) tiene una banda negra de unos 12 a 15 px en el
+      borde superior del propio archivo, confirmado viendo el archivo. La
+      primera foto está limpia. Se arregla recortando la foto y volviéndola
+      a subir desde el dashboard, sin tocar el código. Se resuelve sola si
+      el producto se borra en el reinicio de datos previo al lanzamiento;
+      al cargar el catálogo real, revisar que las fotos no traigan bandas.
 
 - [ ] **Guía de tallas**: tablas de tallas universales, dejando claro qué
       cubre cada tabla (sobre todo si se entra desde el footer), e imágenes
