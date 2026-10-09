@@ -256,7 +256,13 @@ const ProductPage = () => {
             value: product?.decoration_technique?.trim(),
         },
         { label: 'Especificaciones', value: product?.specifications?.trim() },
+        { label: 'Código', value: selectedVariant?.sku },
     ].filter((detail) => detail.value)
+
+    // Etiqueta sobre el título: la franquicia; si no tiene, la categoría; si
+    // tampoco, nada. Sin NO_FRANCHISE_VALUES: "Diseños originales" se muestra
+    // como franquicia (NO_FRANCHISE_VALUES es solo para "Explora más diseños")
+    const franchiseLabel = product?.franchise_name || product?.product_category
 
     const isSoldOut = !hasStock(product)
     const selectedHasStock = (selectedVariant?.stock ?? 0) > 0
@@ -449,22 +455,14 @@ const ProductPage = () => {
 
                     {/* ZONA DERECHA: INFO Y COMPRA */}
                     <div className="flex flex-col pt-4">
-                        <div className="flex items-center justify-between gap-2 mb-3">
-                            <div className="flex items-center gap-2 sm:gap-3 text-xs font-bold text-base-content/50 uppercase tracking-widest">
-                                <span>
-                                    SKU: {selectedVariant?.sku || 'N/A'}
-                                </span>
-                                {/* Franquicia; si no tiene, la categoría; si tampoco,
-                                    nada (ni el separador) */}
-                                {(product.franchise_name || product.product_category) && (
-                                    <>
-                                        <span className="opacity-40 font-light">|</span>
-                                        <span className="truncate text-primary">
-                                            {product.franchise_name || product.product_category}
-                                        </span>
-                                    </>
-                                )}
-                            </div>
+                        <div className="flex items-start justify-between gap-2 mb-3">
+                            {franchiseLabel ? (
+                                <p className="min-w-0 break-words pt-1.5 text-xs font-bold uppercase tracking-widest text-primary">
+                                    {franchiseLabel}
+                                </p>
+                            ) : (
+                                <span aria-hidden="true" />
+                            )}
                             <button
                                 type="button"
                                 onClick={handleShare}
@@ -626,61 +624,33 @@ const ProductPage = () => {
 
                             {(productDetails.length > 0 || careGuide) && (
                                 <ProductAccordion
-                                    title="Detalles y cuidados"
+                                    title="Detalles"
                                     className="min-w-0"
                                     contentClassName="text-sm text-base-content/80 min-w-0"
                                 >
                                         {productDetails.length > 0 && (
-                                            <>
-                                                <p className="text-xs uppercase tracking-widest text-primary font-semibold mb-2 px-3">
-                                                    Detalles
-                                                </p>
-                                                <div className="overflow-x-auto rounded-lg border border-base-content/10">
-                                                    <table className="table table-sm">
-                                                        <tbody>
-                                                            {productDetails.map((detail) => (
-                                                                <tr key={detail.label} className="border-base-content/10">
-                                                                    <td className="font-semibold whitespace-nowrap w-1/3">{detail.label}</td>
-                                                                    <td className="text-base-content/80 whitespace-pre-line break-words">{detail.value}</td>
-                                                                </tr>
-                                                            ))}
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                            </>
+                                            <div className="overflow-x-auto rounded-lg border border-base-content/10">
+                                                <table className="table table-sm">
+                                                    <tbody>
+                                                        {productDetails.map((detail) => (
+                                                            <tr key={detail.label} className="border-base-content/10">
+                                                                <td className="font-semibold whitespace-nowrap w-1/3">{detail.label}</td>
+                                                                <td className="text-base-content/80 whitespace-pre-line break-words">{detail.value}</td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </table>
+                                            </div>
                                         )}
 
                                         {careGuide && (
-                                            <div className={productDetails.length > 0 ? 'mt-4 pt-4 border-t border-base-content/10' : ''}>
-                                                <p className="text-xs uppercase tracking-widest text-primary font-semibold mb-2 px-2">
-                                                    Cuidados
-                                                </p>
-                                                <div className="overflow-x-auto rounded-lg border border-base-content/10">
-                                                    <table className="table table-xs">
-                                                        <tbody>
-                                                            {careGuide.items.map((item) => (
-                                                                <tr key={item.label} className="border-base-content/10">
-                                                                    <td className="w-8">
-                                                                        <item.icon
-                                                                            className="h-4 w-4 text-primary"
-                                                                            aria-label={item.label}
-                                                                            role="img"
-                                                                        />
-                                                                    </td>
-                                                                    <td className="text-base-content/70">{item.text}</td>
-                                                                </tr>
-                                                            ))}
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                                <Link
-                                                    to={`/guia-cuidados#${product.product_category}`}
-                                                    state={{ from: 'product' }}
-                                                    className="link link-primary text-sm font-semibold mt-2 inline-block"
-                                                >
-                                                    Ver guía completa de cuidados →
-                                                </Link>
-                                            </div>
+                                            <Link
+                                                to={`/guia-cuidados#${product.product_category}`}
+                                                state={{ from: 'product' }}
+                                                className={`link link-primary text-sm font-semibold inline-block ${productDetails.length > 0 ? 'mt-3' : ''}`}
+                                            >
+                                                Ver guía de cuidados →
+                                            </Link>
                                         )}
                                 </ProductAccordion>
                             )}
