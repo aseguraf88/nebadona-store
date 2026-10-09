@@ -3,7 +3,10 @@ import { useEffect, useRef, useState } from 'react'
 // Galería de la ficha bajo 1024 px (una columna): fotos a todo el ancho con
 // deslizamiento nativo y contador "1/N". ProductPage la monta con
 // key={product._id}: al cambiar de producto arranca en la primera foto
-const MobileGallery = ({ images, productName }) => {
+// children: botones sobre la foto (volver, compartir), ya posicionados con
+// absolute. Van antes del contenedor que se desliza, para que el orden con
+// el teclado sea botones y después fotos
+const MobileGallery = ({ images, productName, children }) => {
     const scrollRef = useRef(null)
     const frameRef = useRef(0)
     const [index, setIndex] = useState(0)
@@ -25,7 +28,8 @@ const MobileGallery = ({ images, productName }) => {
 
     if (total === 0) {
         return (
-            <div className="-mx-4 sm:-mx-6 aspect-square bg-base-200/50 flex items-center justify-center text-base-content/50">
+            <div className="relative -mx-4 sm:-mx-6 aspect-square bg-base-200/50 flex items-center justify-center text-base-content/50">
+                {children}
                 Sin imagen
             </div>
         )
@@ -33,6 +37,7 @@ const MobileGallery = ({ images, productName }) => {
 
     return (
         <div role="region" aria-label="Fotos del producto" className="relative -mx-4 sm:-mx-6">
+            {children}
             <div
                 ref={scrollRef}
                 onScroll={handleScroll}

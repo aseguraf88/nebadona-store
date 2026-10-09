@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback, useId } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import toast from 'react-hot-toast'
-import { Share2 } from 'lucide-react'
+import { ArrowLeft, Share2 } from 'lucide-react'
 import {
     useCart,
     useAddToCartFeedback,
@@ -21,6 +21,8 @@ import { getCareGuideByCategory } from '../../../entities/product/config/careGui
 import { getSizeStandardById } from '../../../entities/product/config/sizeStandardOptions'
 import { PRODUCT_DELIVERY_HIGHLIGHTS } from '../../../shared/config/shipping'
 import MobileGallery from './MobileGallery'
+import PhotoActionButton from './PhotoActionButton'
+import useGoBack from '../../../shared/lib/useGoBack'
 
 const MD_MEDIA_QUERY = '(min-width: 1024px)'
 
@@ -128,6 +130,7 @@ const ProductPage = () => {
     const { id } = useParams()
     const { addToCart } = useCart()
     const isMdUp = useIsMdUp()
+    const goBack = useGoBack()
 
     const { getProductById, product, productLoading, products } = useProduct()
 
@@ -339,7 +342,7 @@ const ProductPage = () => {
                     </ul>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 mb-20">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 lg:gap-16 mb-20">
                     {/* ZONA IZQUIERDA: GALERÍA */}
                     {isMdUp ? (
                         // self-start: sin esto, el grid estira la galería al alto de la
@@ -392,27 +395,42 @@ const ProductPage = () => {
                             key={product._id}
                             images={images}
                             productName={product.name}
-                        />
+                        >
+                            <PhotoActionButton
+                                icon={ArrowLeft}
+                                label="Volver"
+                                onClick={goBack}
+                                className="absolute left-3 top-3 z-10"
+                            />
+                            <PhotoActionButton
+                                icon={Share2}
+                                label="Compartir producto"
+                                onClick={handleShare}
+                                className="absolute right-3 top-3 z-10"
+                            />
+                        </MobileGallery>
                     )}
 
                     {/* ZONA DERECHA: INFO Y COMPRA */}
-                    <div className="flex flex-col pt-4">
-                        <div className="flex items-start justify-between gap-2 mb-3">
+                    <div className="flex flex-col lg:pt-4">
+                        <div className="mb-3 lg:flex lg:items-start lg:justify-between lg:gap-2">
                             {franchiseLabel ? (
-                                <p className="min-w-0 break-words pt-1.5 text-xs font-bold uppercase tracking-widest text-primary">
+                                <p className="min-w-0 break-words lg:pt-1.5 text-xs font-bold uppercase tracking-widest text-primary">
                                     {franchiseLabel}
                                 </p>
                             ) : (
                                 <span aria-hidden="true" />
                             )}
-                            <button
-                                type="button"
-                                onClick={handleShare}
-                                className="btn btn-ghost btn-circle btn-sm text-base-content/60 hover:text-primary shrink-0"
-                                aria-label="Compartir producto"
-                            >
-                                <Share2 className="h-4 w-4" />
-                            </button>
+                            {isMdUp && (
+                                <button
+                                    type="button"
+                                    onClick={handleShare}
+                                    className="btn btn-ghost btn-circle btn-sm text-base-content/60 hover:text-primary shrink-0"
+                                    aria-label="Compartir producto"
+                                >
+                                    <Share2 className="h-4 w-4" />
+                                </button>
+                            )}
                         </div>
 
                         <h1 className="text-3xl sm:text-4xl lg:text-5xl font-medium text-base-content tracking-tight leading-tight mb-4">
