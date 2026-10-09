@@ -37,7 +37,7 @@ const MobileGallery = ({ images, productName }) => {
                 ref={scrollRef}
                 onScroll={handleScroll}
                 tabIndex={0}
-                className="flex aspect-square w-full overflow-x-auto snap-x snap-mandatory overscroll-x-contain scrollbar-hide bg-base-200/50 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary"
+                className="flex aspect-square w-full overflow-x-auto snap-x snap-mandatory overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden bg-base-200/50 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary"
             >
                 {images.map((img, idx) => (
                     <div key={idx} className="w-full h-full shrink-0 snap-start snap-always">

@@ -20,6 +20,9 @@ const Navbar = ({ children }) => {
     const isDashboardProductsRoute = location.pathname.startsWith(
         '/admin/dashboard/products',
     )
+    // Ficha de producto (/product/:id): en mobile la foto va pegada al
+    // navbar y el borde inferior se veía como una línea gris sobre ella
+    const isProductRoute = location.pathname.startsWith('/product/')
 
     // 4. Efectos (Scroll)
     useEffect(() => {
@@ -35,7 +38,7 @@ const Navbar = ({ children }) => {
         <header className="sticky top-0 z-50">
             {/* PISO 1: NAVBAR PRINCIPAL */}
             <nav
-                className={`w-full border-b border-base-200 py-2 text-base-content transition-colors duration-300 ${
+                className={`w-full ${isProductRoute ? 'lg:border-b' : 'border-b'} border-base-200 py-2 text-base-content transition-colors duration-300 ${
                     isScrolled
                         ? 'bg-base-100/95 backdrop-blur-md shadow-sm'
                         : 'bg-base-100'
