@@ -943,14 +943,47 @@ octubre. Sin código todavía: cada grupo se convierte en uno o más pasos.
           dedo que empieza sobre un botón no desliza la galería; al volver
           a `/shop` no se recupera la posición de scroll. Probado en local
           y en producción (celular);
-        - 61: franja fija inferior con precio y "Agregar". La prueba en
+        - ~~61: franja fija inferior con precio y "Agregar"~~ — resuelto
+          (commit `a14ae8f`). La prueba en
           celular del 59 lo justifica: el botón "Agregar" **no cabe** sin
           scroll (el precio queda en el borde inferior de la pantalla). En
           la captura del celular tras el paso 60 (ficha de "Dexter"), el
           botón "Agregar" sigue sin verse sin scroll: el precio queda
           cerca del borde inferior y debajo faltan el selector, la
           cantidad y el botón (estimado: unos 200 px por debajo de lo
-          visible). Esto confirma el paso 61;
+          visible). Lo que quedó: **franja fija inferior en mobile**
+          (`StickyAddToCartBar.jsx`, bajo 1024 px), con el precio de la
+          variante seleccionada a la izquierda (y el precio anterior
+          tachado si existe) y el botón "Agregar" a la derecha, con las
+          mismas clases y `rounded-2xl` del botón principal (`h-12` en vez
+          de `h-14`). **Cuándo se ve:** solo cuando el botón "Agregar" real
+          no está a la vista; un `IntersectionObserver` descuenta el alto
+          del header sticky y el de la franja (un botón real que asoma
+          detrás de la franja no cuenta como visible: hace falta el 90 %
+          del botón). Reaparece al pasar de largo hacia los acordeones y
+          "Explora más diseños", y se oculta si el producto entero está
+          agotado. **Comparte estado** con el botón principal: una sola
+          instancia de `useAddToCartFeedback` (el "Listo" y el freno del
+          doble clic son uno solo); agrega la variante y la cantidad
+          seleccionadas en la página. **Técnica:** `createPortal` a
+          `document.body` (como el carrito), `z-40`, `inert` cuando no se
+          ve, transición de 200 ms con `motion-reduce:transition-none`, y
+          área segura de abajo con `env(safe-area-inset-bottom)` (hoy sin
+          efecto en iPhone, porque `index.html` no tiene
+          `viewport-fit=cover`). **Variable `--sticky-bar-h`** en
+          `<html>`: la franja escribe su alto mientras se ve (0 cuando se
+          oculta; se borra al desmontarse). El botón flotante de WhatsApp
+          la suma a su `bottom` (sube sobre la franja) y el Footer la suma
+          a su padding inferior bajo 1024 px (desde 1024 px queda
+          `lg:pb-10`); sin franja vale 0, y WhatsApp y el footer quedan
+          idénticos a antes en todas las páginas. **Decisiones:** WhatsApp
+          sube (no se esconde); la franja reaparece; el producto entero
+          agotado la oculta; botón `h-12`. **Sin probar con datos reales**
+          (no existen en el catálogo publicado): el cambio de precio de la
+          franja al elegir una variante de otro precio, el precio tachado,
+          y el "Agotado" de la franja con otras tallas disponibles; es el
+          mismo cálculo que el precio de la ficha. Probado en local y en
+          producción (celular);
         - 62: "volver" coherente en todo el proyecto. Incluye restaurar la
           posición de scroll al volver a `/shop` (`ScrollToTop` sube al
           inicio en cada cambio de ruta, también al volver);
@@ -981,6 +1014,21 @@ octubre. Sin código todavía: cada grupo se convierte en uno o más pasos.
         F5), solo si la categoría tiene guía en `careGuides.js`. La mini
         tabla de cuidados (ícono + instrucción) se quitó de la ficha; la
         guía completa sigue en `/guia-cuidados`.
+
+- [ ] **Título o miniatura del producto en la franja de "Agregar"**
+      (idea de Alejandro tras el paso 61): cuando el cliente baja hasta
+      que la galería y el título del producto salen de la pantalla, la
+      franja solo muestra el precio y "Agregar", y ya no se ve de qué
+      producto se trata. Que la franja muestre también el **nombre del
+      producto** o una **miniatura de su foto**, por lo menos en ese
+      momento. **A decidir antes de implementarla:** nombre o miniatura
+      (o ambos); mostrarlo siempre o solo cuando el título sale de la
+      pantalla (requeriría otro observador sobre el `<h1>`); el espacio
+      (la columna izquierda de la franja mide unos 150 px en 375 px, así
+      que el nombre habría que truncarlo); y su relación con la línea
+      chica con la selección ("Talla M · Rojo"), que se evaluó en el
+      paso 61 y quedó fuera por ahora. Se hace como paso propio, con
+      Parte 1 de investigación y mockup antes de implementar.
 
 - [ ] **Fotos con borde oscuro en el archivo** (tarea de catálogo, no de
       código). Dos casos, los dos confirmados viendo el archivo original:

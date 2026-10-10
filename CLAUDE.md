@@ -118,6 +118,11 @@ manual. MercadoPago fue eliminado del código por completo (no reintroducir).
 - **Para "volver" se usa `useGoBack`** (`shared/lib/`, paso 60): lee
   `window.history.state.idx` al hacer clic; si es mayor que 0 vuelve atrás,
   si no va a `/shop` con `replace`. Nunca saca al cliente de la tienda.
+- **Variable CSS `--sticky-bar-h`** (paso 61): `StickyAddToCartBar` (ficha,
+  bajo 1024 px) escribe en `<html>` su alto mientras se ve y la borra al
+  desmontarse. `WhatsAppFloatingButton` y `Footer` la suman con respaldo
+  `0px`; todo elemento nuevo fijo abajo en la tienda debe sumarla también.
+  Las clases con la variable van literales completas.
 
 ## Sitio en producción
 Desplegado y en vivo — dos dominios con propósitos distintos:
