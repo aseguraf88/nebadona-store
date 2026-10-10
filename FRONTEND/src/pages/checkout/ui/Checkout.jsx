@@ -59,7 +59,7 @@ const Checkout = () => {
     useEffect(() => {
         if (!cartLoading && !completedOrder && cart.length === 0) {
             toast.error('Tu carrito está vacío. Agrega productos antes de continuar.')
-            navigate('/shop')
+            navigate('/shop', { replace: true })
         }
     }, [cartLoading, completedOrder, cart.length, navigate])
 

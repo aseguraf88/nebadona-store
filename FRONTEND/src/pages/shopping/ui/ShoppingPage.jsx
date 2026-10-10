@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef } from 'react'
+import { useMemo, useEffect, useRef } from 'react'
 import { Link, useLocation, useSearchParams } from 'react-router-dom'
 import { useProduct, hasStock } from '../../../entities/product'
 import { slugify } from '../../../entities/product/lib/themes'
@@ -10,9 +10,9 @@ import {
 } from '../../../widgets/catalog'
 import { TbFilter } from 'react-icons/tb'
 
-// Los filtros viven en la URL (se pueden compartir y "atrás" funciona), con
-// los valores en slug. Un valor que no existe se ignora. "category" mantiene
-// el nombre que ya usan los enlaces de Home
+// Los filtros viven en la URL (se pueden compartir y se conservan al volver
+// desde una ficha), con los valores en slug. Un valor que no existe se
+// ignora. "category" mantiene el nombre que ya usan los enlaces de Home
 const PARAMS = {
     theme: 'tematica',
     franchises: 'franquicia',
@@ -26,6 +26,19 @@ const pickFromUrl = (searchParams, param, options) => {
     return options.filter((option) => slugs.includes(slugify(option)))
 }
 
+// El orden también vive en la URL (?orden=...), en slug. Sin el parámetro,
+// o con un valor desconocido, es "relevante" (el por defecto, que no se
+// escribe en la URL)
+const SORT_PARAM = 'orden'
+const SORT_SLUGS = {
+    'price-asc': 'precio-asc',
+    'price-desc': 'precio-desc',
+    newest: 'nuevos',
+}
+const sortFromSlug = (slug) =>
+    Object.keys(SORT_SLUGS).find((option) => SORT_SLUGS[option] === slug) ??
+    'relevant'
+
 const ShoppingPage = () => {
     const {
         products,
@@ -36,18 +49,18 @@ const ShoppingPage = () => {
         error,
     } = useProduct()
 
-    const [sortOption, setSortOption] = useState('relevant')
     const [searchParams, setSearchParams] = useSearchParams()
     const location = useLocation()
     const drawerToggleRef = useRef(null)
     const searchQuery = searchParams.get('search')
+    const sortOption = sortFromSlug(searchParams.get(SORT_PARAM))
 
     // Al llegar desde fuera del panel (Tienda, el menú, el buscador, Home):
-    // orden por defecto y cajón de filtros cerrado, como cuando la ruta
-    // tenía key={location.key}. Los cambios del panel no lo reinician
+    // cajón de filtros cerrado, como cuando la ruta tenía key={location.key}.
+    // Los cambios del panel no lo cierran (fromFilters). El orden no hace
+    // falta reiniciarlo: un enlace sin ?orden ya es "relevante"
     useEffect(() => {
         if (location.state?.fromFilters) return
-        setSortOption('relevant')
         if (drawerToggleRef.current) drawerToggleRef.current.checked = false
     }, [location.key, location.state])
 
@@ -119,14 +132,29 @@ const ShoppingPage = () => {
     }, [themeSlug, products, designThemes])
 
     // Escribe en la URL conservando lo demás (búsqueda, temática).
-    // fromFilters evita que se reinicie el orden
+    // replace: cambiar un filtro no suma una entrada al historial, así
+    // "atrás" sale de /shop en un paso en vez de recorrer los filtros.
+    // fromFilters evita que se cierre el cajón de filtros mobile
     const updateParams = (changes) => {
         const next = new URLSearchParams(searchParams)
         for (const [param, values] of Object.entries(changes)) {
             next.delete(param)
             for (const value of values) next.append(param, slugify(value))
         }
-        setSearchParams(next, { state: { fromFilters: true } })
+        setSearchParams(next, { replace: true, state: { fromFilters: true } })
+    }
+
+    // Cambiar el orden: como los filtros, con replace y sin cerrar el cajón.
+    // "Relevante" quita el parámetro
+    const handleSortChange = (option) => {
+        const next = new URLSearchParams(searchParams)
+        const slug = SORT_SLUGS[option]
+        if (slug) {
+            next.set(SORT_PARAM, slug)
+        } else {
+            next.delete(SORT_PARAM)
+        }
+        setSearchParams(next, { replace: true, state: { fromFilters: true } })
     }
 
     // El panel llama setSelectedX(array) o setSelectedX((prev) => array)
@@ -388,7 +416,7 @@ const ShoppingPage = () => {
                                 <ResultsToolbar
                                     totalProducts={processedProducts.length}
                                     sortOption={sortOption}
-                                    onSortChange={setSortOption}
+                                    onSortChange={handleSortChange}
                                 />
                             )}
                             {renderContent()}

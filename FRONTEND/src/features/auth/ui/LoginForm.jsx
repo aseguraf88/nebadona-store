@@ -52,6 +52,7 @@ const LoginForm = () => {
         return (
             <Navigate
                 to={userInfo?.isAdmin ? '/admin/dashboard/products' : '/'}
+                replace
             />
         )
     }
