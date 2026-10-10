@@ -3,10 +3,14 @@ import { Link } from 'react-router-dom'
 import { INSTAGRAM_URL } from '../../../shared/config/contact'
 
 const Footer = () => {
-    // pb-24 en mobile: la última línea no queda debajo del botón flotante de
-    // WhatsApp al llegar al final de la página
+    // Espacio abajo: 6rem (el pb-24 de siempre) en mobile, para que la
+    // última línea no quede debajo del botón flotante de WhatsApp; 2.5rem
+    // (el pb-10 de siempre) en tablets, y pb-10 en desktop. En mobile y
+    // tablets suma --sticky-bar-h, el alto de la franja fija de la ficha
+    // mientras se ve (con ella WhatsApp sube); sin franja vale 0 y el
+    // footer queda igual que siempre en todas las páginas
     return (
-        <footer className="flex flex-col items-center gap-3 bg-base-200 text-base-content p-10 pb-24 sm:pb-10 text-center">
+        <footer className="flex flex-col items-center gap-3 bg-base-200 text-base-content p-10 pb-[calc(6rem_+_var(--sticky-bar-h,0px))] sm:pb-[calc(2.5rem_+_var(--sticky-bar-h,0px))] lg:pb-10 text-center">
             <div className="flex flex-col items-center gap-3 max-w-md">
                 <Link
                     to="/"

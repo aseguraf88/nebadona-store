@@ -23,6 +23,7 @@ import { PRODUCT_DELIVERY_HIGHLIGHTS } from '../../../shared/config/shipping'
 import MobileGallery from './MobileGallery'
 import PhotoActionButton from './PhotoActionButton'
 import useGoBack from '../../../shared/lib/useGoBack'
+import StickyAddToCartBar from './StickyAddToCartBar'
 
 const MD_MEDIA_QUERY = '(min-width: 1024px)'
 
@@ -137,6 +138,9 @@ const ProductPage = () => {
     const [quantity, setQuantity] = useState(1)
     const [selectedImageIndex, setSelectedImageIndex] = useState(0)
     const [selectedVariant, setSelectedVariant] = useState(null)
+    // Botón "Agregar" real (callback ref): la franja inferior lo observa, y
+    // al cambiar de ficha llega el botón nuevo y se vuelve a enganchar
+    const [addButtonEl, setAddButtonEl] = useState(null)
 
     useEffect(() => {
         // La primera variante con stock (antes, siempre la primera: si estaba
@@ -498,6 +502,7 @@ const ProductPage = () => {
                                 )}
 
                                 <button
+                                    ref={setAddButtonEl}
                                     type="button"
                                     onClick={() => feedback.trigger()}
                                     // Ya no se desactiva en "Listo" (DaisyUI lo pintaba gris);
@@ -718,6 +723,19 @@ const ProductPage = () => {
                     </div>
                 )}
             </div>
+            {!isMdUp && !isSoldOut && (
+                <StickyAddToCartBar
+                    target={addButtonEl}
+                    feedback={feedback}
+                    selectedHasStock={selectedHasStock}
+                    price={selectedVariant?.price ?? product.price ?? 0}
+                    compareAtPrice={
+                        product.compareAtPrice > product.price
+                            ? product.compareAtPrice
+                            : null
+                    }
+                />
+            )}
         </main>
     )
 }
