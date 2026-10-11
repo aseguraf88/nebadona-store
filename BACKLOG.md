@@ -429,7 +429,9 @@ como punto de partida, en vez de diseñar a ciegas.
       2. En `nebadon.cl`: login en incógnito (admin y cliente) y un
          checkout completo.
       3. Safari (iPhone y Mac), que nunca se probó: login del admin,
-         dashboard y carrito de un cliente logueado.
+         dashboard y carrito de un cliente logueado; el gesto de deslizar
+         para volver y la restauración de la posición de scroll en `/shop`
+         (puede haber un parpadeo entre la captura y la página real).
       Después del lanzamiento:
       4. Decidir si se retira `nebadona-store-cyan.vercel.app`; si se
          retira, sacarlo de `FRONTEND_URL`.
@@ -941,8 +943,8 @@ octubre. Sin código todavía: cada grupo se convierte en uno o más pasos.
           foto y no de la ficha); desktop conserva el botón a la derecha
           de la franquicia, idéntico a antes. Limitaciones conocidas: un
           dedo que empieza sobre un botón no desliza la galería; al volver
-          a `/shop` no se recupera la posición de scroll. Probado en local
-          y en producción (celular);
+          a `/shop` no se recupera la posición de scroll (resuelto en el
+          paso 62). Probado en local y en producción (celular);
         - ~~61: franja fija inferior con precio y "Agregar"~~ — resuelto
           (commit `a14ae8f`). La prueba en
           celular del 59 lo justifica: el botón "Agregar" **no cabe** sin
@@ -984,9 +986,43 @@ octubre. Sin código todavía: cada grupo se convierte en uno o más pasos.
           y el "Agotado" de la franja con otras tallas disponibles; es el
           mismo cálculo que el precio de la ficha. Probado en local y en
           producción (celular);
-        - 62: "volver" coherente en todo el proyecto. Incluye restaurar la
-          posición de scroll al volver a `/shop` (`ScrollToTop` sube al
-          inicio en cada cambio de ruta, también al volver);
+        - ~~62: "volver" coherente en todo el proyecto~~ — resuelto (commit
+          `1516c65`). **`ScrollToTop.jsx` reescrito** (`shared/ui/`):
+          guarda la posición de scroll por entrada del historial
+          (`location.key` más ruta y parámetros) en `sessionStorage`
+          (máximo 50 entradas) y la restaura solo al volver (`POP`: el
+          "atrás" del sistema, el gesto, los botones "Volver" y F5; en la
+          primera carga solo si el navegador informa `reload` o
+          `back_forward`). Una navegación nueva (`PUSH` o `REPLACE`) sube
+          al inicio o va al `#ancla`. `history.scrollRestoration =
+          'manual'`. La posición que se guarda sale de una referencia que
+          mantiene el listener de scroll, no de `window.scrollY` al salir,
+          para que el recorte del navegador en una página más corta no la
+          pise. Si la página no tiene aún su altura final (por ejemplo, el
+          catálogo después de F5), reintenta en cada frame hasta 3 s y se
+          cancela con `wheel`, `touchstart`, `pointerdown` o `keydown`. El
+          dashboard no cambia: su scroll es de un contenedor interno.
+          **Filtros y orden de `/shop` en la URL con `replace`:** un filtro
+          ya no suma una entrada al historial, así que un solo "atrás" sale
+          de `/shop`. El orden vive en
+          `?orden=precio-asc|precio-desc|nuevos` (sin parámetro es
+          "relevante"; un valor desconocido se ignora). `state.fromFilters`
+          se conserva solo para que no se cierre el cajón de filtros del
+          celular. Consecuencias aceptadas: "atrás" ya no deshace el último
+          filtro (se desmarca a mano) y cambiar el orden sube la página,
+          igual que los filtros. **`replace` en `Checkout.jsx`** (carrito
+          vacío: antes `/shop` se apilaba sobre `/checkout` y "atrás"
+          atrapaba al cliente) y en `LoginForm.jsx` (después de iniciar
+          sesión, "atrás" ya no vuelve al formulario). **Se quitó el
+          `window.scrollTo(0, 0)` de `ProductPage.jsx`** (era redundante con
+          `ScrollToTop` y chocaba con la restauración al volver a una
+          ficha). **Límites conocidos:** los acordeones de la ficha vuelven
+          a su estado inicial al regresar (la posición guardada puede
+          quedar un poco más abajo); los carruseles horizontales del Home
+          vuelven a su primera página; en Safari con el gesto de deslizar
+          para volver puede notarse un parpadeo entre la captura y la
+          página real (sin probar, va al checklist de Safari). Probado en
+          local y en producción (celular);
       - Hallazgos de los pasos 59 y 59b, sin tocar:
         - `scrollbar-hide` no está definida en ningún lado (ni plugin ni
           `index.css`) y no hace nada en `ProductCarousel`, `CartDrawer`,
@@ -1014,6 +1050,26 @@ octubre. Sin código todavía: cada grupo se convierte en uno o más pasos.
         F5), solo si la categoría tiene guía en `careGuides.js`. La mini
         tabla de cuidados (ícono + instrucción) se quitó de la ficha; la
         guía completa sigue en `/guia-cuidados`.
+
+- [ ] **Ancla tapada en las guías** (hallazgo del paso 62, se resuelve en
+      el paso 63). Al entrar a `/guia-tallas#...` desde la ficha, el título
+      de la sección queda tapado por la cabecera fija (marquesina más
+      navbar) y hay que subir un poco para confirmar qué tabla se ve. Las
+      secciones ya tienen `scroll-mt-32` (128 px) en `SizeGuide.jsx`; la
+      causa **no está determinada** (se sospecha el alto real de la
+      cabecera, el momento en que se hace el scroll o un cambio de altura
+      de la página después). Lo mismo puede pasar en `/guia-cuidados` y en
+      el Home. Se comprobó leyendo el código que el `ScrollToTop` anterior
+      (`45c5704`) ya llamaba a `scrollIntoView()` igual: el comportamiento
+      es anterior al paso 62, pero no se reprodujo en `45c5704`. El paso 63
+      lo mide y lo reproduce antes de tocar nada.
+
+- [ ] **"Lo sentimos" sin salida** (hallazgo del paso 62, se resuelve en
+      el paso 63). En `/shop`, una búsqueda sin resultados muestra "Lo
+      sentimos" y el botón "Limpiar todos los filtros", que no hace nada:
+      `clearFilters` solo borra los filtros (tematica, franquicia, tipo,
+      category) y conserva `?search=`. El cliente queda en la misma
+      pantalla. Es anterior al paso 62 (verificado en `45c5704`).
 
 - [ ] **Título o miniatura del producto en la franja de "Agregar"**
       (idea de Alejandro tras el paso 61): cuando el cliente baja hasta
@@ -1075,6 +1131,11 @@ Relacionado con "🎨 Pulido visual / UI-UX", más arriba:
       hallazgos del Admin priorizados.
 
 ## 🔵 Baja prioridad, no bloqueante
+
+- [ ] Con el carrito, el menú móvil o el buscador móvil abiertos, "atrás"
+      no los cierra: siguen abiertos sobre la página anterior, porque
+      viven fuera de la ruta. Cerrarlos al cambiar de ruta sería un paso
+      aparte (encontrado en el paso 62).
 
 - [ ] Limpieza cosmética menor, sin apuro: `careGuides.js` contiene
       referencias a componentes de React (`Droplet`, `Wind`, `IronIcon`,

@@ -123,6 +123,11 @@ manual. MercadoPago fue eliminado del código por completo (no reintroducir).
   desmontarse. `WhatsAppFloatingButton` y `Footer` la suman con respaldo
   `0px`; todo elemento nuevo fijo abajo en la tienda debe sumarla también.
   Las clases con la variable van literales completas.
+- **El scroll al navegar lo maneja solo `ScrollToTop`** (`shared/ui/`, paso
+  62), con `history.scrollRestoration = 'manual'`: sube al inicio en una
+  navegación nueva y restaura la posición guardada al volver; no agregar
+  `window.scrollTo` en las páginas. Los filtros y el orden de `/shop` viven
+  en la URL y se cambian con `replace`: un solo "atrás" sale de `/shop`.
 
 ## Sitio en producción
 Desplegado y en vivo — dos dominios con propósitos distintos:
