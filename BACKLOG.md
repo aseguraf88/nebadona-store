@@ -490,7 +490,8 @@ como punto de partida, en vez de diseñar a ciegas.
         lista de temas de Configuración.
       Actualizado en el paso 57: buena parte de esta tarea queda
       reemplazada por "Reiniciar los datos antes del lanzamiento" (más
-      abajo), que borra el catálogo actual para cargar el inventario real.
+      abajo); desde el 11 de octubre el catálogo no se borra (ver la nota
+      de ese ítem).
 
 - [x] ~~**Página en blanco en cualquier URL desconocida**~~ — resuelto
       (paso 56, commit `a4c3fa5`). Encontrado en el paso 55: `App.jsx` no
@@ -514,20 +515,140 @@ como punto de partida, en vez de diseñar a ciegas.
       `www.nebadon.cl`).
 
 - [ ] **Reiniciar los datos antes del lanzamiento**: borrar las órdenes
-      de prueba y el catálogo actual (el stock no es real) para cargar el
-      inventario real. Al cierre del paso 57 hay 86 órdenes, todas de
-      prueba: 64 `whatsapp_pending`, 2 `pending`, 5 `approved` y 15
-      `cancelled`. Las 66 sin revisar aparecen hoy en "Pedidos por
-      revisar" del inicio del dashboard. Como paso propio:
+      de prueba y cargar el stock real (el catálogo **no** se borra: ver
+      la nota del 11 de octubre, abajo). Al cierre del paso 57 hay 86
+      órdenes, todas de prueba: 64 `whatsapp_pending`, 2 `pending`, 5
+      `approved` y 15 `cancelled`. Las 66 sin revisar aparecen hoy en
+      "Pedidos por revisar" del inicio del dashboard. Como paso propio:
       - respaldo previo de la base;
       - confirmación de la dueña;
       - decidir qué se conserva (la cuenta de admin; categorías,
         franquicias y temas);
       - decidir qué hacer con las imágenes de Cloudinary de los productos
-        borrados (quedarían huérfanas) y con los carritos guardados que
-        apuntan a esos productos;
+        que se eliminen (quedarían huérfanas) y con los carritos guardados
+        que apuntan a esos productos;
       - recordar que local y producción usan la misma base
         (`ecommerceDB`): borrar desde local borra producción.
+      **Nota de Alejandro (11 de octubre):** los productos del sistema son
+      "datos de prueba" solo en cuanto al **stock**; **al menos el 90 %
+      son modelos reales.** Por eso **no se borra el catálogo**: se
+      perderían los modelos, nombres, handles, categorías y lo que ya esté
+      cargado.
+      **Plan liviano, por confirmar en la Parte 1 del paso:**
+      1. borrar las **órdenes de prueba** y los carritos guardados que
+         apuntan a productos que se vayan a eliminar;
+      2. **después**, cargar el **stock real** por CSV (la importación
+         actualiza por Handle; confirmar que sobrescribe el stock
+         existente y cómo trata los SKU nuevos y los que ya no existan);
+      3. borrar o archivar los productos que no existen (≈10 %);
+      4. completar precios, descripciones y fotos de los borradores y
+         publicar de a poco.
+      **Orden importante: las órdenes de prueba primero y el stock real
+      después.** Cancelar o cambiar una orden aprobada mueve el stock
+      (salir de `approved` lo restaura); si eso ocurre después de cargar
+      el stock real, lo descuadra.
+      **Dependencia:** el **inventario físico no está hecho**; no se sabe
+      cuántos modelos nuevos hay ni las cantidades. Sin esa lista no se
+      puede fijar el reinicio.
+      **Quién borra:** las consultas del agente a la base son solo de
+      lectura; el borrado de las órdenes lo ejecutaría Alejandro con un
+      script con modo de prueba, o desde Atlas. Respaldo previo y
+      confirmación de la dueña.
+      **Lanzar por etapas:** considerar publicar primero solo lo que ya
+      esté contado (la tienda distingue publicados y borradores) y sumar
+      el resto de a poco, en vez de esperar a tener todo.
+
+- [ ] **Textos de envíos y pagos** (cambio de condiciones de la tienda,
+      decidido por Alejandro el 11 de octubre). Se hace como **paso 64**:
+      - **Se mantienen las cuatro modalidades:** envío por Starken,
+        Express en Santiago, punto de encuentro y retiro en bodega.
+      - **Envíos por agencia: solo Starken.** Se quitan Blue Express y
+        "otras agencias a convenir" (hoy los textos dicen "Starken (también
+        Blue Express; otras agencias, a convenir)").
+      - **Starken:** el cliente transfiere **antes del despacho el total
+        de los productos** (solo transferencia), y **el envío se paga en
+        destino**, al recibir.
+      - **Express en Santiago (Uber o DiDi):** se mantiene; el cliente
+        paga todo en una sola transferencia.
+      - **Punto de encuentro:** mismos lugares (Metro Ciudad del Niño L2 y
+        Metro Mirador L5).
+      - **Retiro en bodega y punto de encuentro:** se puede pagar en
+        efectivo o por transferencia.
+      - Toca `shared/config/shipping.js` (fuente única),
+        `/envios-y-entregas`, el checkout, el PDF, el mensaje de WhatsApp,
+        la franja de la ficha y "¿Cómo comprar?" (solo los textos). La
+        regla de textos del paso 54 se mantiene ("el envío lo pagas al
+        recibir", títulos cortos, íconos con su texto).
+
+- [ ] **Quitar la guía de cuidados** (decisión de la dueña, 11 de
+      octubre). Se hace como **paso 64b**. Solo quedan las guías de
+      "Envíos y entregas" y de "Tallas". El acordeón "Detalles" de la
+      ficha (material, tipo de calce, técnica, especificaciones y código)
+      **se mantiene**. Lo que se quita:
+      - la página `/guia-cuidados`: `pages/guia-cuidados/`
+        (`GuiaCuidados.jsx` e `index.js`) y su ruta e import en
+        `App.jsx`. Sin redirección: `/guia-cuidados` caerá en "No
+        encontramos esta página" (la ruta `*` del paso 56);
+      - el enlace "Ver guía de cuidados →" del acordeón "Detalles" de
+        `ProductPage.jsx`, con el import de `getCareGuideByCategory` y la
+        variable `careGuide`. La condición del acordeón
+        (`productDetails.length > 0 || careGuide`) pasa a depender solo
+        de las filas; como casi siempre está la fila Código, sigue
+        apareciendo;
+      - el enlace del footer (`Footer.jsx`, grupo "Ayuda") y el del menú
+        hamburguesa (`MobileMenuDrawer.jsx:25`);
+      - los datos: `entities/product/config/careGuides.js`;
+      - la dependencia `@lucide/lab`, con `npm uninstall @lucide/lab` (no
+        a mano), para que `package.json` y `package-lock.json` queden
+        coherentes: hoy solo la importa `careGuides.js` (el ícono de
+        plancha). `lucide-react` se queda: la usan la ficha,
+        `shipping.js`, `/envios-y-entregas` y `ProductCarousel.jsx`.
+      **A revisar en el mismo paso:**
+      - `CLAUDE.md`: la regla de `@lucide/lab` (con el ejemplo de
+        `IronIcon` en `careGuides.js`), la receta de tabla (nombra
+        `/guia-cuidados` y `GuiaCuidados.jsx`) y la sección de Materiales
+        (el link de cuidados de la ficha y la tabla por categoría);
+      - las líneas del BACKLOG que nombran `/guia-cuidados`,
+        `careGuides.js` o `GuiaCuidados.jsx`: "Ayuda" del footer, el caso
+        "categoría sin guía de cuidados", el ítem de títulos de los
+        acordeones (pasos 54 y 58), "Ancla tapada en las guías", la
+        limpieza cosmética de `careGuides.js` en "🔵 Baja prioridad"
+        (queda sin objeto) y la nota de rutas en español, más los
+        resueltos de la Guía de Cuidados (páginas propias, tablas,
+        subsecciones, íconos, "← Volver al producto" y radio de tablas).
+        Los resueltos se dejan como historia, con una nota de que la guía
+        se retiró.
+      Antes de borrar, un `grep` de `careGuides`, `CARE_GUIDES`,
+      `guia-cuidados` y `@lucide/lab` en `FRONTEND/src`, y `npm run
+      build`.
+
+- [ ] **Categorías de accesorios.** Alejandro (11 de octubre): la tienda
+      no vende solo calcetas, camisas y polerones. Categorías
+      mencionadas: llaveros, pendientes (aros), relojes, juguetes,
+      peluches, billeteras, camisas, polerones, calcetines, mochilas,
+      bandoleras, estuches, agendas, lápices, "etc." (**la lista está
+      incompleta**).
+      **Lo que asume hoy el código** (a confirmar en la Parte 1):
+      `sizeGuides.js`, `productTypeOptions.js`
+      (`PRODUCT_TYPES_BY_CATEGORY`, `SIZE_OPTIONS`), `isSockCategory`,
+      los prefijos de SKU (`CAL`, `CAM`, `POL`), los campos de la ficha
+      pensados para ropa ("Tipo de Calce", "Técnica de Decoración"), los
+      menús y "Explora por Categoría" del Home (con muchas categorías
+      puede no caber). Una categoría nueva funciona como dato, pero sin
+      tabla de tallas propia hasta que se agregue.
+      **Paso propio (65):** Parte 1 con una consulta de solo lectura de
+      las categorías que ya existen en la base y su conteo por estado, la
+      auditoría del código que asume tres categorías, y una propuesta de
+      configuración por categoría (¿tiene tallas?, ¿qué opciones de
+      talla?, ¿qué campos de la ficha aplican?, ¿prefijo de SKU?).
+      **Decisiones de la dueña, por categoría:** tallas, y colores o
+      diseños.
+      **Pendiente de la dueña:** responde el 12 de octubre, después de
+      revisar en la bodega, con una planilla con categoría, tallas,
+      colores o diseños y cantidad aproximada de modelos. Sin eso no se
+      puede empezar el paso 65.
+      La Parte 1 comparará esta lista con los nombres reales de las
+      categorías en la base antes de proponer nada.
 
 ## 📝 Lista de la dueña y usuarios (octubre)
 
@@ -846,6 +967,74 @@ octubre. Sin código todavía: cada grupo se convierte en uno o más pasos.
         con modo sin conexión; resumen, filtro y exportación; y la huella al
         final, si hay tiempo.
 
+- [ ] **Armar regalos (caja de regalo como consulta).** Prioridad:
+      después del lanzamiento, lo antes posible, por pasos. Se hace como
+      paso propio, con Parte 1 de diseño antes de implementar.
+
+      **Idea de la dueña (11 de octubre):** la página tendrá la opción de
+      "armar regalos", disponible cuando termine de forrar las cajas que
+      se usarán.
+
+      **Definiciones de Alejandro:**
+      - Las cajas son **recicladas** (de té, golosinas, ropa, etc.),
+        forradas con papel de regalo, de **distintos tamaños** y con el
+        **mismo diseño**. Precio fijo: **$2.000** (descuentos: un
+        "podría", sin definir).
+      - **El cliente no ve ni necesita saber las dimensiones**: solo que
+        sus artículos irán envueltos.
+      - Decidir automáticamente qué productos y cuántas unidades caben en
+        una caja es **difícil** (productos grandes, cantidades
+        significativas, cajas irregulares). Por eso la **primera versión
+        es una consulta**, no un cálculo.
+
+      **Versión 1 (la que se hará primero): casilla de consulta.**
+      - En el carrito (y en el checkout), una casilla del estilo
+        **"Consultar por caja de regalo (+$2.000)"**, con una nota corta:
+        se confirma por WhatsApp si el pedido cabe y los $2.000 se suman
+        solo si se confirma. Textos de ejemplo de Alejandro: "Consultar
+        por envoltorio especial por $2.000" o "Pregunta por
+        disponibilidad de caja de regalo. Se agregarían $2.000".
+      - **No suma al total de la orden**: el total y la validación de
+        precios del backend (paso 40) no cambian. La consulta queda
+        **anotada**: un campo en la orden (por ejemplo,
+        `giftBoxRequested`), una línea en el **PDF** y en el **mensaje de
+        WhatsApp** ("Consulta: caja de regalo, +$2.000, a confirmar"), y
+        una **insignia en el panel de órdenes** para que la dueña no la
+        pase por alto.
+      - La dueña confirma y cobra por WhatsApp, como hace con todo.
+        Límite conocido: el total que ve el panel no incluye los $2.000
+        de la caja confirmada.
+      - Los textos respetan la regla del paso 54 ("todavía no pagas
+        nada"; el total dice que no incluye envío ni caja).
+
+      **Versión 1.5 (si hace falta):** un interruptor en el dashboard,
+      por producto, **"Admite caja de regalo"** (por defecto sí), y un
+      máximo configurable de **unidades por pedido**. Si el carrito tiene
+      un producto que no la admite (por ejemplo, mochilas o peluches
+      grandes) o supera ese máximo, la casilla no aparece. Es una regla
+      simple, sin cálculo de volumen.
+
+      **Versión 2 (solo si el volumen de consultas lo justifica):** un
+      modelo de "puntos de espacio" por categoría y producto, con una
+      capacidad por caja; más de una caja por pedido; stock de cajas;
+      descuentos; una página "Regalos".
+
+      **Datos que faltan de la dueña:** si los $2.000 valen para todos
+      los tamaños; qué categorías o productos no pueden ir en caja (para
+      la versión 1.5); y, cuando termine de forrar las cajas, cuántos
+      productos de cada tipo caben en cada tamaño.
+
+      **Implicaciones:** el carrito, el checkout, la orden (`OrderModel`
+      y Zod), el PDF, el mensaje de WhatsApp, el panel de órdenes. En la
+      **app de ventas de la feria**, la caja se puede vender desde el
+      primer día como **artículo suelto de $2.000**.
+
+      **Sin código, mientras tanto:** la dueña ofrece la caja por
+      WhatsApp, o un producto "Caja de regalo" ($2.000, talla única) en
+      el catálogo.
+
+      **Relacionado:** "Categorías de accesorios".
+
 ### Prioridad media
 
 - [ ] **Pedir por Telegram** como alternativa a WhatsApp. Telegram no
@@ -1051,25 +1240,78 @@ octubre. Sin código todavía: cada grupo se convierte en uno o más pasos.
         tabla de cuidados (ícono + instrucción) se quitó de la ficha; la
         guía completa sigue en `/guia-cuidados`.
 
-- [ ] **Ancla tapada en las guías** (hallazgo del paso 62, se resuelve en
-      el paso 63). Al entrar a `/guia-tallas#...` desde la ficha, el título
-      de la sección queda tapado por la cabecera fija (marquesina más
-      navbar) y hay que subir un poco para confirmar qué tabla se ve. Las
-      secciones ya tienen `scroll-mt-32` (128 px) en `SizeGuide.jsx`; la
-      causa **no está determinada** (se sospecha el alto real de la
-      cabecera, el momento en que se hace el scroll o un cambio de altura
-      de la página después). Lo mismo puede pasar en `/guia-cuidados` y en
-      el Home. Se comprobó leyendo el código que el `ScrollToTop` anterior
-      (`45c5704`) ya llamaba a `scrollIntoView()` igual: el comportamiento
-      es anterior al paso 62, pero no se reprodujo en `45c5704`. El paso 63
-      lo mide y lo reproduce antes de tocar nada.
+- [ ] **Ancla tapada en las guías** (hallazgo del paso 62; investigado en
+      la Parte 1 del paso 63 y **aplazado**, prioridad media-baja). Al
+      entrar a una guía desde la ficha, el título de la sección a la que
+      enlaza queda cortado por la cabecera fija (marquesina más navbar);
+      la tabla se ve y basta subir un poco. Alejandro lo confirmó el 11 de
+      octubre, **en desktop y en celular**, desde los enlaces de los
+      acordeones de la ficha: "Detalles" → "Ver guía de cuidados →" (a
+      `/guia-cuidados#<categoría>`) y "Tallas" → el enlace a
+      `/guia-tallas`, que **solo aparece cuando el producto tiene la talla
+      editable** (por ejemplo, "Donkey Kong"; con talla fija no se
+      muestra).
+      **La guía de cuidados se retira** (decisión de la dueña, 11 de
+      octubre; ver "Quitar la guía de cuidados"): el problema queda solo
+      en `/guia-tallas` y en el ancla `#catalogo` del Home.
+      **Resultado de la Parte 1 del paso 63:** el `id` y el `scroll-mt-32`
+      están en el **mismo elemento** (hipótesis descartada) en
+      `SizeGuide.jsx`, `GuiaCuidados.jsx` y el Home. La cabecera mide unos
+      154 px desde 1024 px de ancho (marquesina 36, navbar 81, submenú 37)
+      contra los 128 px del margen: en desktop **el título queda tapado
+      por unos 26 px**. En celular el cálculo da unos 113 a 117 px, que
+      cabe en 128, así que **la causa en celular no está determinada**.
+      Faltan tres mediciones con las DevTools en `/guia-tallas#bebes`:
+      `document.querySelector('header').offsetHeight`,
+      `document.getElementById('<id>').getBoundingClientRect().top` y
+      `getComputedStyle(...).scrollMarginTop`; y si el buscador móvil
+      estaba abierto.
+      **Opciones evaluadas:** A) subir el margen fijo
+      (`lg:scroll-mt-44`): simple, pero se rompe si cambia la cabecera;
+      B) calcular el desplazamiento en `ScrollToTop` (toca la lógica del
+      paso 62); C) variable CSS `--header-h` medida en `Layout.jsx`
+      (patrón de `--sticky-bar-h`) y una clase por sección; **C'**
+      (recomendada) una sola regla global
+      `html { scroll-padding-top: calc(var(--header-h, 7rem) + 1rem) }` en
+      `index.css` con `--header-h` medida en `Layout.jsx`
+      (`useLayoutEffect` y `ResizeObserver`, borrada al desmontar),
+      quitando `scroll-mt-32` de las secciones con ancla (tras retirar la
+      guía de cuidados, tres lugares del código: dos en `SizeGuide.jsx`,
+      uno de ellos dentro de un `map` que dibuja dos secciones, y
+      `#catalogo` en `Home.jsx`; si quedan los dos, se suman).
+      **Estado:** aplazado. No es del paso 62: el `ScrollToTop` anterior
+      (`45c5704`) ya llamaba a `scrollIntoView()` igual. Se retoma después
+      del lanzamiento o en un hueco, con las tres mediciones.
+      Ya se verificó (solo lectura, cierre del paso 62) que el único
+      `scrollIntoView()` de anclas de la tienda está en `ScrollToTop.jsx`.
+      Antes de retomar C' falta verificar el foco con teclado, el ancla
+      nativa `<a href="#catalogo">` del Home (que se beneficiaría de
+      `scroll-padding`) y que la regla en `html` no afecte al dashboard
+      (su scroll es de un contenedor interno).
 
-- [ ] **"Lo sentimos" sin salida** (hallazgo del paso 62, se resuelve en
-      el paso 63). En `/shop`, una búsqueda sin resultados muestra "Lo
-      sentimos" y el botón "Limpiar todos los filtros", que no hace nada:
-      `clearFilters` solo borra los filtros (tematica, franquicia, tipo,
-      category) y conserva `?search=`. El cliente queda en la misma
-      pantalla. Es anterior al paso 62 (verificado en `45c5704`).
+- [x] ~~**"Lo sentimos" sin salida**~~ — resuelto (paso 63, arreglo 2,
+      commit `1da457f`). Hallazgo del paso 62, anterior a él (verificado
+      en `45c5704`): en `/shop`, una búsqueda sin resultados mostraba "Lo
+      sentimos" y el botón "Limpiar todos los filtros", que no hacía nada
+      porque `clearFilters` conservaba `?search=`. Ahora, en
+      `ShoppingPage.jsx`:
+      - con una búsqueda sin resultados (con o sin filtros), el botón del
+        estado vacío dice **"Ver todos los productos"** y lleva a `/shop`:
+        quita la búsqueda y los filtros y conserva `?orden=`, con
+        `replace` y `state.fromFilters` (no cierra el cajón de filtros
+        del celular);
+      - con solo filtros sin resultados, el botón sigue siendo "Limpiar
+        todos los filtros";
+      - sin búsqueda ni filtros no se muestra botón.
+      `SearchBar.jsx` (las dos instancias, desktop y mobile) sigue a
+      `?search=` **solo en `/shop`** y **solo cuando cambia el valor de la
+      URL** (ajuste durante el render, no en un efecto): no pisa lo que el
+      cliente está escribiendo, después de F5 muestra el término y en una
+      ficha conserva su texto. **Límites conocidos:** enviar una búsqueda
+      desde la caja y la cruz de la caja siguen descartando filtros y orden
+      (como antes); el caso "sin búsqueda, sin filtros y sin productos" no
+      es reproducible con el catálogo actual (queda sin probar). Probado en
+      local y en producción (celular).
 
 - [ ] **Título o miniatura del producto en la franja de "Agregar"**
       (idea de Alejandro tras el paso 61): cuando el cliente baja hasta
@@ -1108,6 +1350,18 @@ octubre. Sin código todavía: cada grupo se convierte en uno o más pasos.
       de calcetines, la talla de bebé y niño, y las tallas elegibles sin
       fila en la tabla.
 
+- [ ] **Listas ordenadas por columna y exportación del CSV con el orden
+      de la plantilla.** Ordenar la lista de inventario y la de productos
+      según las columnas (interpretación por confirmar: poder ordenar al
+      tocar el encabezado de una columna) y que la exportación del CSV
+      salga con las columnas en el mismo orden que la plantilla del
+      dashboard.
+
+- [ ] **Historial de importaciones y exportaciones de CSV**, con fecha y
+      hora de cada una, y la fecha de la última actualización del CSV
+      visible en el dashboard. Hoy no se guarda ningún registro;
+      probablemente requiere un modelo nuevo en el backend.
+
 ### Pulido visual
 
 Relacionado con "🎨 Pulido visual / UI-UX", más arriba:
@@ -1130,12 +1384,20 @@ Relacionado con "🎨 Pulido visual / UI-UX", más arriba:
       etc.), usando `informe-consistencia-ui-ux.md`, que ya tiene los
       hallazgos del Admin priorizados.
 
+- [ ] **Reorganizar "¿Cómo comprar?" del Home:** la franja se ve muy
+      delgada, los íconos son demasiado pequeños, las cajas de cada paso
+      deben ser cuadradas, y en mobile deben quedar en dos filas y dos
+      columnas.
+
 ## 🔵 Baja prioridad, no bloqueante
 
 - [ ] Con el carrito, el menú móvil o el buscador móvil abiertos, "atrás"
       no los cierra: siguen abiertos sobre la página anterior, porque
       viven fuera de la ruta. Cerrarlos al cambiar de ruta sería un paso
       aparte (encontrado en el paso 62).
+
+- [ ] **`/login`: el cursor debe partir en la caja del nombre de
+      usuario** (autofoco).
 
 - [ ] Limpieza cosmética menor, sin apuro: `careGuides.js` contiene
       referencias a componentes de React (`Droplet`, `Wind`, `IronIcon`,
