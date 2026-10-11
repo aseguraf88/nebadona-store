@@ -191,6 +191,16 @@ const ShoppingPage = () => {
             [PARAMS.categories]: [],
         })
 
+    // "Ver todos los productos" del estado vacío cuando hay búsqueda: quita
+    // la búsqueda y los filtros y conserva el orden. Como los filtros, con
+    // replace y sin cerrar el cajón
+    const showAllProducts = () => {
+        const next = new URLSearchParams()
+        const sort = searchParams.get(SORT_PARAM)
+        if (sort) next.set(SORT_PARAM, sort)
+        setSearchParams(next, { replace: true, state: { fromFilters: true } })
+    }
+
     // ✨ LA MAGIA ANTI-ACENTOS
     const normalizeText = (text) => {
         if (!text) return ''
@@ -317,12 +327,23 @@ const ShoppingPage = () => {
                             ? 'No hay resultados que coincidan con tu búsqueda o filtros.'
                             : 'Actualmente no hay productos en esta sección.'}
                     </p>
-                    <button
-                        onClick={clearFilters}
-                        className="btn btn-outline btn-primary mt-2"
-                    >
-                        Limpiar todos los filtros
-                    </button>
+                    {searchQuery ? (
+                        <button
+                            type="button"
+                            onClick={showAllProducts}
+                            className="btn btn-outline btn-primary mt-2"
+                        >
+                            Ver todos los productos
+                        </button>
+                    ) : hasActiveFilters ? (
+                        <button
+                            type="button"
+                            onClick={clearFilters}
+                            className="btn btn-outline btn-primary mt-2"
+                        >
+                            Limpiar todos los filtros
+                        </button>
+                    ) : null}
                 </div>
             )
         }

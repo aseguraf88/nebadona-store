@@ -1,12 +1,31 @@
 import { useState, useRef } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { HiOutlineSearch, HiOutlineX } from 'react-icons/hi'
 
+// La caja sigue a ?search= solo en /shop, y solo cuando ese valor cambia
+// (enviar, la cruz, "Ver todos los productos", F5, atrás): lo que el cliente
+// está escribiendo no se toca. Fuera de /shop (una ficha) conserva su texto.
+// Hay dos instancias (desktop y mobile) y cada una se sincroniza sola
 const SearchBar = () => {
-    const [searchTerm, setSearchTerm] = useState('')
     const navigate = useNavigate()
+    const location = useLocation()
     const [searchParams] = useSearchParams()
     const inputRef = useRef(null)
+    // null fuera de /shop: ahí la URL no dice nada sobre la caja
+    const urlSearch =
+        location.pathname === '/shop' ? (searchParams.get('search') ?? '') : null
+    const [searchTerm, setSearchTerm] = useState(urlSearch ?? '')
+    const [lastUrlSearch, setLastUrlSearch] = useState(urlSearch)
+
+    // Ajuste durante el render (no en un efecto): sin un pintado con el
+    // texto viejo. Si la caja ya tiene ese término (la que lo envió, quizá
+    // con espacios al final), no se pisa
+    if (urlSearch !== lastUrlSearch) {
+        setLastUrlSearch(urlSearch)
+        if (urlSearch !== null && urlSearch !== searchTerm.trim()) {
+            setSearchTerm(urlSearch)
+        }
+    }
 
     const handleSubmit = (e) => {
         e.preventDefault()
