@@ -22,9 +22,10 @@ manual. MercadoPago fue eliminado del código por completo (no reintroducir).
 - No agregues funciones ni cambies de tema sin que se pida explícitamente —
   nada de scope creep. Si algo parece un próximo paso lógico, menciónalo en
   una frase y espera confirmación, no lo implementes solo.
-- Sugiere un commit de checkpoint (`git add . && git commit -m "..."`) antes
-  de aplicar un batch de cambios grande, y recuerda que el usuario está en
-  PowerShell de Windows (no asumir sintaxis de bash tipo `2>/dev/null`).
+- Sugiere un commit de checkpoint (`git add -- <rutas explícitas>` y
+  `git commit -F`, nunca `git add .`) antes de aplicar un batch de cambios
+  grande, y recuerda que el usuario está en PowerShell de Windows (no
+  asumir sintaxis de bash tipo `2>/dev/null`).
 - Si una búsqueda o lectura falla, dilo explícitamente — no sigas como si
   hubiera funcionado.
 - **Un "guardado" confirmado no es prueba de que se aplicó completo.** Pasó
@@ -180,19 +181,6 @@ Desplegado y en vivo — dos dominios con propósitos distintos:
 Ver `BACKLOG.md` en la raíz del repo para la lista completa de pendientes,
 lo ya resuelto y lo descartado a propósito (incluye la decisión de app
 móvil nativa vía Capacitor, pausada hasta después de publicar la web).
-
-## ✅ Tarea cerrada: selector de variantes (talla/color)
-
-Completada de punta a punta en una sesión anterior — los 11 archivos
-listados originalmente (`VariantSelector.jsx`, `ProductPage.jsx`,
-`ProductCard.jsx`, `ProductDetailModal.jsx`, `CartContext.jsx`,
-`cartServices.js`, `CartDrawer.jsx`, `CartModel.js`, `cartControllers.js`,
-`OrderModel.js`, `orderControllers.js`) ya tienen el sku/size/baseColor
-fluyendo de punta a punta, desde el selector hasta la orden guardada.
-Probado end-to-end (invitado, logueado, y checkout con WhatsApp/PDF).
-
-Ver `BACKLOG.md` para el detalle de esta tarea y el resto del estado
-del proyecto — es la fuente de verdad actualizada, no esta sección.
 
 ## ✅ Tarea cerrada: panel de órdenes completo (backend + frontend)
 
