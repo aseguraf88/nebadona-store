@@ -558,27 +558,32 @@ como punto de partida, en vez de diseñar a ciegas.
       esté contado (la tienda distingue publicados y borradores) y sumar
       el resto de a poco, en vez de esperar a tener todo.
 
-- [ ] **Textos de envíos y pagos** (cambio de condiciones de la tienda,
-      decidido por Alejandro el 11 de octubre). Se hace como **paso 64**:
-      - **Se mantienen las cuatro modalidades:** envío por Starken,
-        Express en Santiago, punto de encuentro y retiro en bodega.
-      - **Envíos por agencia: solo Starken.** Se quitan Blue Express y
-        "otras agencias a convenir" (hoy los textos dicen "Starken (también
-        Blue Express; otras agencias, a convenir)").
-      - **Starken:** el cliente transfiere **antes del despacho el total
-        de los productos** (solo transferencia), y **el envío se paga en
-        destino**, al recibir.
-      - **Express en Santiago (Uber o DiDi):** se mantiene; el cliente
-        paga todo en una sola transferencia.
-      - **Punto de encuentro:** mismos lugares (Metro Ciudad del Niño L2 y
-        Metro Mirador L5).
-      - **Retiro en bodega y punto de encuentro:** se puede pagar en
-        efectivo o por transferencia.
-      - Toca `shared/config/shipping.js` (fuente única),
-        `/envios-y-entregas`, el checkout, el PDF, el mensaje de WhatsApp,
-        la franja de la ficha y "¿Cómo comprar?" (solo los textos). La
-        regla de textos del paso 54 se mantiene ("el envío lo pagas al
-        recibir", títulos cortos, íconos con su texto).
+- [x] ~~**Textos de envíos y pagos**~~ — resuelto (paso 64, commit
+      `b318bea`). Cambio de condiciones decidido por Alejandro el 11 de
+      octubre:
+      - **Starken como única agencia:** salen Blue Express y "otras
+        agencias, a convenir". Con Starken, el cliente transfiere antes
+        del despacho el total de los productos y el envío se paga a
+        Starken al recibir.
+      - **Se mantienen las cuatro modalidades** (envío por agencia,
+        Express en Santiago, punto de encuentro y retiro en bodega), con
+        los mismos `id`: el backend no cambió.
+      - **Campo `payment` por modalidad en `shared/config/shipping.js`**
+        (frases impersonales, terminadas en punto): lo leen el PDF, el
+        mensaje de WhatsApp y el formulario del checkout. En el punto de
+        encuentro y el retiro en bodega: "Efectivo o transferencia."; en
+        Express: "Todo en una sola transferencia."
+      - **`/envios-y-entregas`:** tarjeta de Starken con cuatro viñetas,
+        tarjeta "Pago" con tres líneas, y "Pagas en efectivo o por
+        transferencia." en el encuentro y el retiro.
+      - **Checkout:** el formulario muestra "Pago: …" según la modalidad
+        elegida; el PDF termina con "Pago: … Coordinamos el pago por
+        WhatsApp una vez confirmado el pedido."; el mensaje de WhatsApp
+        suma la línea "Pago: …" como último hijo de ENTREGA; la pantalla
+        final dice "Pagas después de que confirmemos tu pedido."
+      La franja de la ficha, "¿Cómo comprar?", el carrito, la marquesina
+      y el footer no cambiaron: sus textos siguen siendo ciertos. Probado
+      en local y en producción (celular).
 
 - [ ] **Quitar la guía de cuidados** (decisión de la dueña, 11 de
       octubre). Se hace como **paso 64b**. Solo quedan las guías de
@@ -649,6 +654,39 @@ como punto de partida, en vez de diseñar a ciegas.
       puede empezar el paso 65.
       La Parte 1 comparará esta lista con los nombres reales de las
       categorías en la base antes de proponer nada.
+
+- [ ] **Rediseñar el mensaje de WhatsApp del pedido.** Pedido de
+      Alejandro (12 de octubre): hacer el mensaje más ameno a la vista y
+      quitar la "basura visual" (los caracteres de árbol y de caja:
+      `├ └ ┌ ─`, etc.); solo lo esencial. Esos símbolos, además, se
+      dibujan distinto según el teléfono.
+      **Contenido deseado:** un título "Nebadon Store"; número de orden;
+      datos personales (nombre, teléfono y email si lo dio); dirección
+      (si corresponde); detalle del pedido; modalidad de entrega; total a
+      pagar; y un mensaje amigable que viene de la página. Si la persona
+      escribió su nombre en el formulario, que también salga en el
+      mensaje (por ejemplo, en el saludo).
+      **Cómo se hace:** el diseño se revisa entre Alejandro y Claude
+      **antes de implementar**. El paso arranca con el mensaje actual
+      completo y una propuesta.
+      **A definir:**
+      - saludo en primera persona o resumen neutro;
+      - qué mensaje amigable viene de la página (saludo, despedida o
+        ambos);
+      - si se mantiene el SKU en cada línea (la dueña lo usa para
+        identificar variantes);
+      - si el PDF cambia también;
+      - cómo queda con pedidos grandes: el mensaje viaja en la URL de
+        WhatsApp y hay un límite práctico de largo;
+      - la línea "Pago: …" por modalidad (paso 64);
+      - la línea de la consulta de caja de regalo (versión 1 de "Armar
+        regalos").
+      **Código:** toca el armado del mensaje en `Checkout.jsx`; en la
+      Parte 1, evaluar extraerlo a una función propia. Mantiene las
+      reglas de textos del paso 54, español neutro y sin voseo.
+      **Relacionado:** "Armar regalos", "Categorías de accesorios" (los
+      nombres largos de producto) y "Doble `└` en el mensaje de WhatsApp"
+      (en "🔵 Baja prioridad").
 
 ## 📝 Lista de la dueña y usuarios (octubre)
 
@@ -1398,6 +1436,19 @@ Relacionado con "🎨 Pulido visual / UI-UX", más arriba:
 
 - [ ] **`/login`: el cursor debe partir en la caja del nombre de
       usuario** (autofoco).
+
+- [ ] **Páginas muertas de MercadoPago:** `pages/payment-results/`
+      conserva textos de MercadoPago ("Pagaste en efectivo (Rapipago,
+      Pago Fácil…)", "Usaste transferencia bancaria"). Sus rutas están
+      comentadas en `App.jsx`, así que nadie las ve, pero contradicen que
+      MercadoPago esté eliminado del código. Limpieza pendiente
+      (encontrado en el paso 64).
+
+- [ ] **Doble `└` en el mensaje de WhatsApp:** en el bloque CLIENTE,
+      cuando el cliente escribe su email, quedan dos `└` (Tel y Email,
+      en `Checkout.jsx`). Es cosmético, pero la dueña lo ve en cada
+      pedido. Se resuelve dentro de "Rediseñar el mensaje de WhatsApp del
+      pedido" (encontrado en el paso 64).
 
 - [ ] Limpieza cosmética menor, sin apuro: `careGuides.js` contiene
       referencias a componentes de React (`Droplet`, `Wind`, `IronIcon`,
