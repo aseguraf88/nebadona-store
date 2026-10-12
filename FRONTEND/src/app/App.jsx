@@ -8,7 +8,6 @@ import { ProductContextProvider } from '../entities/product'
 import { CartContextProvider } from '../entities/cart'
 import { Checkout } from '../pages/checkout'
 import { ComingSoon } from '../pages/coming-soon'
-import { GuiaCuidados } from '../pages/guia-cuidados'
 import { EnviosYEntregas } from '../pages/envios-y-entregas'
 import { SizeGuide } from '../pages/size-guide'
 /* import PaymentSuccess from '../pages/payment-results/PaymentSuccess'
@@ -57,7 +56,6 @@ function App() {
                             <Route path="/register" element={<Navigate to="/" replace />} />
                             <Route path="/login" element={<Login />} />
                             <Route path="/checkout" element={<Checkout />} />
-                            <Route path="/guia-cuidados" element={<GuiaCuidados />} />
                             <Route path="/envios-y-entregas" element={<EnviosYEntregas />} />
                             <Route path="/guia-tallas" element={<SizeGuide />} />
                             {/*                             <Route

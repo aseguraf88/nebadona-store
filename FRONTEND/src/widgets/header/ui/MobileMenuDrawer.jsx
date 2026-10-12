@@ -22,7 +22,6 @@ const helpLinkClass =
 const HELP_LINKS = [
     { name: 'Envíos y Entregas', path: '/envios-y-entregas' },
     { name: 'Guía de Tallas', path: '/guia-tallas' },
-    { name: 'Guía de Cuidados', path: '/guia-cuidados' },
 ]
 
 const EXTERNAL_LINKS = [

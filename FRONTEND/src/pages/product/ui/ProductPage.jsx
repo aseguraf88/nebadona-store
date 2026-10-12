@@ -17,7 +17,6 @@ import {
 import VariantSelector from '../../../entities/product/ui/VariantSelector'
 import { ProductSection } from '../../../widgets/catalog'
 import { getSizeGuideByCategory } from '../../../entities/product/config/sizeGuides'
-import { getCareGuideByCategory } from '../../../entities/product/config/careGuides'
 import { getSizeStandardById } from '../../../entities/product/config/sizeStandardOptions'
 import { PRODUCT_DELIVERY_HIGHLIGHTS } from '../../../shared/config/shipping'
 import MobileGallery from './MobileGallery'
@@ -246,10 +245,6 @@ const ProductPage = () => {
     // Ancla de la Guía de Tallas según el grupo del estándar
     const sizeGuideAnchor =
         { babies: 'bebes', kids: 'ninos' }[sockStandard?.gender] || 'adultos'
-
-    const careGuide = product
-        ? getCareGuideByCategory(product.product_category)
-        : null
 
     const materialText = product?.material?.trim()
     const productDetails = [
@@ -586,7 +581,7 @@ const ProductPage = () => {
                                         )}
                             </ProductAccordion>
 
-                            {(productDetails.length > 0 || careGuide) && (
+                            {productDetails.length > 0 && (
                                 <ProductAccordion
                                     title="Detalles"
                                     className="min-w-0"
@@ -605,16 +600,6 @@ const ProductPage = () => {
                                                     </tbody>
                                                 </table>
                                             </div>
-                                        )}
-
-                                        {careGuide && (
-                                            <Link
-                                                to={`/guia-cuidados#${product.product_category}`}
-                                                state={{ from: 'product' }}
-                                                className={`link link-primary text-sm font-semibold inline-block ${productDetails.length > 0 ? 'mt-3' : ''}`}
-                                            >
-                                                Ver guía de cuidados →
-                                            </Link>
                                         )}
                                 </ProductAccordion>
                             )}

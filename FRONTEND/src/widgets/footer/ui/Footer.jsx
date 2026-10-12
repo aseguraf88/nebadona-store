@@ -46,12 +46,6 @@ const Footer = () => {
 
                 <div className="flex flex-wrap justify-center gap-x-4 gap-y-2 text-sm">
                     <Link
-                        to="/guia-cuidados"
-                        className="link link-hover text-base-content/70"
-                    >
-                        Guía de Cuidados
-                    </Link>
-                    <Link
                         to="/guia-tallas"
                         className="link link-hover text-base-content/70"
                     >
