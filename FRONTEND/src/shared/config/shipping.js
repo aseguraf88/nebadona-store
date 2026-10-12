@@ -15,8 +15,10 @@ import {
 // a secas, sino "el envío lo pagas al recibir"
 
 // Las 4 formas de entrega: condición corta (checkout), viñetas
-// (/envios-y-entregas) y deliveryType, que la orden sigue guardando (el
-// backend lo deriva igual: orderControllers.js, DELIVERY_TYPE_BY_METHOD).
+// (/envios-y-entregas, en segunda persona), payment (forma de pago, frase
+// impersonal y terminada en punto: la leen la dueña en el WhatsApp y el PDF,
+// y el cliente en el checkout) y deliveryType, que la orden sigue guardando
+// (el backend lo deriva igual: orderControllers.js, DELIVERY_TYPE_BY_METHOD).
 // La dirección se pide solo en las de tipo 'delivery'
 export const DELIVERY_METHODS = [
     {
@@ -25,10 +27,13 @@ export const DELIVERY_METHODS = [
         condition: 'Starken · el envío lo pagas al recibir',
         deliveryType: 'delivery',
         details: [
-            'Por Starken (también Blue Express; otras agencias, a convenir).',
+            'Por Starken.',
+            'Antes del despacho, transfieres el total de los productos.',
             'Despachamos el día hábil siguiente a tu pago.',
-            'El envío lo pagas a la agencia al recibir. Te damos un valor aproximado.',
+            'El envío lo pagas a Starken al recibir. Te damos un valor aproximado.',
         ],
+        payment:
+            'Transferencia de los productos antes del despacho; el envío se paga a Starken al recibir.',
         icon: Truck,
     },
     {
@@ -40,6 +45,7 @@ export const DELIVERY_METHODS = [
             'Por Uber o DiDi, el mismo día.',
             'Te cotizamos el viaje y pagas todo en una sola transferencia.',
         ],
+        payment: 'Todo en una sola transferencia.',
         icon: Zap,
     },
     {
@@ -50,7 +56,9 @@ export const DELIVERY_METHODS = [
         details: [
             'Ciudad del Niño (Línea 2) o Mirador (Línea 5).',
             'Día y hora a convenir.',
+            'Pagas en efectivo o por transferencia.',
         ],
+        payment: 'Efectivo o transferencia.',
         icon: TrainFront,
     },
     {
@@ -62,7 +70,9 @@ export const DELIVERY_METHODS = [
             'Gratis.',
             'Lunes a viernes de 19:00 a 22:00. Sábado y domingo de 10:00 a 20:00.',
             'Te damos la dirección por WhatsApp.',
+            'Pagas en efectivo o por transferencia.',
         ],
+        payment: 'Efectivo o transferencia.',
         icon: Warehouse,
     },
 ]

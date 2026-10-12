@@ -99,7 +99,7 @@ const Checkout = () => {
                             botón de abajo).
                         </li>
                         <li>Te respondemos en menos de 1 hora (de 12:00 a 22:00).</li>
-                        <li>Pagas cuando confirmemos tu pedido.</li>
+                        <li>Pagas después de que confirmemos tu pedido.</li>
                     </ol>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
@@ -235,14 +235,19 @@ const Checkout = () => {
 
         // --- Condiciones de pago ---
         // La fuente va antes de splitTextToSize: el corte depende del tamaño
+        // La forma de pago de la modalidad (shipping.js) termina en punto:
+        // se une con un espacio, sin agregar otro
         startY += 12
         doc.setFont('helvetica', 'normal')
         doc.setFontSize(9)
         doc.setTextColor(100, 100, 100)
-        const paymentLines = doc.splitTextToSize(
-            'Los productos se pagan por transferencia una vez confirmado el pedido por WhatsApp. Envío por agencia: el envío se paga a la agencia al recibir.',
-            182,
-        )
+        const paymentText = [
+            deliveryMethod?.payment && `Pago: ${deliveryMethod.payment}`,
+            'Coordinamos el pago por WhatsApp una vez confirmado el pedido.',
+        ]
+            .filter(Boolean)
+            .join(' ')
+        const paymentLines = doc.splitTextToSize(paymentText, 182)
         // Si no entra antes del margen inferior (15 mm), pasa a una hoja nueva
         const lineHeight = doc.getLineHeight() / doc.internal.scaleFactor
         const pageBottom = doc.internal.pageSize.getHeight() - 15
@@ -344,7 +349,14 @@ const Checkout = () => {
             message += `\n`
 
             message += `🚚 *ENTREGA*\n`
-            message += `└ ${deliveryMethod.name}${deliveryType === 'delivery' ? `: ${data.street} #${data.number}, ${data.city}` : ''}\n\n`
+            const deliveryLine = `${deliveryMethod.name}${deliveryType === 'delivery' ? `: ${data.street} #${data.number}, ${data.city}` : ''}`
+            // "└ Pago" es siempre el último hijo del árbol
+            if (deliveryMethod?.payment) {
+                message += `├ ${deliveryLine}\n`
+                message += `└ Pago: ${deliveryMethod.payment}\n\n`
+            } else {
+                message += `└ ${deliveryLine}\n\n`
+            }
 
             message += `📦 *DETALLE DE ÍTEMS*\n`
             message += `┌────────────────────────┐\n`
@@ -608,11 +620,16 @@ const Checkout = () => {
                                         </div>
                                     )}
 
-                                    <p className="mt-4 text-center text-xs sm:text-sm text-base-content/70">
-                                        Todavía no pagas nada. Te escribiremos por
-                                        WhatsApp para confirmar el stock, la entrega
-                                        y los datos de transferencia.
-                                    </p>
+                                    <div className="mt-4 space-y-1 text-center text-xs sm:text-sm text-base-content/70">
+                                        <p>
+                                            Todavía no pagas nada. Te escribiremos
+                                            por WhatsApp para confirmar el stock y
+                                            la entrega.
+                                        </p>
+                                        {deliveryMethod?.payment && (
+                                            <p>Pago: {deliveryMethod.payment}</p>
+                                        )}
+                                    </div>
 
                                     <button
                                         type="submit"

@@ -11,8 +11,9 @@ const INFO_CARDS = [
         title: 'Pago',
         icon: Wallet,
         details: [
-            'Transferencia bancaria.',
-            'Efectivo, si retiras en bodega o en el punto de encuentro.',
+            'Transferencia bancaria, en todas las formas de entrega.',
+            'Efectivo, solo si retiras en bodega o en el punto de encuentro.',
+            'Con Starken, transfieres los productos antes del despacho y el envío lo pagas al recibir.',
         ],
     },
     {
