@@ -585,47 +585,23 @@ como punto de partida, en vez de diseñar a ciegas.
       y el footer no cambiaron: sus textos siguen siendo ciertos. Probado
       en local y en producción (celular).
 
-- [ ] **Quitar la guía de cuidados** (decisión de la dueña, 11 de
-      octubre). Se hace como **paso 64b**. Solo quedan las guías de
-      "Envíos y entregas" y de "Tallas". El acordeón "Detalles" de la
-      ficha (material, tipo de calce, técnica, especificaciones y código)
-      **se mantiene**. Lo que se quita:
-      - la página `/guia-cuidados`: `pages/guia-cuidados/`
-        (`GuiaCuidados.jsx` e `index.js`) y su ruta e import en
-        `App.jsx`. Sin redirección: `/guia-cuidados` caerá en "No
-        encontramos esta página" (la ruta `*` del paso 56);
-      - el enlace "Ver guía de cuidados →" del acordeón "Detalles" de
-        `ProductPage.jsx`, con el import de `getCareGuideByCategory` y la
-        variable `careGuide`. La condición del acordeón
-        (`productDetails.length > 0 || careGuide`) pasa a depender solo
-        de las filas; como casi siempre está la fila Código, sigue
-        apareciendo;
-      - el enlace del footer (`Footer.jsx`, grupo "Ayuda") y el del menú
-        hamburguesa (`MobileMenuDrawer.jsx:25`);
-      - los datos: `entities/product/config/careGuides.js`;
-      - la dependencia `@lucide/lab`, con `npm uninstall @lucide/lab` (no
-        a mano), para que `package.json` y `package-lock.json` queden
-        coherentes: hoy solo la importa `careGuides.js` (el ícono de
-        plancha). `lucide-react` se queda: la usan la ficha,
-        `shipping.js`, `/envios-y-entregas` y `ProductCarousel.jsx`.
-      **A revisar en el mismo paso:**
-      - `CLAUDE.md`: la regla de `@lucide/lab` (con el ejemplo de
-        `IronIcon` en `careGuides.js`), la receta de tabla (nombra
-        `/guia-cuidados` y `GuiaCuidados.jsx`) y la sección de Materiales
-        (el link de cuidados de la ficha y la tabla por categoría);
-      - las líneas del BACKLOG que nombran `/guia-cuidados`,
-        `careGuides.js` o `GuiaCuidados.jsx`: "Ayuda" del footer, el caso
-        "categoría sin guía de cuidados", el ítem de títulos de los
-        acordeones (pasos 54 y 58), "Ancla tapada en las guías", la
-        limpieza cosmética de `careGuides.js` en "🔵 Baja prioridad"
-        (queda sin objeto) y la nota de rutas en español, más los
-        resueltos de la Guía de Cuidados (páginas propias, tablas,
-        subsecciones, íconos, "← Volver al producto" y radio de tablas).
-        Los resueltos se dejan como historia, con una nota de que la guía
-        se retiró.
-      Antes de borrar, un `grep` de `careGuides`, `CARE_GUIDES`,
-      `guia-cuidados` y `@lucide/lab` en `FRONTEND/src`, y `npm run
-      build`.
+- [x] ~~**Quitar la guía de cuidados**~~ — resuelto (paso 64b, commit
+      `189dd57`). Decisión de la dueña del 11 de octubre: solo quedan las
+      guías de "Envíos y entregas" y de "Tallas". Se quitó:
+      - la página `/guia-cuidados` (`pages/guia-cuidados/`) y su ruta e
+        import en `App.jsx`;
+      - el enlace "Ver guía de cuidados →" del acordeón "Detalles" de la
+        ficha. El acordeón **se mantiene**, con su tabla de material, tipo
+        de calce, técnica, especificaciones y código; ahora depende solo
+        de sus filas;
+      - los enlaces del footer y del menú hamburguesa;
+      - `careGuides.js` y la dependencia `@lucide/lab` (con `npm
+        uninstall`; el lock solo cambió en lo de `@lucide/lab`).
+        `lucide-react` se queda.
+      `/guia-cuidados` cae en "No encontramos esta página", sin
+      redirección. Los ítems del BACKLOG que nombraban la guía quedaron
+      como historia o sin objeto. Probado en local y en producción
+      (celular).
 
 - [ ] **Categorías de accesorios.** Alejandro (11 de octubre): la tienda
       no vende solo calcetas, camisas y polerones. Categorías
@@ -795,7 +771,8 @@ octubre. Sin código todavía: cada grupo se convierte en uno o más pasos.
       "Tienda" más un botón por tema, con un panel de franquicias que se
       abre con el cursor, con un clic o con el teclado, centrado bajo el
       buscador. **Mobile:** la sesión (si hay), Tienda, los temas en
-      acordeón y "Ayuda" (envíos, tallas, cuidados, WhatsApp e Instagram).
+      acordeón y "Ayuda" (envíos, tallas, cuidados, WhatsApp e Instagram;
+      la guía de cuidados se retiró en el paso 64b).
       Se eliminaron "Lo Nuevo" y "Ofertas" de los dos menús. Los filtros de
       `/shop` ahora viven en la URL (`tematica`, `franquicia`, `tipo` y
       `category`, con slugs; un valor que no existe se ignora), así que se
@@ -1121,9 +1098,10 @@ octubre. Sin código todavía: cada grupo se convierte en uno o más pasos.
         al elegir talla o color). Probado en local y en producción
         (pruebas.nebadon.cl, celular y desktop);
       - Sin probar con datos reales (paso 58): "sin franquicia" (muestra
-        la categoría) y "categoría sin guía de cuidados" (sin link). No hay
-        productos publicados así. Es la misma lógica de antes, pero no se
-        verificó;
+        la categoría). No hay productos publicados así. Es la misma lógica
+        de antes, pero no se verificó. El otro caso de ese paso,
+        "categoría sin guía de cuidados" (sin link), quedó **sin objeto**:
+        la guía se retiró en el paso 64b;
       - color de franquicia igual en `ProductCard`, `ProductDetailModal` y
         `ProductPage`. Hallazgo del paso 58: hoy difiere en los tres
         (ficha `text-primary`, tarjeta `text-secondary`, modal gris por el
@@ -1276,7 +1254,8 @@ octubre. Sin código todavía: cada grupo se convierte en uno o más pasos.
         `state={{ from: 'product' }}` ("← Volver al producto" sigue tras
         F5), solo si la categoría tiene guía en `careGuides.js`. La mini
         tabla de cuidados (ícono + instrucción) se quitó de la ficha; la
-        guía completa sigue en `/guia-cuidados`.
+        guía completa sigue en `/guia-cuidados`. La guía se retiró en el
+        paso 64b: "Detalles" quedó solo con su tabla.
 
 - [ ] **Ancla tapada en las guías** (hallazgo del paso 62; investigado en
       la Parte 1 del paso 63 y **aplazado**, prioridad media-baja). Al
@@ -1289,9 +1268,10 @@ octubre. Sin código todavía: cada grupo se convierte en uno o más pasos.
       `/guia-tallas`, que **solo aparece cuando el producto tiene la talla
       editable** (por ejemplo, "Donkey Kong"; con talla fija no se
       muestra).
-      **La guía de cuidados se retira** (decisión de la dueña, 11 de
-      octubre; ver "Quitar la guía de cuidados"): el problema queda solo
-      en `/guia-tallas` y en el ancla `#catalogo` del Home.
+      **La guía de cuidados se retiró en el paso 64b** (decisión de la
+      dueña, 11 de octubre; ver "Quitar la guía de cuidados"): el
+      problema queda solo en `/guia-tallas` y en el ancla `#catalogo` del
+      Home.
       **Resultado de la Parte 1 del paso 63:** el `id` y el `scroll-mt-32`
       están en el **mismo elemento** (hipótesis descartada) en
       `SizeGuide.jsx`, `GuiaCuidados.jsx` y el Home. La cabecera mide unos
@@ -1450,21 +1430,38 @@ Relacionado con "🎨 Pulido visual / UI-UX", más arriba:
       pedido. Se resuelve dentro de "Rediseñar el mensaje de WhatsApp del
       pedido" (encontrado en el paso 64).
 
-- [ ] Limpieza cosmética menor, sin apuro: `careGuides.js` contiene
-      referencias a componentes de React (`Droplet`, `Wind`, `IronIcon`,
-      etc., vía `createElement` para evitar depender de que `.js`
-      soporte sintaxis JSX) — candidato a renombrarse `careGuides.jsx`
-      para reflejar mejor su contenido real, a diferencia de
-      `sizeGuides.js` que sí es texto plano. Además, `GuiaCuidados.jsx`
-      (y probablemente `EnviosYEntregas.jsx`) rompen la convención del
-      resto del proyecto de nombrar componentes en inglés aunque el
-      contenido sea en español (`ProductPage`, `Footer`, `Navbar`...) —
-      candidatos a renombrarse `CareGuide.jsx`/`ShippingInfo.jsx` o
-      similar. Ninguno de los dos afecta el funcionamiento ni las rutas
-      públicas (`/guia-cuidados`, que sí conviene mantener en español).
-      La tercera página de este tipo, la Guía de Tallas (Fase 4, paso 34),
-      ya se creó con la convención correcta (`pages/size-guide/ui/SizeGuide.jsx`,
-      ruta `/guia-tallas` en español): quedan 2 de 3 por renombrar.
+- [ ] **El acordeón "Detalles" aparece un frame después** en el primer
+      render de la ficha, debajo del botón "Agregar": desde el paso 64b
+      depende solo de sus filas, y la fila "Código" necesita la variante
+      seleccionada, que se elige en un efecto después del primer render.
+      No se nota al cargar. Baja prioridad.
+
+- [ ] **Deuda técnica: `npm run lint` no pasa limpio.** Al cierre del
+      paso 64b da 47 problemas (42 errores y 5 avisos) en 21 archivos,
+      todos anteriores a ese paso. Por regla:
+      `react-hooks/set-state-in-effect` 16, `preserve-caught-error` 11
+      (los `services` de carrito, órdenes y usuario), `no-unused-vars` 7,
+      `react-refresh/only-export-components` 6 (los tres contextos),
+      `react-hooks/exhaustive-deps` 5 (avisos), `no-undef` 1
+      (`require` en `tailwind.config.js`) y `no-useless-assignment` 1.
+      Los que salieron al tocar archivos en el paso 64b son tres
+      `set-state-in-effect`: dos en `ProductPage.jsx` (`useIsMdUp` y la
+      selección de la variante inicial) y uno en `MobileMenuDrawer.jsx`
+      (cerrar los acordeones al cerrar el menú); no son bugs, la regla es
+      de estilo y esos efectos están probados en producción. El resto no
+      se revisó uno por uno. El build no depende del lint. Revisarlo como
+      paso propio, por regla y sin cambiar comportamiento.
+
+- [ ] Limpieza cosmética menor, sin apuro: `EnviosYEntregas.jsx` rompe
+      la convención del resto del proyecto de nombrar componentes en
+      inglés aunque el contenido sea en español (`ProductPage`, `Footer`,
+      `Navbar`...): candidato a renombrarse `ShippingInfo.jsx` o similar,
+      sin cambiar la ruta pública (`/envios-y-entregas`). La Guía de
+      Tallas ya se creó con la convención correcta
+      (`pages/size-guide/ui/SizeGuide.jsx`, ruta `/guia-tallas`).
+      La parte original de este ítem sobre `careGuides.js` (renombrarlo a
+      `.jsx`) y `GuiaCuidados.jsx` quedó **sin objeto**: la guía se retiró
+      en el paso 64b.
 
 - [ ] Limpieza chica, sin apuro: la lista de sinónimos de "calcetines"
       (`calceta`, `calcetas`, `calcetin`, `calcetines`) tiene su fuente en
@@ -1638,7 +1635,8 @@ Relacionado con "🎨 Pulido visual / UI-UX", más arriba:
       agregados al footer. Confirmado con productos reales de las tres
       categorías. Actualización (paso 58): la mini tabla de cuidados se
       quitó de la ficha; queda solo el link "Ver guía de cuidados →"
-      dentro del acordeón "Detalles".
+      dentro del acordeón "Detalles". La guía de cuidados se retiró en el
+      paso 64b; `/envios-y-entregas` sigue.
 - [x] **Footer desktop: separadores desbordados a la izquierda** — el
       `<footer>` era `flex flex-col` sin ancho máximo, así que los 3
       `divider` (`w-full`) se estiraban hasta el borde de la pantalla en
@@ -1660,13 +1658,15 @@ Relacionado con "🎨 Pulido visual / UI-UX", más arriba:
       pasaron de lista a tabla de dos columnas. Íconos con `lucide-react`
       + `@lucide/lab` (nuevo; el ícono de plancha, `IronIcon`, viene de
       lab y va envuelto en `Icon iconNode={...}`). Confirmado en el
-      navegador, desktop y 375px, con las tres categorías.
+      navegador, desktop y 375px, con las tres categorías. La guía se
+      retiró en el paso 64b (y con ella `@lucide/lab`).
 - [x] Acordeón "Detalles del Producto y Cuidados" separado en dos
       subsecciones: subtítulos "Detalles" y "Cuidados" (mismo estilo que
       la línea de técnica de `/guia-cuidados`, cada uno visible solo si
       su bloque existe) y una línea divisoria entre ambos, solo cuando
       hay detalles arriba (hoy en `border-base-content/10`, el mismo tono
-      que los separadores de tabla). Confirmado en el navegador.
+      que los separadores de tabla). Confirmado en el navegador. La guía
+      se retiró en el paso 64b.
 - [x] **Estilo de tabla unificado en todo el sitio** — una sola receta
       en `/guia-cuidados`, Detalles y Cuidados de la ficha, Tallas y
       Medidas, y Envíos: contenedor `overflow-x-auto` con borde
@@ -1679,11 +1679,13 @@ Relacionado con "🎨 Pulido visual / UI-UX", más arriba:
       Tallas y Medidas la columna Talla va en negrita, igual que la
       columna de etiquetas de las otras tablas, y el fix de `min-w-0` en
       dos niveles se conservó. Receta documentada en `CLAUDE.md`.
-      Confirmado en el navegador, desktop y 375px.
+      Confirmado en el navegador, desktop y 375px. La guía se retiró en
+      el paso 64b; la receta sigue en Tallas y la ficha.
 - [x] Emoji de categoría (🧦👕🧥) sacado de los títulos de
       `/guia-cuidados` — los íconos de la tabla ya cumplen esa función.
       El campo `emoji` de `careGuides.js` quedó sin uso (se dejó a
-      propósito, pendiente de decidir si se borra).
+      propósito, pendiente de decidir si se borra). La guía se retiró en
+      el paso 64b (con ella, el campo `emoji`).
 - [x] **Mini tabla de envíos en la ficha** — el acordeón "Detalles de
       Envío y Entregas" reemplazó sus 3 emojis sueltos por una mini tabla
       con las 4 modalidades reales de `/envios-y-entregas` (agencia,
@@ -1698,13 +1700,14 @@ Relacionado con "🎨 Pulido visual / UI-UX", más arriba:
       (`state` de React Router en los links de origen, sobrevive a F5) y
       vuelve con `navigate(-1)`. Pasó a `btn-outline btn-primary`; queda
       distinto a propósito del "Seguir comprando" del checkout, que sigue
-      sin color.
+      sin color. La guía se retiró en el paso 64b; el botón sigue en
+      `/envios-y-entregas` y `/guia-tallas`.
 - [x] **Radio de las tablas anidadas en acordeones** — las 4 tablas de la
       ficha usaban `rounded-box` (16px) dentro de acordeones `rounded-xl`
       (12px): la caja de adentro más redondeada que la de afuera. Pasaron
       a `rounded-lg` (8px, igual a `--rounded-btn` del tema). La tabla de
       `/guia-cuidados`, que no está anidada, sigue con `rounded-box`.
-      Confirmado en el navegador.
+      Confirmado en el navegador. La guía se retiró en el paso 64b.
 
 - [x] **Tabla de "Tallas y Medidas" se desbordaba en mobile** (la de
       Polerones, 5 columnas, era la más notoria) — tercer caso del mismo

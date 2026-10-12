@@ -87,11 +87,6 @@ manual. MercadoPago fue eliminado del código por completo (no reintroducir).
   `tree /F /A | Out-File -Encoding utf8 estructura.txt` — nunca desde la
   raíz de `BACKEND`/`FRONTEND`, porque `tree` no permite excluir
   `node_modules`.
-- **Los íconos de `@lucide/lab` son icon nodes, no componentes de React.**
-  Hay que envolverlos con `<Icon iconNode={...} />` de `lucide-react` (en
-  un `.js` sin JSX, con `createElement`; ejemplo real: `IronIcon` en
-  `careGuides.js`). Si se usan directo, `npm run build` no detecta el
-  error: solo falla al renderizar.
 - **Estilo de tabla del sitio (receta única, no reinventarla)**:
   contenedor `overflow-x-auto` + radio + `border border-base-content/10`
   (mismo tono que el `divider` del footer), y `border-base-content/10` en
@@ -100,7 +95,7 @@ manual. MercadoPago fue eliminado del código por completo (no reintroducir).
   sin `!important`. Sin `table-zebra` ni separadores verticales por
   defecto. Encabezado oscuro (`bg-neutral text-neutral-content` en el
   `<tr>` del `<thead>`) solo si la tabla tiene una fila de encabezado
-  real con texto (`/guia-cuidados`, la tabla del acordeón "Tallas"); las
+  real con texto (`/guia-tallas`, la tabla del acordeón "Tallas"); las
   tablas sin encabezado (la de Detalles de la ficha) no lo llevan.
   La tabla de envíos de la ficha ya no existe: el acordeón de envíos se
   quitó en el paso 54 y su información quedó en la franja bajo el botón
@@ -108,8 +103,8 @@ manual. MercadoPago fue eliminado del código por completo (no reintroducir).
   Radio según dónde vive la tabla: anidada dentro de un acordeón
   (`rounded-xl`, 12px) → `rounded-lg` (8px), más chico que su contenedor
   y además igual a `--rounded-btn` del tema, así que no suma un valor
-  nuevo; suelta, no anidada (`/guia-cuidados`) → `rounded-box` (16px).
-  Aplicado en `ProductPage.jsx` y `GuiaCuidados.jsx`. Si la tabla va
+  nuevo; suelta, no anidada (`/guia-tallas`) → `rounded-box` (16px).
+  Aplicado en `ProductPage.jsx` y `SizeGuide.jsx`. Si la tabla va
   dentro de un acordeón, sumar también el `min-w-0` en dos niveles de la
   regla de DaisyUI de más arriba.
 - **`scrollbar-hide` no existe en este proyecto** (no hay plugin ni regla
@@ -216,11 +211,10 @@ La ficha de producto (`ProductPage.jsx`) tenía, en el acordeón "Detalles
 del Producto y Cuidados" (hoy "Detalles", desde el paso 58), 3 bullets
 fijos pensados solo para calcetas
 ("Algodón peinado premium...", etc.), sin sentido para camisas o
-polerones. La parte de Cuidados se había resuelto antes (movida a
-`/guia-cuidados`, con resumen corto + link en la ficha). Esta fase
-reemplazó los bullets por **campos reales, editables por producto desde
-el dashboard**. Probado de punta a punta por el usuario (crear, editar,
-borrar un valor, recarga completa, ficha pública).
+polerones. Esta fase reemplazó los bullets por **campos reales,
+editables por producto desde el dashboard**. Probado de punta a punta
+por el usuario (crear, editar, borrar un valor, recarga completa, ficha
+pública).
 
 **Los 4 campos:**
 - **Material** — `material`, ya existía. Se guarda en minúscula
@@ -243,9 +237,7 @@ requiere cambiar dos inputs, sin tocar datos ni backend.
 `useProductForm.js` (los 4 lugares de siempre: `EMPTY_TEMPLATE`,
 `normalizeTemplate`, `mapProductToTemplate`, `payload` de
 `handleConfirmSave`), `ProductAttributesForm.jsx` (inputs debajo de
-Material, en la tarjeta "Organización") y `ProductPage.jsx`. Para los
-cuidados: `careGuides.js`, `GuiaCuidados.jsx`, `package.json` y
-`package-lock.json`.
+Material, en la tarjeta "Organización") y `ProductPage.jsx`.
 
 **Comportamiento en la ficha (actualizado en el paso 58):** el acordeón
 "Detalles" muestra una **tabla de dos columnas** (etiqueta / valor), en
@@ -256,29 +248,17 @@ cambia al elegir talla o color); solo aparecen las filas con valor.
 Como todo producto tiene al menos una variante con `sku`, la fila Código
 casi siempre existe y el acordeón casi siempre aparece.
 
-Debajo de la tabla va el link "Ver guía de cuidados →" a
-`/guia-cuidados#<categoría>` con `state={{ from: 'product' }}` (hace
-aparecer "← Volver al producto" en la guía, también tras F5), con
-`mt-3` solo si hay tabla arriba. El link solo aparece si la categoría
-tiene guía en `careGuides.js` (calcetines, camisas, polerones). La mini
-tabla de cuidados (ícono + instrucción) se quitó de la ficha en el paso
-58; los íconos y textos de `careGuides.js` los sigue usando
-`/guia-cuidados`. El acordeón no se renderiza solo si no hay ninguna
-fila (ni siquiera Código) y la categoría no tiene guía.
+No hay guía de cuidados (`/guia-cuidados` se retiró en el paso 64b por
+decisión de la dueña; no reintroducir).
 
-`/guia-cuidados` pasó de tarjetas a **tabla por categoría** (ícono /
-acción / instrucción).
-
-**Íconos:** `lucide-react` + `@lucide/lab` (dependencia nueva en
-`package.json`). Ver la regla sobre `@lucide/lab` en "Reglas de trabajo".
+**Íconos:** solo `lucide-react`.
 
 **Error real ya cometido una vez con este mismo tema, no repetir:** al
-escribir la Guía de Cuidados (`/guia-cuidados`) se usó la palabra
-"estampados" de forma genérica para todo el texto, aunque las calcetas
-son bordadas — lo detectó la dueña del negocio en QA real. Por eso el
-campo se llama "Técnica de Decoración" (genérico) y no "Estampado", y
-cualquier texto nuevo debe evitar asumir una sola técnica para todas las
-categorías.
+escribir un texto de cuidados se usó "estampados" de forma genérica
+aunque las calcetas son bordadas — lo detectó la dueña del negocio en
+QA real. Por eso el campo se llama "Técnica de Decoración" (genérico) y
+no "Estampado", y cualquier texto nuevo debe evitar asumir una sola
+técnica para todas las categorías.
 
 ## 🔧 Tarea en curso ahora mismo
 
