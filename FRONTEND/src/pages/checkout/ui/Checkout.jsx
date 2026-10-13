@@ -7,11 +7,12 @@ import toast from 'react-hot-toast'
 import { FiArrowLeft, FiCheckCircle } from 'react-icons/fi'
 import { FaWhatsapp } from 'react-icons/fa'
 import { jsPDF } from 'jspdf'
-import { WHATSAPP_URL } from '../../../shared/config/contact'
+import { buildWhatsAppUrl } from '../../../shared/config/contact'
 import {
     DELIVERY_METHODS,
     getDeliveryMethod,
 } from '../../../shared/config/shipping'
+import { buildWhatsAppMessage } from '../lib/buildWhatsAppMessage'
 
 const Checkout = () => {
     const { cart, total, loading: cartLoading, openModal, clearCart } = useCart()
@@ -319,69 +320,50 @@ const Checkout = () => {
 
             const folio = result.orderNumber
             const today = new Date()
+            // La misma fecha y hora van al PDF y al mensaje; la hora en 24 h
+            // ("18:45"), sin "p. m."
             const dateStr = today.toLocaleDateString('es-CL')
             const timeStr = today.toLocaleTimeString('es-CL', {
                 hour: '2-digit',
                 minute: '2-digit',
+                hourCycle: 'h23',
             })
 
             // Generamos el PDF
             generatePDF(data, folio, dateStr, timeStr)
 
-            // ==========================================
-            // MENSAJE DE WHATSAPP (ESTILO MATRICIAL)
-            // ==========================================
-            let message = `┌────────────────────────┐\n`
-            message += `│    NEBADON STORE       │\n`
-            message += `│   ORDEN DE COMPRA      │\n`
-            message += `├────────────────────────┤\n`
-            message += `│ Folio : #ORD-${folio}        │\n`
-            message += `│ Fecha : ${dateStr}     │\n`
-            message += `│ Hora  : ${timeStr}          │\n`
-            message += `└────────────────────────┘\n\n`
-
-            message += `👤 *CLIENTE*\n`
-            message += `├ Nombre: ${data.firstName} ${data.lastName}\n`
-            message += `└ Tel   : ${data.phone}\n`
-            if (data.email && deliveryType === 'delivery') {
-                message += `└ Email : ${data.email}\n`
-            }
-            message += `\n`
-
-            message += `🚚 *ENTREGA*\n`
-            const deliveryLine = `${deliveryMethod.name}${deliveryType === 'delivery' ? `: ${data.street} #${data.number}, ${data.city}` : ''}`
-            // "└ Pago" es siempre el último hijo del árbol
-            if (deliveryMethod?.payment) {
-                message += `├ ${deliveryLine}\n`
-                message += `└ Pago: ${deliveryMethod.payment}\n\n`
-            } else {
-                message += `└ ${deliveryLine}\n\n`
-            }
-
-            message += `📦 *DETALLE DE ÍTEMS*\n`
-            message += `┌────────────────────────┐\n`
-
-            cart.forEach((item, index) => {
-                const qty = item.quantity || 1
-                const itemNum = String(index + 1).padStart(2, '0')
-                const categoryName =
-                    item.product_category || item.category || 'General'
-                const sku = item.sku || 'SIN-SKU'
-                const subtotal = formatPrice(item.price * qty)
-
-                message += `│ #${itemNum} | Qty: ${qty}\n`
-                message += `│ [${categoryName}] - [${sku}]\n`
-                message += `│ ${item.name}\n`
-                message += `│ Subtotal: ${subtotal}\n`
-                message += `├────────────────────────┤\n`
+            // Mensaje de WhatsApp (lib/buildWhatsAppMessage.js)
+            const message = buildWhatsAppMessage({
+                folio,
+                dateStr,
+                timeStr,
+                customer: {
+                    firstName: data.firstName,
+                    lastName: data.lastName,
+                    phone: data.phone,
+                    // Solo con despacho: en las de retiro el campo no se
+                    // muestra, pero data.email puede traer el correo de la
+                    // sesión (defaultValues)
+                    email: deliveryType === 'delivery' ? data.email : '',
+                },
+                address:
+                    deliveryType === 'delivery'
+                        ? {
+                              street: data.street,
+                              number: data.number,
+                              city: data.city,
+                              state: data.state,
+                          }
+                        : null,
+                deliveryMethod,
+                items: cart,
+                total,
+                formatPrice,
             })
 
-            message += `│ *TOTAL (sin envío): ${formatPrice(total)}*\n`
-            message += `└────────────────────────┘\n\n`
-            message += `Hola, acabo de enviar la orden #ORD-${folio} desde la web y descargué mi PDF. Quedo atento(a) a la confirmación.`
-
-            const encodedMessage = encodeURIComponent(message)
-            const whatsappUrl = `${WHATSAPP_URL}?text=${encodedMessage}`
+            // api.whatsapp.com/send (contact.js): wa.me pierde los emojis en
+            // el computador. La función codifica el texto: va sin codificar
+            const whatsappUrl = buildWhatsAppUrl(message)
             window.open(whatsappUrl, '_blank')
 
             toast.success(`¡Orden #ORD-${folio} registrada exitosamente!`)
