@@ -124,6 +124,9 @@ manual. MercadoPago fue eliminado del código por completo (no reintroducir).
   navegación nueva y restaura la posición guardada al volver; no agregar
   `window.scrollTo` en las páginas. Los filtros y el orden de `/shop` viven
   en la URL y se cambian con `replace`: un solo "atrás" sale de `/shop`.
+- **WhatsApp del pedido:** `buildWhatsAppMessage.js`, sin tabs ni dibujo;
+  emojis del set de 2010, sin U+FE0F ni U+FFFD, nunca en lugar de palabras.
+  Con emojis abrir con `buildWhatsAppUrl` (`contact.js`): `wa.me` los rompe en WhatsApp Web.
 
 ## Sitio en producción
 Desplegado y en vivo — dos dominios con propósitos distintos:

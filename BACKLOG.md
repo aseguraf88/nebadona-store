@@ -631,38 +631,43 @@ como punto de partida, en vez de diseñar a ciegas.
       La Parte 1 comparará esta lista con los nombres reales de las
       categorías en la base antes de proponer nada.
 
-- [ ] **Rediseñar el mensaje de WhatsApp del pedido.** Pedido de
-      Alejandro (12 de octubre): hacer el mensaje más ameno a la vista y
-      quitar la "basura visual" (los caracteres de árbol y de caja:
-      `├ └ ┌ ─`, etc.); solo lo esencial. Esos símbolos, además, se
-      dibujan distinto según el teléfono.
-      **Contenido deseado:** un título "Nebadon Store"; número de orden;
-      datos personales (nombre, teléfono y email si lo dio); dirección
-      (si corresponde); detalle del pedido; modalidad de entrega; total a
-      pagar; y un mensaje amigable que viene de la página. Si la persona
-      escribió su nombre en el formulario, que también salga en el
-      mensaje (por ejemplo, en el saludo).
-      **Cómo se hace:** el diseño se revisa entre Alejandro y Claude
-      **antes de implementar**. El paso arranca con el mensaje actual
-      completo y una propuesta.
-      **A definir:**
-      - saludo en primera persona o resumen neutro;
-      - qué mensaje amigable viene de la página (saludo, despedida o
-        ambos);
-      - si se mantiene el SKU en cada línea (la dueña lo usa para
-        identificar variantes);
-      - si el PDF cambia también;
-      - cómo queda con pedidos grandes: el mensaje viaja en la URL de
-        WhatsApp y hay un límite práctico de largo;
-      - la línea "Pago: …" por modalidad (paso 64);
-      - la línea de la consulta de caja de regalo (versión 1 de "Armar
-        regalos").
-      **Código:** toca el armado del mensaje en `Checkout.jsx`; en la
-      Parte 1, evaluar extraerlo a una función propia. Mantiene las
-      reglas de textos del paso 54, español neutro y sin voseo.
-      **Relacionado:** "Armar regalos", "Categorías de accesorios" (los
-      nombres largos de producto) y "Doble `└` en el mensaje de WhatsApp"
-      (en "🔵 Baja prioridad").
+- [x] ~~**Rediseñar el mensaje de WhatsApp del pedido**~~ — resuelto
+      (paso 66, commit `4da0bc1`). Diseño de la dueña:
+      - **Función propia:** `pages/checkout/lib/buildWhatsAppMessage.js`,
+        pura: `Checkout.jsx` le pasa los datos y arma la URL.
+      - **Formato:** saludo con el nombre ("Hola, soy … Acabo de hacer
+        este pedido en la tienda. 👋", sin punto doble si el nombre
+        termina en `.`, `!` o `?`); secciones entre separadores de 27
+        guiones; títulos y etiquetas en mayúsculas y negrita (`*PEDIDO:*`,
+        `*DETALLE*`…), datos en texto normal; cierre "Espero tu
+        confirmación. ¡Gracias!", sin emoji.
+      - **Emojis solo en los títulos y al final del saludo:** 11, del set
+        de Unicode 6.0 (⚡ es anterior), sin selector de variación ni en
+        lugar de una palabra. El de ENTREGA depende de la modalidad
+        (🚚 ⚡ 🚇 📦).
+      - **Sin tabuladores:** se probaron para alinear los dos puntos y se
+        vieron distintos según el teléfono y el computador.
+      - **Contenido:** número de pedido; fecha y hora (24 horas, también
+        en el PDF); ítems con talla y color entre paréntesis (sin `STD`
+        ni `UNICA`) y sin SKU (el PDF lo conserva); total sin envío;
+        modalidad; dirección en dos líneas y email solo con despacho;
+        línea de pago por modalidad (`shipping.js`); nombre y teléfono.
+      - **Lo que escribe el cliente y el catálogo:** `cleanText` quita
+        `*`, `_`, `~` y backtick (no rompen la negrita) y junta los
+        blancos; el email no se limpia.
+      - **URL:** `wa.me` pierde los emojis en el computador (se ve "?");
+        el checkout usa `api.whatsapp.com/send` mediante
+        `buildWhatsAppUrl` (`shared/config/contact.js`), también en
+        "Reabrir WhatsApp". El botón flotante y el menú siguen con
+        `wa.me` porque su texto no lleva emojis.
+      - **Sin recorte de pedidos grandes:** 25 ítems ≈ 2.700 caracteres
+        codificados (ver "Pedidos muy largos en el mensaje de WhatsApp",
+        en "🔵 Baja prioridad").
+      - `extraLines` queda listo para la consulta de caja de regalo
+        ("Armar regalos").
+      Probado en local y en producción (celular y computador, en WhatsApp
+      Web: los emojis se ven con `api.whatsapp.com/send`). La aplicación
+      de escritorio de WhatsApp no se probó.
 
 ## 📝 Lista de la dueña y usuarios (octubre)
 
@@ -1424,11 +1429,34 @@ Relacionado con "🎨 Pulido visual / UI-UX", más arriba:
       MercadoPago esté eliminado del código. Limpieza pendiente
       (encontrado en el paso 64).
 
-- [ ] **Doble `└` en el mensaje de WhatsApp:** en el bloque CLIENTE,
-      cuando el cliente escribe su email, quedan dos `└` (Tel y Email,
-      en `Checkout.jsx`). Es cosmético, pero la dueña lo ve en cada
-      pedido. Se resuelve dentro de "Rediseñar el mensaje de WhatsApp del
-      pedido" (encontrado en el paso 64).
+- [x] ~~**Doble `└` en el mensaje de WhatsApp**~~ — resuelto con el
+      rediseño del mensaje (paso 66, commit `4da0bc1`): el mensaje ya no
+      usa caracteres de árbol ni de caja.
+
+- [ ] **Teléfono del checkout sin formato:** el campo acepta cualquier
+      texto de 8 o más caracteres (`required` y `minLength: 8` en
+      `Checkout.jsx`), aunque el ejemplo dice "+56912345678", y no se
+      normaliza ni en el frontend ni en el backend: se guarda y sale en
+      el mensaje tal como lo escribe el cliente (encontrado en el paso
+      66).
+
+- [ ] **Error vacío en el teléfono con menos de 8 caracteres:**
+      `minLength: 8` no tiene mensaje propio, así que el campo queda en
+      rojo con el mensaje de error en blanco (encontrado en el paso 66).
+
+- [ ] **Pedidos muy largos en el mensaje de WhatsApp** (plan, sin
+      implementar). El mensaje viaja en la URL y hay un límite práctico
+      de largo; hoy no se recorta: 25 ítems ≈ 2.700 caracteres
+      codificados. Si la URL codificada pasa de unos 6.000 caracteres:
+      listar los primeros N ítems, "y X productos más; el detalle
+      completo está en el PDF" y el total siempre. Va en
+      `buildWhatsAppMessage.js` (encontrado en el paso 66).
+
+- [ ] **Consulta de caja de regalo en el mensaje:** `buildWhatsAppMessage`
+      recibe `extraLines`, líneas que van justo después del total,
+      pensadas para la consulta de la versión 1 de "Armar regalos"
+      ("Consulta: caja de regalo, +$2.000, a confirmar"). Hoy no se usa;
+      se conecta en ese paso.
 
 - [ ] **El acordeón "Detalles" aparece un frame después** en el primer
       render de la ficha, debajo del botón "Agregar": desde el paso 64b
