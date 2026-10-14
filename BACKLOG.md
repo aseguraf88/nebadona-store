@@ -432,6 +432,12 @@ como punto de partida, en vez de diseñar a ciegas.
          dashboard y carrito de un cliente logueado; el gesto de deslizar
          para volver y la restauración de la posición de scroll en `/shop`
          (puede haber un parpadeo entre la captura y la página real).
+         Revisión parcial (13 de octubre), que **no cuenta como prueba**:
+         una persona ajena entró desde un iPhone, abrió el dashboard,
+         cargó la lista de productos e hizo una orden de prueba. No se
+         sabe qué más revisó. **Falta una lista de pruebas para Safari,
+         iPhone y Mac**, y hacerlas con ella; los resultados se anotan
+         aquí, con el aparato y lo que se probó.
       Después del lanzamiento:
       4. Decidir si se retira `nebadona-store-cyan.vercel.app`; si se
          retira, sacarlo de `FRONTEND_URL`.
@@ -624,10 +630,11 @@ como punto de partida, en vez de diseñar a ciegas.
       talla?, ¿qué campos de la ficha aplican?, ¿prefijo de SKU?).
       **Decisiones de la dueña, por categoría:** tallas, y colores o
       diseños.
-      **Pendiente de la dueña:** responde el 12 de octubre, después de
-      revisar en la bodega, con una planilla con categoría, tallas,
-      colores o diseños y cantidad aproximada de modelos. Sin eso no se
-      puede empezar el paso 65.
+      **Pendiente de la dueña:** una planilla con categoría, tallas,
+      colores o diseños y cantidad aproximada de modelos, que enviará
+      cuando vea el inventario (sin fecha). Al 13 de octubre aún no
+      llega la lista completa de categorías. Sin eso no se puede
+      empezar el paso 65.
       La Parte 1 comparará esta lista con los nombres reales de las
       categorías en la base antes de proponer nada.
 
@@ -668,6 +675,39 @@ como punto de partida, en vez de diseñar a ciegas.
       Probado en local y en producción (celular y computador, en WhatsApp
       Web: los emojis se ven con `api.whatsapp.com/send`). La aplicación
       de escritorio de WhatsApp no se probó.
+
+- [ ] **Cambiar "Retiro en bodega" por "Punto de retiro" en los textos
+      públicos.** Observación de una persona que revisó la tienda (13 de
+      octubre): "bodega" sugiere un almacén con mucha mercadería y
+      expone el lugar de retiro, así que conviene un nombre más neutro.
+      **Nombre decidido por Alejandro (13 de octubre): "Punto de
+      retiro".** Riesgo conocido: se parece a "Punto de encuentro" (la
+      otra modalidad presencial); el contexto de cada tarjeta (lugar,
+      horarios, gratis) las distingue, pero conviene mirar en las
+      pruebas si confunde.
+      **Dónde aparece hoy "bodega" (solo texto público, frontend):**
+      - `shared/config/shipping.js`: `name: 'Retiro en bodega'` y la
+        franja de la ficha (`PRODUCT_DELIVERY_HIGHLIGHTS`: "Retiro
+        gratis" · "en bodega (La Granja)");
+      - `pages/envios-y-entregas/ui/EnviosYEntregas.jsx`: "Efectivo,
+        solo si retiras en bodega o en el punto de encuentro." (con el
+        nombre nuevo hay que reescribirla: "punto de retiro o punto de
+        encuentro" se lee confuso).
+      El checkout, el PDF, el mensaje de WhatsApp y el panel de órdenes
+      leen el nombre de `shipping.js`. "Costo Bodega"
+      (`PricingFields.jsx`) es una etiqueta interna del dashboard y no
+      se toca.
+      **No cambia:** el `id` `warehouse` ni el backend (`OrderModel.js`,
+      `orderControllers.js`); las órdenes guardan solo el `id`, así que
+      las anteriores se verían con el nombre nuevo.
+      **Sin decidir todavía:**
+      - si "La Granja" se sigue mostrando (en `condition` y en la franja
+        de la ficha) o solo se da la dirección por WhatsApp, como ya se
+        hace con la dirección exacta;
+      - si los horarios de retiro se mantienen públicos.
+      Alcance: texto en 2 archivos (`shipping.js` y
+      `EnviosYEntregas.jsx`); probar el checkout, el PDF y el mensaje de
+      WhatsApp con esa modalidad.
 
 ## 📝 Lista de la dueña y usuarios (octubre)
 
