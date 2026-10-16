@@ -190,6 +190,10 @@ punta desde la interfaz real, no solo por API:
 
 - Entrar a `approved` descuenta el stock exacto de la variante correcta
   (por `sku`), permite negativo sin bloquear, avisa en `warnings`.
+  **En revisión (14 de octubre):** el código actual (`min: 0` en
+  `ProductModel.js` y `product.save()`) probablemente falla con stock
+  negativo. Ver "Hallazgos del 14 de octubre" en el ítem "Ventas en la
+  feria" del BACKLOG; el paso 67a lo confirma o lo descarta.
 - Salir de `approved` restaura el stock. Confirmado con datos reales.
 - Repetir el mismo estado no vuelve a descontar (idempotencia confirmada).
 - Usuario no-admin es redirigido al intentar entrar por URL directa.

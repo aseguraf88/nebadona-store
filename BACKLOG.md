@@ -615,6 +615,17 @@ como punto de partida, en vez de diseñar a ciegas.
       peluches, billeteras, camisas, polerones, calcetines, mochilas,
       bandoleras, estuches, agendas, lápices, "etc." (**la lista está
       incompleta**).
+      **Lista de categorías decidida (16 de octubre), 17 categorías:**
+      aros, bandoleras, billeteras, calcetines, camisas, carteras,
+      estuches, gorras (jockeys), lápices, libretas, llaveros,
+      mochilas, peluches, polerones, relojes, tarjeteros y totebags.
+      Es la lista que envió la dueña el 14 de octubre, sin "agendas"
+      (Alejandro: libretas solamente). Alejandro había sumado colgantes
+      (de mochila), juguetes y monederos; como la dueña no los anotó,
+      **quedan fuera por ahora** y pueden sumarse más adelante
+      (Alejandro prevé ampliar las categorías). "Pendientes" y "aros"
+      son la misma categoría. La lista no trae aún tallas, colores ni
+      cantidades por categoría.
       **Lo que asume hoy el código** (a confirmar en la Parte 1):
       `sizeGuides.js`, `productTypeOptions.js`
       (`PRODUCT_TYPES_BY_CATEGORY`, `SIZE_OPTIONS`), `isSockCategory`,
@@ -632,9 +643,9 @@ como punto de partida, en vez de diseñar a ciegas.
       diseños.
       **Pendiente de la dueña:** una planilla con categoría, tallas,
       colores o diseños y cantidad aproximada de modelos, que enviará
-      cuando vea el inventario (sin fecha). Al 13 de octubre aún no
-      llega la lista completa de categorías. Sin eso no se puede
-      empezar el paso 65.
+      cuando vea el inventario (sin fecha). La lista de categorías ya
+      llegó (ver arriba). Sin la planilla no se puede empezar el
+      paso 65.
       La Parte 1 comparará esta lista con los nombres reales de las
       categorías en la base antes de proponer nada.
 
@@ -700,11 +711,16 @@ como punto de partida, en vez de diseñar a ciegas.
       **No cambia:** el `id` `warehouse` ni el backend (`OrderModel.js`,
       `orderControllers.js`); las órdenes guardan solo el `id`, así que
       las anteriores se verían con el nombre nuevo.
-      **Sin decidir todavía:**
-      - si "La Granja" se sigue mostrando (en `condition` y en la franja
-        de la ficha) o solo se da la dirección por WhatsApp, como ya se
-        hace con la dirección exacta;
-      - si los horarios de retiro se mantienen públicos.
+      **Decidido por Alejandro (14 de octubre):**
+      - "La Granja" **se sigue mostrando** (en `condition` y en la
+        franja de la ficha). Se mirará cómo responden los clientes; si
+        dejan el pedido a medias por la comuna, se reconsidera.
+      - Los **horarios de retiro se quitan** de los textos públicos
+        (hoy son una línea de `details` en `shipping.js`). Se
+        coordinan por WhatsApp, para dar menos información útil a
+        quien no debe tenerla. En la Parte 1 de ese paso hay que
+        buscar si los horarios aparecen también en otro lugar
+        (`EnviosYEntregas.jsx`, el PDF, el mensaje de WhatsApp).
       Alcance: texto en 2 archivos (`shipping.js` y
       `EnviosYEntregas.jsx`); probar el checkout, el PDF y el mensaje de
       WhatsApp con esa modalidad.
@@ -975,8 +991,10 @@ octubre. Sin código todavía: cada grupo se convierte en uno o más pasos.
       - Registro rápido desde el celular. Una venta por cliente, con uno o
         varios artículos; pago efectivo o transferencia por venta; hora
         automática.
-      - Descuenta stock. El stock es **uno solo** para el sitio, la feria y
-        cualquier otro canal.
+      - Descuenta stock, pero **de la feria**: la feria tiene un stock
+        aparte del de la web (ver "Stock de la feria", más abajo). Esto
+        reemplaza la idea original de un stock único para todos los
+        canales.
       - **Artículos del catálogo** (producto, talla y color) **y artículos
         sueltos** (extraordinarios): descripción y precio a mano, sin stock.
       - **Precio editable en cada artículo**, por descuentos y promociones.
@@ -989,11 +1007,12 @@ octubre. Sin código todavía: cada grupo se convierte en uno o más pasos.
       - **Dos vendedoras a la vez, cada una con su cuenta.** Hace falta un
         rol "vendedor" que solo pueda registrar ventas; esto adelanta
         "Multiusuario con niveles de acceso" (post-lanzamiento).
-      - **Stock negativo:** con dos celulares sin señal y el sitio
-        vendiendo, puede venderse algo sin stock. Aceptar la venta y avisar
-        el stock negativo, no rechazarla: la venta ya ocurrió. Es el mismo
-        criterio que ya usa el panel de órdenes al aprobar (permite stock
-        negativo y avisa).
+      - **Stock negativo:** con dos celulares sin señal, o con una
+        carga olvidada, puede venderse algo sin stock de feria.
+        Aceptar la venta y avisar el stock negativo, no rechazarla: la
+        venta ya ocurrió. Vale para el stock de la feria. El panel de
+        órdenes **no** funciona hoy con este criterio, o al menos no
+        está confirmado (ver "Hallazgos del 14 de octubre").
       - **Número de venta:** con dos celulares sin conexión no hay un
         correlativo único. Usar una serie por vendedora (A-001, B-001) o
         asignar el número definitivo al sincronizar.
@@ -1026,6 +1045,154 @@ octubre. Sin código todavía: cada grupo se convierte en uno o más pasos.
         backend (con protección contra duplicados); la PWA de venta rápida
         con modo sin conexión; resumen, filtro y exportación; y la huella al
         final, si hay tiempo.
+
+      **Stock de la feria (modelo decidido el 14 de octubre):**
+      - El stock de la web es el stock real de **todo** el catálogo. La
+        feria tiene un **stock aparte**, que vive mientras dure la feria
+        (unos 14 días).
+      - Cada día, antes de salir y con internet, Alejandro traspasa
+        productos del stock de la web al de la feria: el de la web baja
+        y el de la feria sube. Dónde se hace ese traspaso (dashboard o
+        la app) **no está decidido**: lo define un anexo a la Parte 1,
+        antes del paso 67c.
+      - Las ventas de la feria bajan **solo** el stock de la feria. No
+        tocan el stock de la web.
+      - El stock de la feria **puede quedar negativo, con aviso** (una
+        carga olvidada, o un viaje a casa por más artículos). Los
+        descuadres se arreglan de noche o al día siguiente.
+      - El traspaso no se hace sin conexión.
+      - Al terminar la feria, todo lo que sobra **vuelve al stock de la
+        web**.
+      - Con dos celulares sin señal, cada uno ve el saldo hasta su
+        última sincronización menos lo que él mismo vendió; los dos
+        números pueden diferir un rato. Por eso se acepta el negativo.
+      - Consecuencias: las ventas de la feria ya no compiten con los
+        pedidos web por la misma unidad; el traspaso necesita
+        operaciones **atómicas y condicionales** (no baja el stock de la
+        web bajo cero); el import CSV no debe usarse durante la feria
+        porque reemplaza el stock de la web.
+
+      **Diseño aprobado (14 de octubre).** Parte 1 del paso 67, revisada
+      por Alejandro. Hasta que se implemente, nada de esto está probado.
+      - **Dónde vive:** carpeta `VENTAS/` con su propio proyecto de
+        Vercel, en `ventas.nebadon.cl`. Un error de caché de la app no
+        puede romper la tienda. Se evita construir los tres proyectos
+        en cada push con "Ignored Build Step" por carpeta.
+      - **Librerías:** `vite-plugin-pwa` 1.3.0 e `idb` 8.0.3. La
+        2.0.0 de `vite-plugin-pwa` (3 de octubre) y la 8.0.4 de `idb`
+        (6 de octubre) se usan solo cuando cumplan dos semanas.
+      - **Modelo `Sale` nuevo**, no se reutiliza `Order`: los estados,
+        los datos del cliente y las tarjetas del dashboard son de la
+        web. Campos: `clientId` (UUID del celular, índice único),
+        `seller`, `saleNumber`, `status` (draft, confirmed, voided),
+        `soldAt` (editable), `recordedAt`, `receivedAt`, `fairDay`,
+        pago, `total`, ítems (catálogo o sueltos) con precio de lista y
+        precio cobrado, `warnings`, `voided` e `history`.
+      - **Pago:** efectivo, transferencia o **mixto**. En el mixto se
+        escribe el monto en efectivo y el resto cuenta como
+        transferencia, para que el efectivo de la caja cuadre al
+        cierre. Precio en $0 no se permite (no hay regalos).
+      - **Número de venta:** una serie por vendedora, asignada en el
+        celular al confirmar. **A = Alejandro, B = la dueña.** Formato
+        A-0001, continuas durante toda la feria. Si un celular pierde
+        sus datos, al entrar el servidor devuelve el último número de
+        esa serie. La identidad real de la venta es el UUID.
+      - **Cuentas:** cuentas de venta aparte (`isAdmin: false`), también
+        para la dueña y para Alejandro. Campos `isSeller` y
+        `sellerCode`; `requireSeller` nuevo; cookie propia
+        `salesToken` con `scope: 'sales'` que no sirve en rutas de
+        administrador; sesión de unos 20 días; revocación con
+        `tokenVersion`. Alejandro crea las cuentas con un script con
+        `--dry-run` que no imprime contraseñas. Registrar ventas no
+        depende de la sesión; solo sincronizar la pide.
+      - **Límite de intentos de login:** `/api/auth` permite 10 cada 15
+        minutos por IP, y los dos celulares compartirán IP en la feria.
+        El login de ventas necesita un límite propio por cuenta (a
+        resolver en el 67b).
+      - **Sincronización:** cola en IndexedDB; `POST /api/sales/batch`
+        en lotes de hasta 50; alta idempotente por `clientId`; envío al
+        guardar, al volver la señal, al abrir, cada 60 segundos, con un
+        botón y con Background Sync como ayuda (solo Chrome en
+        Android). Un SKU borrado no rechaza la venta: se guarda con
+        aviso.
+      - **Día de feria:** por `soldAt`, con corte a las 06:00 en
+        `America/Santiago`. Si la hora del celular difiere más de 5
+        minutos de la del servidor, la venta queda marcada.
+      - **Catálogo de la app:** `GET /api/sales/catalog` (solo
+        vendedoras), con los PUBLISHED y los DRAFT que tengan stock;
+        sin `cost_price`. Una miniatura de 200 px por producto, con un
+        botón "Descargar catálogo" para guardarlas sin conexión. El
+        catálogo completo pesa unos 75 KB y las miniaturas unos 1,2 MB.
+      - **Fotos y variantes:** la foto es del producto, no de la
+        variante (`imageUrls` está en `Product`). Regla: **lo que se ve
+        distinto es un producto distinto**; las variantes son talla y
+        color que no cambian la foto. Alejandro elimina a mano los
+        productos duplicados mientras hace el inventario.
+      - **Borradores:** se sincronizan con estado draft, sin número y
+        sin descontar stock. Al confirmar reciben número, descuentan y
+        se completa la hora. Hora de la venta editable; si queda en el
+        futuro o a más de 48 horas, la app pide confirmación.
+      - **Anular y corregir:** la venta pasa a voided y el stock vuelve;
+        las ediciones dejan registro en `history`. Una devolución es
+        una corrección.
+      - **Cierre del día:** total, efectivo y transferencia, cantidad de
+        ventas, ticket medio, totales por vendedora y sueltos; los
+        borradores sin confirmar aparte. Exportación a CSV que se abra
+        bien en **LibreOffice Calc** (Alejandro lo usa): UTF-8 con BOM,
+        montos enteros, fechas dd-mm-aaaa HH:mm; una fila por artículo.
+        Separador y forma de abrirlo a verificar en el 67e.
+      - **Plan B:** volver al cuaderno y pasar las ventas después como
+        borradores con hora editada.
+
+      **Sub-pasos (orden):**
+      - **67a:** descuento de stock atómico en `updateOrderStatus`
+        (corrige el hallazgo de abajo), empezando por una prueba
+        controlada. Se hace antes que todo lo demás.
+      - **67b:** cuentas y login de ventas.
+      - **Anexo a la Parte 1:** modelo del stock de la feria y del
+        traspaso (antes del 67c).
+      - **67c:** modelo `Sale`, catálogo, lote idempotente, corregir,
+        anular y "mis ventas".
+      - **67d:** la app `VENTAS/` (catálogo con fotos, venta, borradores,
+        cola, sincronización).
+      - **67e:** resumen de cierre y CSV, y una tarjeta de feria en el
+        dashboard.
+      - **67f:** noche de prueba (mediados de noviembre).
+      - **67g:** huella (passkeys), solo si sobra tiempo.
+
+      **Pendiente, fuera del código:** terminar el inventario físico
+      (esta semana, según Alejandro) y cargar el stock real; precios de
+      lo que se venda; no importar CSV durante la feria.
+
+      **Hallazgos del 14 de octubre (a confirmar con una prueba
+      controlada en el 67a, sin tocar datos reales):**
+      - **Aprobar una orden que deja el stock bajo cero probablemente
+        falla con error 500.** `VariantSchema.stock` tiene `min: 0`
+        (`ProductModel.js:31`) y `updateOrderStatus` descuenta con
+        `product.save()` (`orderControllers.js`, alrededor de las
+        líneas 264 a 289), que valida. El agente lo comprobó validando
+        un producto en memoria (stock -1: "less than minimum allowed
+        value"); **no se probó contra la base**. Contradice la frase
+        "permite negativo sin bloquear" de `CLAUDE.md` y este
+        BACKLOG, que dicen haberlo confirmado con datos reales. Hasta
+        la prueba no se sabe cuál de las dos cosas es cierta. El
+        `min: 0` está desde la primera versión del modelo (commit
+        `694a02f`), así que no se agregó después de aquella prueba;
+        quizá esa prueba no cubrió el caso de stock negativo.
+        Efecto hoy en la web: dos pedidos por la última unidad pasan
+        la validación del paso 37 (no reserva stock) y, al aprobar el
+        segundo, la dueña vería un error.
+      - **El descuento no es atómico ni por orden completa.** Lee,
+        modifica y guarda, un producto por vez. Si falla en el segundo
+        ítem, el primero ya quedó descontado y la orden no cambia de
+        estado; al reintentar, el primer ítem se descuenta otra vez.
+      - **El import CSV reemplaza el stock.** Hace `$set` del arreglo
+        `variants` con el stock del CSV; si falta la columna, queda en
+        0 (`productsControllers.js`, alrededor de las líneas 428 y 518
+        a 540). Un import durante la feria borraría lo vendido.
+      - Otros riesgos conocidos: el número de orden es "último + 1" sin
+        atomicidad (dos órdenes simultáneas pueden chocar) y los límites
+        de peticiones se cuentan en memoria, por instancia.
 
 - [ ] **Armar regalos (caja de regalo como consulta).** Prioridad:
       después del lanzamiento, lo antes posible, por pasos. Se hace como
