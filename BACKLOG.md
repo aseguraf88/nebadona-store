@@ -1011,8 +1011,9 @@ octubre. Sin código todavía: cada grupo se convierte en uno o más pasos.
         carga olvidada, puede venderse algo sin stock de feria.
         Aceptar la venta y avisar el stock negativo, no rechazarla: la
         venta ya ocurrió. Vale para el stock de la feria. El panel de
-        órdenes **no** funciona hoy con este criterio, o al menos no
-        está confirmado (ver "Hallazgos del 14 de octubre").
+        órdenes de la web usa otro criterio desde el paso 67a: no
+        aprueba si el stock no alcanza (ver "Hallazgos del 14 de
+        octubre y resultado del paso 67a").
       - **Número de venta:** con dos celulares sin conexión no hay un
         correlativo único. Usar una serie por vendedora (A-001, B-001) o
         asignar el número definitivo al sincronizar.
@@ -1146,8 +1147,9 @@ octubre. Sin código todavía: cada grupo se convierte en uno o más pasos.
 
       **Sub-pasos (orden):**
       - **67a:** descuento de stock atómico en `updateOrderStatus`
-        (corrige el hallazgo de abajo), empezando por una prueba
-        controlada. Se hace antes que todo lo demás.
+        (corrige el hallazgo de abajo). Hecho en el commit `7b03998`
+        (18 de octubre), probado en base de prueba; falta probarlo en
+        Vercel y en el panel.
       - **67b:** cuentas y login de ventas.
       - **Anexo a la Parte 1:** modelo del stock de la feria y del
         traspaso (antes del 67c).
@@ -1164,32 +1166,66 @@ octubre. Sin código todavía: cada grupo se convierte en uno o más pasos.
       (esta semana, según Alejandro) y cargar el stock real; precios de
       lo que se venda; no importar CSV durante la feria.
 
-      **Hallazgos del 14 de octubre (a confirmar con una prueba
-      controlada en el 67a, sin tocar datos reales):**
-      - **Aprobar una orden que deja el stock bajo cero probablemente
-        falla con error 500.** `VariantSchema.stock` tiene `min: 0`
-        (`ProductModel.js:31`) y `updateOrderStatus` descuenta con
-        `product.save()` (`orderControllers.js`, alrededor de las
-        líneas 264 a 289), que valida. El agente lo comprobó validando
-        un producto en memoria (stock -1: "less than minimum allowed
-        value"); **no se probó contra la base**. Contradice la frase
-        "permite negativo sin bloquear" de `CLAUDE.md` y este
-        BACKLOG, que dicen haberlo confirmado con datos reales. Hasta
-        la prueba no se sabe cuál de las dos cosas es cierta. El
-        `min: 0` está desde la primera versión del modelo (commit
-        `694a02f`), así que no se agregó después de aquella prueba;
-        quizá esa prueba no cubrió el caso de stock negativo.
-        Efecto hoy en la web: dos pedidos por la última unidad pasan
-        la validación del paso 37 (no reserva stock) y, al aprobar el
-        segundo, la dueña vería un error.
-      - **El descuento no es atómico ni por orden completa.** Lee,
-        modifica y guarda, un producto por vez. Si falla en el segundo
-        ítem, el primero ya quedó descontado y la orden no cambia de
-        estado; al reintentar, el primer ítem se descuenta otra vez.
+      **Hallazgos del 14 de octubre y resultado del paso 67a:**
+      - **Lo medido antes del 67a** (línea base del 17 de octubre,
+        contra una base de prueba del mismo clúster, con el código de
+        `updateOrderStatus` de entonces):
+        - Aprobar una orden que dejaba el stock bajo cero respondía
+          **500** y no cambiaba nada. Causa: `VariantSchema.stock`
+          tiene `min: 0` (desde el commit `e4fbfd0`, 5 de septiembre)
+          y el descuento usaba `product.save()`, que valida. Con ese
+          código, "permite negativo sin bloquear" no era cierto.
+        - Una variante negativa (por ejemplo, desde un CSV) hacía
+          fallar con 500 la aprobación de otra variante del mismo
+          producto, y también cancelar una orden con stock negativo.
+        - Dos aprobaciones simultáneas de órdenes distintas por la
+          última unidad: las dos se aprobaban, stock 0 y sin aviso (5
+          de 5 veces). Con stock 5 quedaba 4 en vez de 3: se perdía un
+          descuento (5 de 5).
+        - La misma orden aprobada dos veces a la vez: stock 4 y dos
+          respuestas 200. Por el código (no medido en la línea base),
+          el riesgo real es la ventana de una sola petición (por
+          ejemplo, un doble clic): si la segunda llega después de que
+          la primera guardó, ve "approved" y responde "Sin cambios".
+        - Orden de dos ítems con el segundo sin stock: 500, el primero
+          quedaba descontado y cada reintento lo descontaba otra vez.
+        - Ítems sin SKU o con la variante borrada: se saltaban sin
+          aviso.
+      - **Corrección (commit `7b03998`, 18 de octubre):**
+        `services/variantStock.js` (`$inc` atómico por sku, modos
+        `conditional` y `allowNegative`) y `updateOrderStatus` con una
+        transacción que reclama el estado de la orden. Entrar a
+        approved no baja de cero (409 "Stock insuficiente: …", la
+        orden no cambia); salir de approved restaura sin condición;
+        si otra petición cambió la orden, 409 "La orden cambió…";
+        ítems sin SKU, con cantidad inválida o con la variante
+        borrada se saltan con aviso en `warnings`. **Probado en base
+        de prueba** (20 casos el 18 de octubre, todos con el resultado
+        esperado); no probado aún en Vercel ni en el panel.
+      - **Efecto en el uso diario:** mientras el inventario no esté
+        cargado, aprobar una orden de una variante sin stock responde
+        409 hasta que se corrija el stock en el dashboard. Las órdenes
+        anteriores sin SKU o con SKU borrado muestran avisos al
+        aprobarlas o cancelarlas (35 órdenes y 18 ítems al 17 de
+        octubre).
+      - **Base real al 17 de octubre** (consulta de solo lectura, solo
+        conteos): 0 variantes con stock negativo, no entero o no
+        numérico; 35 órdenes con algún ítem sin SKU (2 aprobadas); 18
+        ítems con un SKU que ya no existe (4 en órdenes aprobadas);
+        ninguna orden con el mismo SKU en dos ítems.
+      - **Pendiente: el formulario del dashboard reescribe el stock.**
+        `updateProduct` guarda el arreglo `variants` completo, con el
+        stock que tenía el formulario al abrirse. Si entre medio se
+        aprueba una orden (o, más adelante, se vende en la feria), ese
+        descuento se pierde al guardar. Visto en memoria (la operación
+        que genera `save()`), no probado contra la base. Sin paso
+        asignado; importa antes de la feria.
       - **El import CSV reemplaza el stock.** Hace `$set` del arreglo
         `variants` con el stock del CSV; si falta la columna, queda en
         0 (`productsControllers.js`, alrededor de las líneas 428 y 518
-        a 540). Un import durante la feria borraría lo vendido.
+        a 540). Un import durante la feria borraría lo vendido. Que el
+        import rechace un stock inválido es un paso aparte (ver el
+        ítem "Stock en el import CSV").
       - Otros riesgos conocidos: el número de orden es "último + 1" sin
         atomicidad (dos órdenes simultáneas pueden chocar) y los límites
         de peticiones se cuentan en memoria, por instancia.
@@ -1844,6 +1880,11 @@ Relacionado con "🎨 Pulido visual / UI-UX", más arriba:
       en Stock queda en 1, y un texto inválido en 0, sin aviso. Mismo
       problema de separador de miles que se resolvió para los precios en
       el paso 44 (no se tocó a propósito: no es un precio). Baja prioridad.
+      **Decidido (17 de octubre, paso 67a):** el import va a rechazar el
+      producto si el Stock es negativo, decimal o texto (como con un
+      precio inválido); vacío sigue siendo 0. Hoy `parseInt("-2")` deja
+      -2 y `bulkWrite` no valida. Va en un commit aparte, después del
+      67a.
 
 - [ ] El contador de `express-rate-limit` vive en la memoria de cada
       instancia serverless de Vercel: se reinicia en cada arranque en frío
@@ -2085,8 +2126,10 @@ Relacionado con "🎨 Pulido visual / UI-UX", más arriba:
       con el carrito). `Checkout.jsx` ahora muestra ese mensaje en vez del
       genérico. Límite conocido: no reserva stock (se descuenta al
       aprobar), así que dos órdenes casi simultáneas por la última unidad
-      pasan las dos; el admin lo ve como aviso de stock negativo al
-      aprobar la segunda.
+      pasan las dos. Al aprobar la segunda, desde el paso 67a el panel
+      responde 409 "Stock insuficiente" y la orden no cambia (antes daba
+      error 500; ver "Hallazgos del 14 de octubre y resultado del paso
+      67a").
 - [x] ~~**La orden confía en el precio que manda el frontend**~~ — resuelto
       (paso 40), todo en `createWhatsAppOrder`. Valida que cada `quantity`
       sea un entero ≥ 1 (400 si no: antes una cantidad negativa pasaba el

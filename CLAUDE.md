@@ -189,12 +189,17 @@ de confirmación, fila expandible con sku/talla/color). Probado de punta a
 punta desde la interfaz real, no solo por API:
 
 - Entrar a `approved` descuenta el stock exacto de la variante correcta
-  (por `sku`), permite negativo sin bloquear, avisa en `warnings`.
-  **En revisión (14 de octubre):** el código actual (`min: 0` en
-  `ProductModel.js` y `product.save()`) probablemente falla con stock
-  negativo. Ver "Hallazgos del 14 de octubre" en el ítem "Ventas en la
-  feria" del BACKLOG; el paso 67a lo confirma o lo descarta.
-- Salir de `approved` restaura el stock. Confirmado con datos reales.
+  (por `sku`) y **no baja de cero** (paso 67a): si un ítem no alcanza,
+  responde 409 "Stock insuficiente: …" y la orden no cambia. Estado y
+  stock cambian juntos en una transacción que reclama el estado de la
+  orden (`$inc` atómico en `services/variantStock.js`); dos aprobaciones
+  a la vez ya no pierden descuentos. Ítems sin SKU, con cantidad
+  inválida o con la variante borrada se saltan con aviso en `warnings`.
+  Probado en base de prueba (20 casos, 18 de octubre); no probado aún en
+  Vercel ni en el panel.
+- Salir de `approved` restaura el stock sin condición (con aviso en
+  `warnings` si la variante ya no existe). Probado en base de prueba
+  (casos 6, 6b y 8); no probado aún en Vercel ni en el panel.
 - Repetir el mismo estado no vuelve a descontar (idempotencia confirmada).
 - Usuario no-admin es redirigido al intentar entrar por URL directa.
 - Los cambios de stock se ven en `ProductFormPage` sin refresh forzado.
