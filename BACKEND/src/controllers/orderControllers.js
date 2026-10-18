@@ -1,6 +1,7 @@
 import mongoose from 'mongoose'
 import OrderModel from '../models/OrderModel.js'
 import ProductModel from '../models/ProductModel.js'
+import { adjustVariantStock } from '../services/variantStock.js'
 
 // Modalidad de entrega (paso 54) → deliveryType, que se sigue guardando para
 // el panel, los filtros y las órdenes anteriores
@@ -223,6 +224,15 @@ export const getAllOrders = async (req, res) => {
     }
 }
 
+// Error con respuesta propia (409): se lanza dentro de la transacción para
+// deshacerla entera y se traduce a respuesta fuera de ella
+class OrderStatusConflict extends Error {
+    constructor(message) {
+        super(message)
+        this.name = 'OrderStatusConflict'
+    }
+}
+
 export const updateOrderStatus = async (req, res) => {
     try {
         const { id } = req.params
@@ -257,42 +267,90 @@ export const updateOrderStatus = async (req, res) => {
                 .json({ success: true, order, message: 'Sin cambios' })
         }
 
-        const warnings = []
         const enteringApproved = status === 'approved' && previousStatus !== 'approved'
         const leavingApproved = previousStatus === 'approved' && status !== 'approved'
 
-        if (enteringApproved) {
-            for (const item of order.products) {
-                if (!item.sku) continue
-                const product = await ProductModel.findById(item.productId)
-                if (!product) continue
-                const variant = product.variants.find((v) => v.sku === item.sku)
-                if (!variant) continue
-                variant.stock -= item.quantity
-                if (variant.stock < 0) {
-                    warnings.push(
-                        `${item.name} (${item.sku}): stock quedó en ${variant.stock}`,
+        // Estado y stock cambian juntos o no cambia nada (transacción). Entrar
+        // a approved descuenta solo si alcanza (nunca deja el stock bajo
+        // cero: el pedido se confirma por WhatsApp antes de aprobar); salir
+        // de approved devuelve sin condición. Un ítem sin SKU, con cantidad
+        // inválida o con la variante borrada no frena el cambio de estado:
+        // se salta y se avisa en warnings
+        let warnings = []
+        let updatedOrder = null
+        await mongoose.connection.transaction(async (session) => {
+            // El driver puede reintentar el callback ante un error
+            // transitorio: cada intento empieza de cero
+            warnings = []
+            updatedOrder = null
+
+            // Reclamo del estado: solo si la orden sigue como se leyó. Si
+            // otra petición la cambió antes (doble clic, dos pestañas), esta
+            // no toca el stock
+            const claimed = await OrderModel.findOneAndUpdate(
+                { _id: order._id, status: previousStatus },
+                { $set: { status } },
+                { new: true, session },
+            )
+            if (!claimed) {
+                throw new OrderStatusConflict(
+                    'La orden cambió mientras la editabas. Recarga la página.',
+                )
+            }
+
+            if (enteringApproved || leavingApproved) {
+                const insufficient = []
+                for (const item of claimed.products) {
+                    const label = item.sku
+                        ? `${item.name || 'Producto'} (${item.sku})`
+                        : item.name || 'Producto'
+                    if (!item.sku) {
+                        warnings.push(`${label}: sin SKU, no se tocó el stock`)
+                        continue
+                    }
+                    if (!Number.isInteger(item.quantity) || item.quantity < 1) {
+                        warnings.push(
+                            `${label}: cantidad inválida, no se tocó el stock`,
+                        )
+                        continue
+                    }
+                    // Mismo SKU en dos ítems: el segundo ve lo que descontó
+                    // el primero (misma sesión)
+                    const result = await adjustVariantStock({
+                        sku: item.sku,
+                        delta: enteringApproved ? -item.quantity : item.quantity,
+                        mode: enteringApproved ? 'conditional' : 'allowNegative',
+                        session,
+                    })
+                    if (result.status === 'not_found') {
+                        warnings.push(
+                            `${label}: el producto o la variante ya no existe, no se ${enteringApproved ? 'descontó' : 'restauró'} stock`,
+                        )
+                    } else if (result.status === 'insufficient') {
+                        insufficient.push(
+                            `${label}, disponible ${result.stock}, pedido ${item.quantity}`,
+                        )
+                    }
+                }
+                // Se revisan todos los ítems para nombrarlos juntos; el
+                // error deshace también los que sí alcanzaban
+                if (insufficient.length > 0) {
+                    throw new OrderStatusConflict(
+                        `Stock insuficiente: ${insufficient.join('; ')}. La orden no cambió.`,
                     )
                 }
-                await product.save()
             }
-        } else if (leavingApproved) {
-            for (const item of order.products) {
-                if (!item.sku) continue
-                const product = await ProductModel.findById(item.productId)
-                if (!product) continue
-                const variant = product.variants.find((v) => v.sku === item.sku)
-                if (!variant) continue
-                variant.stock += item.quantity
-                await product.save()
-            }
-        }
 
-        order.status = status
-        await order.save()
+            updatedOrder = claimed
+        })
 
-        res.status(200).json({ success: true, order, warnings })
+        res.status(200).json({ success: true, order: updatedOrder, warnings })
     } catch (error) {
+        if (error instanceof OrderStatusConflict) {
+            return res
+                .status(409)
+                .json({ success: false, message: error.message })
+        }
         console.error('Error en updateOrderStatus:', error)
         res.status(500).json({
             success: false,
