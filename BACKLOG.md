@@ -1148,8 +1148,11 @@ octubre. Sin código todavía: cada grupo se convierte en uno o más pasos.
       **Sub-pasos (orden):**
       - **67a:** descuento de stock atómico en `updateOrderStatus`
         (corrige el hallazgo de abajo). Hecho en el commit `7b03998`
-        (18 de octubre), probado en base de prueba; falta probarlo en
-        Vercel y en el panel.
+        (18 de octubre), probado en base de prueba y también en
+        producción el 18 de octubre (pedido de prueba: aprobar bajó el
+        stock de 20 a 17, volver a pendiente lo devolvió a 20, y se
+        canceló). Los 409 y los avisos en `warnings` solo están
+        probados en la base de prueba; no se vieron en el panel.
       - **67b:** cuentas y login de ventas.
       - **Anexo a la Parte 1:** modelo del stock de la feria y del
         traspaso (antes del 67c).
@@ -1201,7 +1204,12 @@ octubre. Sin código todavía: cada grupo se convierte en uno o más pasos.
         ítems sin SKU, con cantidad inválida o con la variante
         borrada se saltan con aviso en `warnings`. **Probado en base
         de prueba** (20 casos el 18 de octubre, todos con el resultado
-        esperado); no probado aún en Vercel ni en el panel.
+        esperado). Probado también en producción el 18 de octubre
+        (pedido de prueba: aprobar bajó el stock de 20 a 17, volver a
+        pendiente lo devolvió a 20, y se canceló). Los 409 y los avisos
+        en `warnings` (ítems sin SKU, cantidad inválida o variante
+        borrada) solo están probados en la base de prueba; no se vieron
+        en el panel.
       - **Efecto en el uso diario:** mientras el inventario no esté
         cargado, aprobar una orden de una variante sin stock responde
         409 hasta que se corrija el stock en el dashboard. Las órdenes

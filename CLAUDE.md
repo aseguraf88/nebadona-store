@@ -195,11 +195,17 @@ punta desde la interfaz real, no solo por API:
   orden (`$inc` atómico en `services/variantStock.js`); dos aprobaciones
   a la vez ya no pierden descuentos. Ítems sin SKU, con cantidad
   inválida o con la variante borrada se saltan con aviso en `warnings`.
-  Probado en base de prueba (20 casos, 18 de octubre); no probado aún en
-  Vercel ni en el panel.
+  Probado en base de prueba (20 casos, 18 de octubre). Probado también
+  en producción el 18 de octubre (pedido de prueba: aprobar bajó el
+  stock de 20 a 17, volver a pendiente lo devolvió a 20, y se canceló).
+  Los 409 y los avisos en `warnings` (ítems sin SKU, cantidad inválida
+  o variante borrada) solo están probados en la base de prueba; no se
+  vieron en el panel.
 - Salir de `approved` restaura el stock sin condición (con aviso en
   `warnings` si la variante ya no existe). Probado en base de prueba
-  (casos 6, 6b y 8); no probado aún en Vercel ni en el panel.
+  (casos 6, 6b y 8) y en producción el 18 de octubre (volver a
+  pendiente devolvió el stock de 17 a 20). El aviso de variante
+  borrada solo está probado en la base de prueba; no se vio en el panel.
 - Repetir el mismo estado no vuelve a descontar (idempotencia confirmada).
 - Usuario no-admin es redirigido al intentar entrar por URL directa.
 - Los cambios de stock se ven en `ProductFormPage` sin refresh forzado.
