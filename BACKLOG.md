@@ -1247,10 +1247,22 @@ octubre. Sin código todavía: cada grupo se convierte en uno o más pasos.
         - login y `GET /api/sales/me` de A y B contra `api.nebadon.cl`,
           desde PowerShell (`Invoke-RestMethod`), con la cookie
           reenviada: 200 en las dos cuentas.
-        **Sin probar:** las flechas y el Ctrl+C real en el prompt
-        oculto, `--nueva-contrasena` sin `--dry-run`, los atributos de
-        la cookie (`Secure`, `SameSite=Strict`) y CORS en un navegador
-        real, con Chrome de Android, y Vercel con varias instancias.
+        **Probado en producción el 19 de octubre** (scripts corridos
+        por Alejandro en su PowerShell contra `ecommerceDB`, con la
+        cuenta A; desde PowerShell, no en navegador):
+        - flechas y Ctrl+C reales en el prompt de contraseña oculto y
+          en la confirmación con la letra: el Ctrl+C imprime "No se
+          hizo: Cancelado." y no se cuelga;
+        - `gestionar-vendedor.mjs --nueva-contrasena` sin `--dry-run`:
+          cambia la contraseña y sube `tokenVersion`;
+        - `--revocar`: una sesión creada antes recibió 401
+          `SALES_SESSION_INVALID` en `/api/sales/me` después de
+          revocar;
+        - `--desbloquear`: borró 1 contador creado con un login
+          fallido; después quedó en 0.
+        **Sin probar:** los atributos de la cookie (`Secure`,
+        `SameSite=Strict`) y CORS en un navegador real, con Chrome de
+        Android, y Vercel con varias instancias.
         **Decisiones a propósito:**
         - El logout de ventas borra la cookie pero no invalida el
           token en el servidor: una copia sigue sirviendo hasta que
