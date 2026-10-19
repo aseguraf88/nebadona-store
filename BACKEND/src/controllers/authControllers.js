@@ -79,7 +79,7 @@ export const loginUser = async (req, res) => {
         // Comparar las contraseñas
         const isPasswordValid = await bcrypt.compare(password, user.password)
 
-        if (!isPasswordValid) {
+        if (!isPasswordValid || user.isSeller) {
             return res.status(400).json({ message: 'Credenciales inválidas.' })
         }
 

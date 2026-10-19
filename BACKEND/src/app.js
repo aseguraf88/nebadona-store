@@ -6,6 +6,7 @@ import designThemesRoutes from './routes/designThemesRoutes.js'
 import franchiseNamesRoutes from './routes/franchiseNamesRoutes.js'
 import cartRoutes from './routes/cartRoutes.js'
 import orderRoutes from './routes/orderRoutes.js'
+import salesRoutes from './routes/salesRoutes.js'
 import cors from 'cors'
 import cookieParser from 'cookie-parser'
 import rateLimit from 'express-rate-limit'
@@ -76,6 +77,8 @@ app.use('/api/design-themes', designThemesRoutes)
 app.use('/api/franchise-names', franchiseNamesRoutes)
 app.use('/api/cart', cartRoutes)
 app.use('/api/orders', orderRoutes)
+// App de ventas de la feria (paso 67b): sin authLimiter, ver salesRoutes.js
+app.use('/api/sales', salesRoutes)
 
 app.use((req, res) => {
     res.status(404).json({ message: 'Recurso no encontrado.' })
