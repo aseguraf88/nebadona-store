@@ -1099,9 +1099,9 @@ octubre. Sin código todavía: cada grupo se convierte en uno o más pasos.
         (unos 14 días).
       - Cada día, antes de salir y con internet, Alejandro traspasa
         productos del stock de la web al de la feria: el de la web baja
-        y el de la feria sube. Dónde se hace ese traspaso (dashboard o
-        la app) **no está decidido**: lo define un anexo a la Parte 1,
-        antes del paso 67c.
+        y el de la feria sube. Dónde y cómo se hace el traspaso: ver
+        "Anexo del stock de la feria (decidido el 19 de octubre)", más
+        abajo.
       - Las ventas de la feria bajan **solo** el stock de la feria. No
         tocan el stock de la web.
       - El stock de la feria **puede quedar negativo, con aviso** (una
@@ -1195,6 +1195,37 @@ octubre. Sin código todavía: cada grupo se convierte en uno o más pasos.
       - **Plan B:** volver al cuaderno y pasar las ventas después como
         borradores con hora editada.
 
+      **Anexo del stock de la feria (decidido el 19 de octubre):**
+      - **Traspaso de la web a la feria:** lo hace Alejandro desde el
+        panel de administración (SKU y cantidad, queda registrado). Los
+        vendedores no mueven stock.
+      - **Stock separado:** al traspasar se descuenta de la web con el
+        modo `conditional` de `adjustVariantStock`.
+      - **Dónde vive:** colección propia, no un campo en `variants`.
+        `updateProduct` guarda `variants` completo y valida `min: 0`
+        (un negativo haría fallar el guardado) y el import CSV hace
+        `$set` de `variants`. El stock y los movimientos pertenecen a
+        una feria, porque el sobrante vuelve a la web al cierre.
+      - **Cierre manual con conteo:** Alejandro cuenta, el sobrante
+        vuelve a la web y el sistema muestra las diferencias. Una
+        devolución de cliente anula la venta y repone stock de feria
+        (supuesto, sin confirmar explícitamente).
+      - **Sobreventa:** se permite y se marca; el stock de feria queda
+        negativo y se revisa al cierre.
+      - **Dos tipos de diferencia al cierre:**
+        a) Contado menor que lo esperado: solo se registra (merma). No
+           toca la web.
+        b) Stock de feria negativo (vendido sin traspasar): infla la
+           web. Botón "aplicar ajuste" por línea, nunca automático:
+           descuento `conditional` en la web, registrado en el
+           historial. Si el stock web no alcanza, informa "no alcanza"
+           y no cambia nada.
+      - **`adjustVariantStock` no sirve para el lado feria** (está fijo
+        a `ProductModel` y `variants.$.stock`). Falta una función
+        hermana, que se define en el 67c, junto con el modelo de la
+        feria.
+      - Nada de esto está implementado ni probado.
+
       **Sub-pasos (orden):**
       - **67a:** descuento de stock atómico en `updateOrderStatus`
         (corrige el hallazgo de abajo). Hecho en el commit `7b03998`
@@ -1270,7 +1301,8 @@ octubre. Sin código todavía: cada grupo se convierte en uno o más pasos.
         - JavaScript no puede leer Retry-After entre orígenes: la app
           de ventas no debe depender de ese encabezado.
       - **Anexo a la Parte 1:** modelo del stock de la feria y del
-        traspaso (antes del 67c).
+        traspaso (antes del 67c): decidido el 19 de octubre; sin
+        implementar.
       - **67c:** modelo `Sale`, catálogo, lote idempotente, corregir,
         anular y "mis ventas".
       - **67d:** la app `VENTAS/` (catálogo con fotos, venta, borradores,
