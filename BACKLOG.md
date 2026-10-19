@@ -1204,7 +1204,7 @@ octubre. Sin código todavía: cada grupo se convierte en uno o más pasos.
         canceló). Los 409 y los avisos en `warnings` solo están
         probados en la base de prueba; no se vieron en el panel.
       - **67b:** cuentas y login de ventas. Hecho en el commit
-        `f8dd43e` (18 de octubre):
+        `f8dd43e` (18 de octubre), ya en producción:
         - cuentas de vendedor aparte (`isSeller`, `sellerCode` con
           índice único parcial, `tokenVersion`), creadas y gestionadas
           con `scripts/crear-vendedor.mjs` y
@@ -1232,15 +1232,25 @@ octubre. Sin código todavía: cada grupo se convierte en uno o más pasos.
         índices ni colecciones, y los scripts como procesos hijos
         (`--revocar`, `--desbloquear`, `--nueva-contrasena --dry-run`
         y un código sin cuenta).
-        **En producción:** nada probado todavía. Al desplegar:
-        comprobar con una consulta de solo lectura que existan los
-        índices `sellerCode_1` (`users`) y `key_1` y `expiresAt_1`
-        (`salesloginattempts`), y que el login del admin siga igual.
-        **Sin probar:** el prompt de contraseña oculta con flechas (y
-        con él, crear una cuenta y `--nueva-contrasena` sin
-        `--dry-run`), el Ctrl+C real en PowerShell, CORS y la cookie
-        `Secure` en un navegador real con HTTPS, y Vercel con varias
-        instancias.
+        **Probado en producción** (18 de octubre, hora de Chile,
+        después del push de `d711a10`):
+        - `GET https://api.nebadon.cl/api/sales/me` sin cookie: 401
+          con code `SALES_SESSION_INVALID`;
+        - consulta de solo lectura en `ecommerceDB`: `sellerCode_1`
+          (único y parcial) en `users`; `key_1` (único) y
+          `expiresAt_1` (TTL 0 s) en `salesloginattempts`;
+        - el login del admin en `pruebas.nebadon.cl` sigue funcionando;
+        - cuentas de vendedor A y B creadas con `crear-vendedor.mjs`,
+          corrido por Alejandro en su PowerShell. El prompt oculto
+          funcionó: entrada oculta, mínimo de 12 caracteres, rechazo si
+          no coinciden y confirmación con la letra;
+        - login y `GET /api/sales/me` de A y B contra `api.nebadon.cl`,
+          desde PowerShell (`Invoke-RestMethod`), con la cookie
+          reenviada: 200 en las dos cuentas.
+        **Sin probar:** las flechas y el Ctrl+C real en el prompt
+        oculto, `--nueva-contrasena` sin `--dry-run`, los atributos de
+        la cookie (`Secure`, `SameSite=Strict`) y CORS en un navegador
+        real, con Chrome de Android, y Vercel con varias instancias.
         **Decisiones a propósito:**
         - El logout de ventas borra la cookie pero no invalida el
           token en el servidor: una copia sigue sirviendo hasta que

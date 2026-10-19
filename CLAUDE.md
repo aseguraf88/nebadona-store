@@ -294,6 +294,7 @@ técnica para todas las categorías.
 
 Paso 67, app de ventas de la feria (ítem "Ventas en la feria:
 aplicación de venta rápida" en `BACKLOG.md`). Hechos: 67a (probado en
-base de prueba y en producción) y 67b (commit `f8dd43e`, probado en
-base de prueba; en producción, nada probado todavía). Siguen el anexo
-del stock de la feria y el 67c.
+base de prueba y en producción) y 67b (commit `f8dd43e`; probado en
+base de prueba, y en producción con login y `/api/sales/me` desde
+PowerShell; en un navegador real, pendiente). Siguen el anexo del
+stock de la feria y el 67c.
