@@ -29,6 +29,13 @@ const OrderSchema = new mongoose.Schema(
             enum: ['agency', 'express', 'meetup', 'warehouse'],
             default: null,
         },
+        // Consulta de caja de regalo (versión 1 de "Armar regalos"): solo
+        // queda anotada, no suma a totalAmount. Las órdenes anteriores no
+        // la tienen y se leen como false (valor por defecto)
+        giftBoxRequested: {
+            type: Boolean,
+            default: false,
+        },
         products: [
             {
                 productId: {

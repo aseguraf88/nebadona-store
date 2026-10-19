@@ -21,6 +21,7 @@ export const createWhatsAppOrder = async (req, res) => {
             deliveryMethod: requestedDeliveryMethod,
             shippingInfo,
             totalAmount,
+            giftBoxRequested,
         } = req.body
 
         // 1. Validaciones de seguridad
@@ -180,6 +181,9 @@ export const createWhatsAppOrder = async (req, res) => {
             orderNumber,
             deliveryType,
             deliveryMethod,
+            // Solo un true real cuenta ("true", 1 o un objeto quedan en
+            // false, sin 400). No toca el total ni su validación
+            giftBoxRequested: giftBoxRequested === true,
             products: items.map((item, i) => ({
                 productId: item._id || item.id, // Compatibilidad por si pasas _id o id
                 name: item.name,
