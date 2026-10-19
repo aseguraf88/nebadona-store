@@ -52,6 +52,18 @@ manual. MercadoPago fue eliminado del código por completo (no reintroducir).
   (`FRONTEND_URL`, `VITE_BACKEND_URL`) sí se pueden anotar, porque ya
   aparecen en el JS compilado y en las respuestas de CORS (ver "Sitio en
   producción").
+- **Los scripts de cuentas de vendedor** (`crear-vendedor.mjs` y
+  `gestionar-vendedor.mjs`, en `BACKEND/scripts/`, paso 67b) los corre
+  Alejandro en su propia ventana de PowerShell, nunca con `!` desde
+  Claude Code: con `!` su salida llega a la conversación, y el prompt
+  de contraseña oculta exige una terminal interactiva (con `!` se
+  niega). Claude no los corre contra ninguna base.
+- **La sesión de ventas va aparte de la de la tienda** (paso 67b,
+  `services/salesSession.js`): el token de ventas no lleva `userId`
+  (usa `sub`) y tiene `audience: 'ventas'`, así que `authenticate` lo
+  rechaza aunque llegue como Bearer. No agregarle `userId` ni hacer
+  que `authenticate` lea la cookie `salesToken`: es una de las
+  barreras entre las rutas de ventas y las de la tienda.
 - **Bug conocido de Claude Code en Windows**: pegar bloques de texto largos
   en la consola se puede truncar en silencio, sin ningún aviso (confirmado,
   reportado a Anthropic). Para bloques de código largos que el usuario deba
@@ -280,4 +292,8 @@ técnica para todas las categorías.
 
 ## 🔧 Tarea en curso ahora mismo
 
-Ninguna definida. Ver `BACKLOG.md` para elegir la siguiente.
+Paso 67, app de ventas de la feria (ítem "Ventas en la feria:
+aplicación de venta rápida" en `BACKLOG.md`). Hechos: 67a (probado en
+base de prueba y en producción) y 67b (commit `f8dd43e`, probado en
+base de prueba; en producción, nada probado todavía). Siguen el anexo
+del stock de la feria y el 67c.

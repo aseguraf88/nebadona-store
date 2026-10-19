@@ -648,6 +648,52 @@ como punto de partida, en vez de diseñar a ciegas.
       paso 65.
       La Parte 1 comparará esta lista con los nombres reales de las
       categorías en la base antes de proponer nada.
+      **Reglas de producto vs variante (definitivas, 18 de octubre)**
+      **Criterio general**
+      - **Variante** (mismo producto, misma tarjeta): el diseño,
+        estampado o bordado es exactamente el mismo y solo cambia el
+        color de fondo (liso) o la talla.
+      - **Otro producto** (tarjeta propia): cambia el diseño, el
+        estampado o el bordado. También cambia el tamaño cuando es
+        considerable, aunque el estampado sea igual.
+      - Motivo: que cada versión tenga su propia tarjeta y no se
+        pierda entre muchas parecidas.
+      - Mapa al modelo de datos: la variante usa `size`, `baseColor`
+        y `designColors`. Las fotos son del producto (máximo 6), no de
+        la variante.
+      **Por categoría**
+      | Categoría | Es variante | Es otro producto |
+      |---|---|---|
+      | Calcetines, Camisas, Polerones | color de fondo, talla | diseño, bordado, estampado, tipo de calce |
+      | Gorras | color de fondo, talla, tipo de gorra (béisbol, malla) | diseño, bordado, estampado |
+      | Carteras, Estuches, Mochilas | mismo modelo de costura en otro color liso, sin estampado ni bordado | estampado o bordado distinto; tamaño considerablemente distinto |
+      | Lápices, Libretas | color de fondo, tamaño | diseño de estampado distinto |
+      | Aros, Billeteras, Llaveros, Peluches, Relojes, Tarjeteros, Totebags | nada | cualquier diferencia (diseño, color, tamaño) |
+      | Bandoleras | (supuesto, por confirmar) igual que Carteras, Estuches y Mochilas | (supuesto) igual que Carteras |
+      **Decisiones transitorias**
+      - **Gorras:** la regla dice que el tipo (béisbol, malla) es
+        variante, pero la variante no tiene campo "tipo". Mientras no
+        exista, se cargan como productos separados ("Gorra X – malla",
+        "Gorra X – béisbol"). Cuando exista el campo, se unen.
+      - **Tipo de calce:** en calcetines es el tipo (invisible,
+        tobillero, etc.); en camisas y polerones es el calce (regular,
+        oversize, etc.). Cada tipo es un producto distinto.
+      **Temas abiertos (no son parte del 67b)**
+      1. **Lápices y libretas:** la idea es que un tipo de lápiz con
+         varios personajes sea un solo producto con variantes. Hoy no
+         cabe: la galería admite 6 fotos por producto y la variante no
+         tiene foto propia. Mientras tanto se aplica la regla estricta
+         (otro diseño = otro producto). Se retoma al diseñar la
+         asociación variante ↔ foto.
+      2. **Asociar cada variante a una foto de la galería** (idea para
+         después).
+      3. **Campo "tipo" en la variante** (necesario para unir las
+         gorras).
+      4. **Listas "Tipo" por categoría** en `productTypeOptions.js`
+         (una línea por categoría; el campo es opcional y no bloquea
+         la carga).
+      5. **Planilla de la dueña** con tallas, colores y cantidades por
+         categoría (paso 65).
 
 - [x] ~~**Rediseñar el mensaje de WhatsApp del pedido**~~ — resuelto
       (paso 66, commit `4da0bc1`). Diseño de la dueña:
@@ -1108,8 +1154,9 @@ octubre. Sin código todavía: cada grupo se convierte en uno o más pasos.
         depende de la sesión; solo sincronizar la pide.
       - **Límite de intentos de login:** `/api/auth` permite 10 cada 15
         minutos por IP, y los dos celulares compartirán IP en la feria.
-        El login de ventas necesita un límite propio por cuenta (a
-        resolver en el 67b).
+        El login de ventas necesita un límite propio por cuenta.
+        Resuelto en el 67b: 5 intentos cada 15 minutos por email + IP,
+        con contadores en la base.
       - **Sincronización:** cola en IndexedDB; `POST /api/sales/batch`
         en lotes de hasta 50; alta idempotente por `clientId`; envío al
         guardar, al volver la señal, al abrir, cada 60 segundos, con un
@@ -1129,6 +1176,9 @@ octubre. Sin código todavía: cada grupo se convierte en uno o más pasos.
         distinto es un producto distinto**; las variantes son talla y
         color que no cambian la foto. Alejandro elimina a mano los
         productos duplicados mientras hace el inventario.
+        Reglas detalladas por categoría: "Reglas de producto vs
+        variante (definitivas, 18 de octubre)", en el ítem "Categorías
+        de accesorios" (paso 65).
       - **Borradores:** se sincronizan con estado draft, sin número y
         sin descontar stock. Al confirmar reciben número, descuentan y
         se completa la hora. Hora de la venta editable; si queda en el
@@ -1153,13 +1203,69 @@ octubre. Sin código todavía: cada grupo se convierte en uno o más pasos.
         stock de 20 a 17, volver a pendiente lo devolvió a 20, y se
         canceló). Los 409 y los avisos en `warnings` solo están
         probados en la base de prueba; no se vieron en el panel.
-      - **67b:** cuentas y login de ventas.
+      - **67b:** cuentas y login de ventas. Hecho en el commit
+        `f8dd43e` (18 de octubre):
+        - cuentas de vendedor aparte (`isSeller`, `sellerCode` con
+          índice único parcial, `tokenVersion`), creadas y gestionadas
+          con `scripts/crear-vendedor.mjs` y
+          `scripts/gestionar-vendedor.mjs` (`--revocar`,
+          `--nueva-contrasena`, `--desbloquear`, todas con
+          `--dry-run`). Se corren en una ventana propia de PowerShell,
+          no con `!` desde Claude Code;
+        - `POST /api/sales/login`, `POST /api/sales/logout` y
+          `GET /api/sales/me`; cookie `salesToken` (`httpOnly`,
+          `SameSite=Strict`, `Path=/api/sales`, 20 días). El token de
+          ventas no sirve en las rutas de la tienda, ni uno de la
+          tienda en ventas;
+        - límite de 5 intentos cada 15 minutos por email + IP, con
+          contadores en la base (no en memoria: en Vercel cada
+          instancia tiene la suya);
+        - el login de la tienda rechaza las cuentas de vendedor con el
+          mismo 400 que una contraseña incorrecta.
+        **Probado en base de prueba** (18 de octubre, 80
+        comprobaciones con `prueba67b.mjs`, que no está versionada):
+        login y atributos de la cookie, tiempos de contraseña errónea
+        y cuenta inexistente, separación de tokens en las 18 rutas de
+        admin, revocación, vencimiento, límite de intentos (con E11000
+        forzado), CORS por cabeceras, `/me`, el login del admin y de un
+        cliente sin los campos nuevos, que los scripts no crean
+        índices ni colecciones, y los scripts como procesos hijos
+        (`--revocar`, `--desbloquear`, `--nueva-contrasena --dry-run`
+        y un código sin cuenta).
+        **En producción:** nada probado todavía. Al desplegar:
+        comprobar con una consulta de solo lectura que existan los
+        índices `sellerCode_1` (`users`) y `key_1` y `expiresAt_1`
+        (`salesloginattempts`), y que el login del admin siga igual.
+        **Sin probar:** el prompt de contraseña oculta con flechas (y
+        con él, crear una cuenta y `--nueva-contrasena` sin
+        `--dry-run`), el Ctrl+C real en PowerShell, CORS y la cookie
+        `Secure` en un navegador real con HTTPS, y Vercel con varias
+        instancias.
+        **Decisiones a propósito:**
+        - El logout de ventas borra la cookie pero no invalida el
+          token en el servidor: una copia sigue sirviendo hasta que
+          vence o hasta --revocar.
+        - JavaScript no puede leer Retry-After entre orígenes: la app
+          de ventas no debe depender de ese encabezado.
       - **Anexo a la Parte 1:** modelo del stock de la feria y del
         traspaso (antes del 67c).
       - **67c:** modelo `Sale`, catálogo, lote idempotente, corregir,
         anular y "mis ventas".
       - **67d:** la app `VENTAS/` (catálogo con fotos, venta, borradores,
         cola, sincronización).
+        - La app trata un 500 de /api/sales como fallo temporal
+          (reintentar), igual que un fallo de red. Solo el 401 con code
+          SALES_SESSION_INVALID pide iniciar sesión de nuevo. Nunca se
+          descarta la cola.
+        - Antes del primer despliegue de la PWA hay que sumar
+          `https://ventas.nebadon.cl` a `FRONTEND_URL` del backend
+          (reescribirla completa, sin espacios, y redesplegar). Con un
+          origen no permitido, el backend responde 500 ("Error interno
+          del servidor."; "No permitido por CORS" queda solo en el log)
+          sin `Access-Control-Allow-Origin`, y el navegador bloquea la
+          respuesta: la app ve un fallo de red, no un 500. Como
+          reintenta los fallos de red igual que un 500, el síntoma
+          sería un reintento eterno.
       - **67e:** resumen de cierre y CSV, y una tarjeta de feria en el
         dashboard.
       - **67f:** noche de prueba (mediados de noviembre).
