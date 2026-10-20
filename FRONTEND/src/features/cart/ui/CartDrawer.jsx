@@ -1,8 +1,16 @@
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom' // 🔥 NUEVO: La herramienta de teletransportación
 import { CgTrash } from 'react-icons/cg'
+import { ChevronDown } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useCart } from '../../../entities/cart'
+import {
+    GIFT_BOX_LABEL,
+    GIFT_BOX_NOTE,
+} from '../../../shared/config/giftBox'
+
+// id de la nota del empaque especial, para aria-controls del chevron
+const GIFT_BOX_NOTE_ID = 'cart-gift-box-note'
 
 const CartDrawer = () => {
     const {
@@ -14,9 +22,15 @@ const CartDrawer = () => {
         updateQuantity,
         removeFromCart,
         loading,
+        giftBoxRequested,
+        setGiftBoxRequested,
     } = useCart()
 
     const navigate = useNavigate()
+
+    // Franja del empaque especial abierta (muestra la nota). Marcar la
+    // casilla la abre; desmarcarla no la cierra; el chevron abre y cierra
+    const [giftBoxOpen, setGiftBoxOpen] = useState(false)
 
     // 🔥 NUEVO: Estado para saber si el componente ya está montado en el navegador
     const [mounted, setMounted] = useState(false)
@@ -255,16 +269,63 @@ const CartDrawer = () => {
 
                 {/* PIE FIJO */}
                 {cart.length > 0 && !loading && (
-                    <footer className="border-t border-base-200 bg-base-100 p-6 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] pb-safe">
-                        <div className="flex items-center justify-between mb-4">
+                    <footer className="border-t border-base-200 bg-base-100 p-4 sm:p-6 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] pb-safe">
+                        {/* Consulta de empaque especial: no suma al subtotal;
+                            se confirma y se cobra por WhatsApp. El chevron
+                            va fuera del label: tocarlo no marca la casilla */}
+                        <div className="mb-3 rounded-xl border-2 border-secondary bg-secondary/20">
+                            <div className="flex items-center gap-1 pr-1">
+                                <label className="flex min-w-0 flex-1 cursor-pointer items-start gap-3 py-2 pl-3">
+                                    <input
+                                        type="checkbox"
+                                        className="checkbox checkbox-secondary checkbox-sm mt-0.5"
+                                        checked={giftBoxRequested}
+                                        onChange={(event) => {
+                                            setGiftBoxRequested(event.target.checked)
+                                            if (event.target.checked) setGiftBoxOpen(true)
+                                        }}
+                                    />
+                                    <span className="flex min-w-0 items-start gap-1.5 text-sm font-bold text-base-content">
+                                        {GIFT_BOX_LABEL}
+                                    </span>
+                                </label>
+                                <button
+                                    type="button"
+                                    onClick={() => setGiftBoxOpen((open) => !open)}
+                                    aria-expanded={giftBoxOpen}
+                                    aria-controls={giftBoxOpen ? GIFT_BOX_NOTE_ID : undefined}
+                                    aria-label="Ver más información"
+                                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-base-content hover:bg-secondary/20"
+                                >
+                                    <ChevronDown
+                                        aria-hidden="true"
+                                        className={`h-5 w-5 transition-transform duration-200 ${giftBoxOpen ? 'rotate-180' : ''}`}
+                                    />
+                                </button>
+                            </div>
+                            {giftBoxOpen && (
+                                <p
+                                    id={GIFT_BOX_NOTE_ID}
+                                    className="pb-3 pl-11 pr-3 text-xs text-base-content/80"
+                                >
+                                    {GIFT_BOX_NOTE}
+                                </p>
+                            )}
+                        </div>
+                        <div className="flex items-center justify-between mb-3">
                             <span className="text-sm font-bold uppercase tracking-widest text-base-content/70">
                                 Subtotal
+                                {giftBoxRequested && (
+                                    <span className="block text-xs font-normal normal-case tracking-normal">
+                                        (sin empaque especial)
+                                    </span>
+                                )}
                             </span>
                             <span className="text-xl font-extrabold text-base-content">
                                 {formatPrice(total)}
                             </span>
                         </div>
-                        <p className="text-xs text-base-content/50 text-center mb-4">
+                        <p className="text-xs text-base-content/50 text-center mb-3">
                             Pagas después de que confirmemos tu pedido por WhatsApp.
                         </p>
                         <Link

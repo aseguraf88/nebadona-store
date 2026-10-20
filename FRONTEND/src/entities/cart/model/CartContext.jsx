@@ -13,12 +13,25 @@ import { resolveLocalItemSku } from '../lib/resolveLocalItemSku'
 
 export const CartContext = createContext({})
 
+// Consulta de caja de regalo (shared/config/giftBox.js): en su propia clave
+// de localStorage, también con sesión (no va al carrito del backend)
+const GIFT_BOX_KEY = 'giftBoxRequested'
+
+const loadGiftBox = () => {
+    try {
+        return localStorage.getItem(GIFT_BOX_KEY) === 'true'
+    } catch {
+        return false
+    }
+}
+
 export const CartContextProvider = ({ children }) => {
     const [cart, setCart] = useState([])
     const [total, setTotal] = useState(0)
     const [itemsQuantity, setItemsQuantity] = useState(0)
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [loading, setLoading] = useState(true)
+    const [giftBoxRequested, setGiftBoxState] = useState(loadGiftBox)
 
     const {
         getUserId,
@@ -50,6 +63,21 @@ export const CartContextProvider = ({ children }) => {
             localStorage.setItem('cart', JSON.stringify(cartItems))
         } catch (error) {
             logError('Error al guardar carrito local:', error)
+        }
+    }
+
+    // Vuelve a false solo por acción del cliente: quitar el último producto
+    // o clearCart después del pedido. Nunca por la carga del carrito ni por
+    // el inicio o el cierre de sesión (un carrito vacío mientras carga no
+    // la borra)
+    const setGiftBoxRequested = (value) => {
+        const next = value === true
+        setGiftBoxState(next)
+        try {
+            if (next) localStorage.setItem(GIFT_BOX_KEY, 'true')
+            else localStorage.removeItem(GIFT_BOX_KEY)
+        } catch (error) {
+            logError('Error al guardar la caja de regalo:', error)
         }
     }
 
@@ -292,11 +320,17 @@ export const CartContextProvider = ({ children }) => {
     }
 
     const removeFromCart = async (productId, sku) => {
+        // Se calcula antes de quitar: con sesión, el carrito nuevo llega
+        // recién con loadCart
+        const removesLast = cart.every(
+            (item) => item._id === productId && item.sku === sku,
+        )
         if (isAuthenticated()) {
             try {
                 setLoading(true)
                 const userId = getUserId()
                 await removeFromCartService(userId, productId, sku)
+                if (removesLast) setGiftBoxRequested(false)
                 await loadCart()
             } catch (error) {
                 logError('Error al eliminar del carrito:', error)
@@ -313,6 +347,7 @@ export const CartContextProvider = ({ children }) => {
                 )
                 setCart(currentCart)
                 saveLocalCart(currentCart)
+                if (removesLast) setGiftBoxRequested(false)
             } catch (error) {
                 logError('Error al eliminar del carrito local:', error)
                 toast.error('Error al eliminar producto del carrito')
@@ -370,6 +405,7 @@ export const CartContextProvider = ({ children }) => {
                 const userId = getUserId()
                 await clearCartService(userId)
                 setCart([])
+                setGiftBoxRequested(false)
             } catch (error) {
                 logError('Error al limpiar carrito:', error)
                 toast.error(error.message || 'Error al limpiar carrito')
@@ -380,6 +416,7 @@ export const CartContextProvider = ({ children }) => {
             try {
                 setCart([])
                 saveLocalCart([])
+                setGiftBoxRequested(false)
             } catch (error) {
                 logError('Error al limpiar carrito local:', error)
                 toast.error('Error al limpiar carrito')
@@ -408,6 +445,8 @@ export const CartContextProvider = ({ children }) => {
                 closeModal,
                 updateQuantity,
                 loadCart,
+                giftBoxRequested,
+                setGiftBoxRequested,
             }}
         >
             {children}
