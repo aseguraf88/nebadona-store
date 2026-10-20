@@ -9,13 +9,27 @@ import { FaWhatsapp } from 'react-icons/fa'
 import { jsPDF } from 'jspdf'
 import { buildWhatsAppUrl } from '../../../shared/config/contact'
 import {
+    GIFT_BOX_LABEL,
+    GIFT_BOX_NOTE,
+    GIFT_BOX_ORDER_LINE,
+    GIFT_BOX_PRICE,
+} from '../../../shared/config/giftBox'
+import {
     DELIVERY_METHODS,
     getDeliveryMethod,
 } from '../../../shared/config/shipping'
 import { buildWhatsAppMessage } from '../lib/buildWhatsAppMessage'
 
 const Checkout = () => {
-    const { cart, total, loading: cartLoading, openModal, clearCart } = useCart()
+    const {
+        cart,
+        total,
+        loading: cartLoading,
+        openModal,
+        clearCart,
+        giftBoxRequested,
+        setGiftBoxRequested,
+    } = useCart()
     const { userInfo } = useUser()
 
     const [loading, setLoading] = useState(false)
@@ -100,6 +114,13 @@ const Checkout = () => {
                             botón de abajo).
                         </li>
                         <li>Te respondemos en menos de 1 hora (de 12:00 a 22:00).</li>
+                        {completedOrder.giftBoxRequested && (
+                            <li>
+                                Te confirmamos si hay empaque especial para tu
+                                pedido. Los {formatPrice(GIFT_BOX_PRICE)} se
+                                suman solo si lo confirmamos.
+                            </li>
+                        )}
                         <li>Pagas después de que confirmemos tu pedido.</li>
                     </ol>
                 </div>
@@ -124,7 +145,8 @@ const Checkout = () => {
     // ==========================================
     // GENERADOR DE PDF
     // ==========================================
-    const generatePDF = (data, folio, dateStr, timeStr) => {
+    // giftBox: la casilla de empaque especial, leída una vez al enviar
+    const generatePDF = (data, folio, dateStr, timeStr, giftBox) => {
         const doc = new jsPDF()
 
         // --- Encabezado ---
@@ -230,7 +252,14 @@ const Checkout = () => {
         startY += 12
         doc.setFont('helvetica', 'bold')
         doc.setFontSize(12)
-        doc.text('TOTAL (sin envío):', 140, startY, { align: 'right' })
+        doc.text(
+            giftBox
+                ? 'TOTAL (sin envío ni empaque especial):'
+                : 'TOTAL (sin envío):',
+            140,
+            startY,
+            { align: 'right' },
+        )
         doc.setTextColor(200, 40, 40)
         doc.text(formatPrice(total), 196, startY, { align: 'right' })
 
@@ -249,12 +278,27 @@ const Checkout = () => {
             .filter(Boolean)
             .join(' ')
         const paymentLines = doc.splitTextToSize(paymentText, 182)
-        // Si no entra antes del margen inferior (15 mm), pasa a una hoja nueva
+        // Si no entra antes del margen inferior (15 mm), pasa a una hoja
+        // nueva; la línea de empaque especial (6 mm) cuenta en el mismo bloque
         const lineHeight = doc.getLineHeight() / doc.internal.scaleFactor
         const pageBottom = doc.internal.pageSize.getHeight() - 15
-        if (startY + paymentLines.length * lineHeight > pageBottom) {
+        const giftBoxHeight = giftBox ? 6 : 0
+        if (
+            startY + giftBoxHeight + paymentLines.length * lineHeight >
+            pageBottom
+        ) {
             doc.addPage()
             startY = 20
+        }
+        if (giftBox) {
+            doc.setFont('helvetica', 'bold')
+            doc.setFontSize(10)
+            doc.setTextColor(0, 0, 0)
+            doc.text(`Consulta: ${GIFT_BOX_ORDER_LINE}`, 14, startY)
+            startY += giftBoxHeight
+            doc.setFont('helvetica', 'normal')
+            doc.setFontSize(9)
+            doc.setTextColor(100, 100, 100)
         }
         doc.text(paymentLines, 14, startY)
 
@@ -266,6 +310,9 @@ const Checkout = () => {
     // ==========================================
     const onSubmit = async (data) => {
         setLoading(true)
+        // Se lee una sola vez: clearCart la pone en false al final, y el
+        // payload, el PDF, el mensaje y la confirmación usan este valor
+        const requestedGiftBox = giftBoxRequested === true
 
         try {
             const orderPayload = {
@@ -273,6 +320,7 @@ const Checkout = () => {
                 // 54 ignora deliveryMethod y guarda la orden con este
                 deliveryType,
                 deliveryMethod: deliveryMethod.id,
+                giftBoxRequested: requestedGiftBox,
                 customer: {
                     firstName: data.firstName,
                     lastName: data.lastName,
@@ -330,7 +378,7 @@ const Checkout = () => {
             })
 
             // Generamos el PDF
-            generatePDF(data, folio, dateStr, timeStr)
+            generatePDF(data, folio, dateStr, timeStr, requestedGiftBox)
 
             // Mensaje de WhatsApp (lib/buildWhatsAppMessage.js)
             const message = buildWhatsAppMessage({
@@ -359,6 +407,10 @@ const Checkout = () => {
                 items: cart,
                 total,
                 formatPrice,
+                extraLines: requestedGiftBox
+                    ? [`*CONSULTA:* ${GIFT_BOX_ORDER_LINE}`]
+                    : [],
+                giftBoxRequested: requestedGiftBox,
             })
 
             // api.whatsapp.com/send (contact.js): wa.me pierde los emojis en
@@ -368,7 +420,11 @@ const Checkout = () => {
 
             toast.success(`¡Orden #ORD-${folio} registrada exitosamente!`)
 
-            setCompletedOrder({ folio, whatsappUrl })
+            setCompletedOrder({
+                folio,
+                whatsappUrl,
+                giftBoxRequested: requestedGiftBox,
+            })
             await clearCart()
         } catch (error) {
             toast.error(error.message || 'Hubo un error al procesar el pedido.')
@@ -693,13 +749,39 @@ const Checkout = () => {
                         </div>
 
                         <div className="pt-4 mt-1 border-t border-base-200">
-                            <div className="flex items-center justify-between text-lg sm:text-xl font-black">
-                                <span>Total (sin envío):</span>
-                                <span className="text-primary">
+                            <div className="flex items-center justify-between gap-3 text-lg sm:text-xl font-black">
+                                <span>
+                                    {giftBoxRequested
+                                        ? 'Total (sin envío ni empaque especial):'
+                                        : 'Total (sin envío):'}
+                                </span>
+                                <span className="text-primary whitespace-nowrap">
                                     {formatPrice(total)}
                                 </span>
                             </div>
                         </div>
+
+                        {/* Consulta de empaque especial: la misma casilla
+                            del carrito (CartContext); no suma al total */}
+                        <label className="mt-4 flex cursor-pointer items-start gap-3 rounded-xl border-2 border-secondary bg-secondary/20 p-3">
+                            <input
+                                type="checkbox"
+                                className="checkbox checkbox-secondary checkbox-sm mt-0.5"
+                                checked={giftBoxRequested}
+                                onChange={(event) =>
+                                    setGiftBoxRequested(event.target.checked)
+                                }
+                                disabled={loading}
+                            />
+                            <span className="min-w-0">
+                                <span className="block text-sm font-bold text-base-content">
+                                    {GIFT_BOX_LABEL}
+                                </span>
+                                <span className="mt-0.5 block text-xs text-base-content/80">
+                                    {GIFT_BOX_NOTE}
+                                </span>
+                            </span>
+                        </label>
                     </div>
                 </div>
             </div>

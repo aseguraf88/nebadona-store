@@ -57,7 +57,9 @@ const variantLabel = ({ size, baseColor }) => {
 // dateStr y timeStr: fecha y hora ya formateadas (las mismas del PDF); si
 // alguna llega vacía, se omite su línea. address: null en las modalidades
 // de retiro. customer.email: '' si no aplica. extraLines: líneas opcionales
-// después del total (por ejemplo, la consulta de caja de regalo)
+// después del total (por ejemplo, la consulta de empaque especial).
+// giftBoxRequested: con true, el total dice que tampoco incluye el empaque
+// especial
 export const buildWhatsAppMessage = ({
     folio,
     dateStr,
@@ -69,6 +71,7 @@ export const buildWhatsAppMessage = ({
     total,
     formatPrice,
     extraLines = [],
+    giftBoxRequested = false,
 }) => {
     const fullName = [customer.firstName, customer.lastName]
         .map(cleanText)
@@ -115,7 +118,7 @@ export const buildWhatsAppMessage = ({
             return `${qty} × ${cleanText(item.name)}${variantLabel(item)}: ${formatPrice(item.price * qty)}`
         }),
         '',
-        `*TOTAL (SIN ENVÍO):* ${formatPrice(total)}`,
+        `*TOTAL (${giftBoxRequested ? 'SIN ENVÍO NI EMPAQUE ESPECIAL' : 'SIN ENVÍO'}):* ${formatPrice(total)}`,
         ...extraLines,
         SEPARATOR,
         deliveryEmoji ? `${deliveryEmoji} *ENTREGA*` : '*ENTREGA*',
