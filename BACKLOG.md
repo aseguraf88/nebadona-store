@@ -735,43 +735,40 @@ como punto de partida, en vez de diseñar a ciegas.
       Web: los emojis se ven con `api.whatsapp.com/send`). La aplicación
       de escritorio de WhatsApp no se probó.
 
-- [ ] **Cambiar "Retiro en bodega" por "Punto de retiro" en los textos
-      públicos.** Observación de una persona que revisó la tienda (13 de
-      octubre): "bodega" sugiere un almacén con mucha mercadería y
-      expone el lugar de retiro, así que conviene un nombre más neutro.
-      **Nombre decidido por Alejandro (13 de octubre): "Punto de
-      retiro".** Riesgo conocido: se parece a "Punto de encuentro" (la
-      otra modalidad presencial); el contexto de cada tarjeta (lugar,
-      horarios, gratis) las distingue, pero conviene mirar en las
-      pruebas si confunde.
-      **Dónde aparece hoy "bodega" (solo texto público, frontend):**
-      - `shared/config/shipping.js`: `name: 'Retiro en bodega'` y la
-        franja de la ficha (`PRODUCT_DELIVERY_HIGHLIGHTS`: "Retiro
-        gratis" · "en bodega (La Granja)");
+- [x] ~~**Cambiar "Retiro en bodega" por "Punto de retiro" en los textos
+      públicos.**~~ — resuelto (commit `431252e`, 20 de octubre).
+      Observación de una persona que revisó la tienda (13 de octubre):
+      "bodega" sugiere un almacén con mucha mercadería y expone el lugar
+      de retiro, así que convenía un nombre más neutro. Nombre decidido
+      por Alejandro el 13 de octubre.
+      **Qué cambió (solo texto, 2 archivos):**
+      - `shared/config/shipping.js`: `name: 'Punto de retiro'`; sin la
+        viñeta de horarios de retiro y con "Día y hora a convenir."; la
+        franja de la ficha (`PRODUCT_DELIVERY_HIGHLIGHTS`) dice "Retiro
+        gratis" · "en La Granja".
       - `pages/envios-y-entregas/ui/EnviosYEntregas.jsx`: "Efectivo,
-        solo si retiras en bodega o en el punto de encuentro." (con el
-        nombre nuevo hay que reescribirla: "punto de retiro o punto de
-        encuentro" se lee confuso).
-      El checkout, el PDF, el mensaje de WhatsApp y el panel de órdenes
-      leen el nombre de `shipping.js`. "Costo Bodega"
-      (`PricingFields.jsx`) es una etiqueta interna del dashboard y no
-      se toca.
-      **No cambia:** el `id` `warehouse` ni el backend (`OrderModel.js`,
-      `orderControllers.js`); las órdenes guardan solo el `id`, así que
-      las anteriores se verían con el nombre nuevo.
+        solo en el punto de retiro y en el punto de encuentro."
+      **No cambió:** el `id` `warehouse` ni el backend (`OrderModel.js`,
+      `orderControllers.js`). El checkout, el PDF, el mensaje de WhatsApp
+      y el panel de órdenes leen el nombre de `shipping.js`, así que las
+      órdenes anteriores se ven con el nombre nuevo. "Costo Bodega"
+      (`PricingFields.jsx`) es una etiqueta interna del dashboard y
+      quedó igual.
       **Decidido por Alejandro (14 de octubre):**
       - "La Granja" **se sigue mostrando** (en `condition` y en la
         franja de la ficha). Se mirará cómo responden los clientes; si
         dejan el pedido a medias por la comuna, se reconsidera.
-      - Los **horarios de retiro se quitan** de los textos públicos
-        (hoy son una línea de `details` en `shipping.js`). Se
-        coordinan por WhatsApp, para dar menos información útil a
-        quien no debe tenerla. En la Parte 1 de ese paso hay que
-        buscar si los horarios aparecen también en otro lugar
-        (`EnviosYEntregas.jsx`, el PDF, el mensaje de WhatsApp).
-      Alcance: texto en 2 archivos (`shipping.js` y
-      `EnviosYEntregas.jsx`); probar el checkout, el PDF y el mensaje de
-      WhatsApp con esa modalidad.
+      - Los **horarios de retiro se quitaron** de los textos públicos:
+        se coordinan por WhatsApp, para dar menos información útil a
+        quien no debe tenerla. Solo estaban en `details` de
+        `shipping.js`, que lee solo `/envios-y-entregas`; el PDF y el
+        mensaje de WhatsApp no los mostraban.
+      **Riesgo que sigue abierto:** "Punto de retiro" se parece a "Punto
+      de encuentro" (la otra modalidad presencial); el contexto de cada
+      tarjeta (lugar, gratis) las distingue, pero conviene mirar en las
+      pruebas con clientes si confunde.
+      Probado en local por Alejandro (20 de octubre). No probado en
+      producción.
 
 ## 📝 Lista de la dueña y usuarios (octubre)
 

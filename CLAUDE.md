@@ -303,5 +303,5 @@ web.
 Aparte, la versión 1 de "Armar regalos" (casilla de "empaque
 especial", commits `9b95120` a `5665ceb`) está hecha, probada en local
 y probada por Alejandro en pruebas.nebadon.cl el 20 de octubre; ver
-`BACKLOG.md`. Activas ahora: las tareas web (punto de retiro, "¿Cómo
-comprar?", Hero). La app de ventas (67c en adelante) queda en espera.
+`BACKLOG.md`. Activas ahora: las tareas web ("¿Cómo comprar?" y
+Hero). La app de ventas (67c en adelante) queda en espera.
