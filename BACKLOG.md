@@ -727,8 +727,10 @@ como punto de partida, en vez de diseñar a ciegas.
       - **Sin recorte de pedidos grandes:** 25 ítems ≈ 2.700 caracteres
         codificados (ver "Pedidos muy largos en el mensaje de WhatsApp",
         en "🔵 Baja prioridad").
-      - `extraLines` queda listo para la consulta de caja de regalo
-        ("Armar regalos").
+      - `extraLines` lleva la consulta de empaque especial (versión 1
+        de "Armar regalos"): `*CONSULTA:* empaque especial, +$2.000, a
+        confirmar`, sin emoji. Con la casilla marcada, el total dice
+        `*TOTAL (SIN ENVÍO NI EMPAQUE ESPECIAL):*`.
       Probado en local y en producción (celular y computador, en WhatsApp
       Web: los emojis se ven con `api.whatsapp.com/send`). La aplicación
       de escritorio de WhatsApp no se probó.
@@ -1382,12 +1384,8 @@ octubre. Sin código todavía: cada grupo se convierte en uno o más pasos.
         ítems con un SKU que ya no existe (4 en órdenes aprobadas);
         ninguna orden con el mismo SKU en dos ítems.
       - **Pendiente: el formulario del dashboard reescribe el stock.**
-        `updateProduct` guarda el arreglo `variants` completo, con el
-        stock que tenía el formulario al abrirse. Si entre medio se
-        aprueba una orden (o, más adelante, se vende en la feria), ese
-        descuento se pierde al guardar. Visto en memoria (la operación
-        que genera `save()`), no probado contra la base. Sin paso
-        asignado; importa antes de la feria.
+        Pasó a ítem propio: "El formulario del dashboard pisa el
+        stock", en esta misma sección.
       - **El import CSV reemplaza el stock.** Hace `$set` del arreglo
         `variants` con el stock del CSV; si falta la columna, queda en
         0 (`productsControllers.js`, alrededor de las líneas 428 y 518
@@ -1398,9 +1396,26 @@ octubre. Sin código todavía: cada grupo se convierte en uno o más pasos.
         atomicidad (dos órdenes simultáneas pueden chocar) y los límites
         de peticiones se cuentan en memoria, por instancia.
 
-- [ ] **Armar regalos (caja de regalo como consulta).** Prioridad:
-      después del lanzamiento, lo antes posible, por pasos. Se hace como
-      paso propio, con Parte 1 de diseño antes de implementar.
+- [ ] **El formulario del dashboard pisa el stock (`updateProduct`).**
+      Sin número de paso; importa antes de la feria. `updateProduct`
+      guarda el arreglo `variants` completo, con el stock que tenía el
+      formulario al abrirse. Si entre medio se aprueba una orden (o, más
+      adelante, se vende en la feria o se traspasa stock a la feria),
+      ese descuento se pierde al guardar. Visto en memoria (la operación
+      que genera `save()`), no probado contra la base. Anotado en el
+      paso 67a ("Hallazgos del 14 de octubre y resultado del paso 67a",
+      en el ítem de la feria). Relacionado: el import CSV también
+      reemplaza el stock (mismo lugar) y "Stock en el import CSV".
+
+- [ ] **Armar regalos (caja de regalo como consulta).** La versión 1
+      está hecha (ver abajo); quedan la 1.5 y la 2, cada una como paso
+      propio, con Parte 1 de diseño antes de implementar. Prioridad de
+      la 1.5 y la 2: después del lanzamiento, lo antes posible.
+
+      **Nombre visible: "empaque especial".** "Caja de regalo",
+      `giftBox` y `giftBoxRequested` son nombres internos (código,
+      commits y este BACKLOG); el cliente y el panel solo ven "empaque
+      especial".
 
       **Idea de la dueña (11 de octubre):** la página tendrá la opción de
       "armar regalos", disponible cuando termine de forrar las cajas que
@@ -1418,28 +1433,53 @@ octubre. Sin código todavía: cada grupo se convierte en uno o más pasos.
         significativas, cajas irregulares). Por eso la **primera versión
         es una consulta**, no un cálculo.
 
-      **Versión 1 (la que se hará primero): casilla de consulta.**
-      - En el carrito (y en el checkout), una casilla del estilo
-        **"Consultar por caja de regalo (+$2.000)"**, con una nota corta:
-        se confirma por WhatsApp si el pedido cabe y los $2.000 se suman
-        solo si se confirma. Textos de ejemplo de Alejandro: "Consultar
-        por envoltorio especial por $2.000" o "Pregunta por
-        disponibilidad de caja de regalo. Se agregarían $2.000".
-      - **No suma al total de la orden**: el total y la validación de
-        precios del backend (paso 40) no cambian. La consulta queda
-        **anotada**: un campo en la orden (por ejemplo,
-        `giftBoxRequested`), una línea en el **PDF** y en el **mensaje de
-        WhatsApp** ("Consulta: caja de regalo, +$2.000, a confirmar"), y
-        una **insignia en el panel de órdenes** para que la dueña no la
-        pase por alto.
-      - La dueña confirma y cobra por WhatsApp, como hace con todo.
-        Límite conocido: el total que ve el panel no incluye los $2.000
-        de la caja confirmada.
-      - Los textos respetan la regla del paso 54 ("todavía no pagas
-        nada"; el total dice que no incluye envío ni caja).
+      **Versión 1: hecha** (commits `9b95120`, `e8e029b`, `a6bac11` y
+      `5665ceb`, 19 de octubre). Probado en local, y probado por
+      Alejandro en pruebas.nebadon.cl el 20 de octubre.
+      - **Carrito:** franja con la casilla "¿Es para regalo? ¡Pregunta
+        por nuestro empaque especial! (+$2.000)" y una nota que se
+        despliega: se confirma por WhatsApp si hay disponibilidad y los
+        $2.000 se suman solo si se confirma. Con la casilla marcada,
+        "Subtotal" lleva debajo "(sin empaque especial)". La misma
+        casilla está en el resumen del checkout.
+      - **Por qué la franja se despliega:** a 375 px, con la nota
+        siempre visible, el pie del carrito ocupaba demasiado alto y
+        dejaba la lista casi sin espacio.
+      - Los textos siguen la regla del paso 54 ("aún no pagas nada"):
+        los $2.000 solo se suman si se confirma.
+      - **Textos y precio** en `shared/config/giftBox.js`
+        (`GIFT_BOX_PRICE`, `GIFT_BOX_LABEL`, `GIFT_BOX_NOTE` y
+        `GIFT_BOX_ORDER_LINE`).
+      - **La marca vive en `CartContext`**, con su propia clave de
+        `localStorage` (`giftBoxRequested`), también con sesión
+        iniciada: no se guarda en el carrito del backend. Se borra solo
+        por acción del cliente (quitar el último producto, o
+        `clearCart` al terminar el pedido), nunca al cargar, al
+        iniciar o cerrar sesión ni al sincronizar.
+      - **Orden:** `giftBoxRequested` en `OrderModel` (Boolean, por
+        defecto false; las órdenes anteriores se leen como false). El
+        backend solo acepta un `true` real (`=== true`, sin 400). **No
+        suma al total**: `totalAmount` y la validación de precios
+        (paso 40) no cambian.
+      - **PDF y WhatsApp:** el total dice "sin envío ni empaque
+        especial" y se agrega la línea "Consulta: empaque especial,
+        +$2.000, a confirmar" (en WhatsApp, `*CONSULTA:*` sin emoji,
+        por `extraLines`). La confirmación del pedido suma un punto en
+        "¿Qué sigue?".
+      - **Panel de órdenes:** insignia "Empaque especial" bajo el folio
+        y la línea "Consulta: …" en el detalle, solo si la orden la
+        pidió.
+      - **Límites conocidos:**
+        - la casilla no viaja entre dispositivos (vive en el
+          `localStorage` de cada navegador);
+        - los $2.000 los suma la dueña a mano al confirmar por
+          WhatsApp: no quedan en `totalAmount` y el total que ve el
+          panel no los incluye;
+        - si el carrito se vacía por otra vía (no quitando el último
+          producto ni terminando un pedido), la casilla queda marcada.
 
       **Versión 1.5 (si hace falta):** un interruptor en el dashboard,
-      por producto, **"Admite caja de regalo"** (por defecto sí), y un
+      por producto, **"Admite empaque especial"** (por defecto sí), y un
       máximo configurable de **unidades por pedido**. Si el carrito tiene
       un producto que no la admite (por ejemplo, mochilas o peluches
       grandes) o supera ese máximo, la casilla no aparece. Es una regla
@@ -1460,9 +1500,10 @@ octubre. Sin código todavía: cada grupo se convierte en uno o más pasos.
       **app de ventas de la feria**, la caja se puede vender desde el
       primer día como **artículo suelto de $2.000**.
 
-      **Sin código, mientras tanto:** la dueña ofrece la caja por
-      WhatsApp, o un producto "Caja de regalo" ($2.000, talla única) en
-      el catálogo.
+      **Antes de la versión 1** (historia): la alternativa sin código
+      era que la dueña ofreciera la caja por WhatsApp, o un producto
+      "Caja de regalo" ($2.000, talla única) en el catálogo. Con la
+      versión 1 ya no hace falta.
 
       **Relacionado:** "Categorías de accesorios".
 
@@ -1863,11 +1904,11 @@ Relacionado con "🎨 Pulido visual / UI-UX", más arriba:
       completo está en el PDF" y el total siempre. Va en
       `buildWhatsAppMessage.js` (encontrado en el paso 66).
 
-- [ ] **Consulta de caja de regalo en el mensaje:** `buildWhatsAppMessage`
-      recibe `extraLines`, líneas que van justo después del total,
-      pensadas para la consulta de la versión 1 de "Armar regalos"
-      ("Consulta: caja de regalo, +$2.000, a confirmar"). Hoy no se usa;
-      se conecta en ese paso.
+- [x] ~~**Consulta de caja de regalo en el mensaje**~~ — resuelto (commit
+      `a6bac11`, versión 1 de "Armar regalos"): `Checkout.jsx` pasa la
+      línea `*CONSULTA:* empaque especial, +$2.000, a confirmar` por
+      `extraLines`, sin emoji. Probado en local, y probado por Alejandro
+      en pruebas.nebadon.cl el 20 de octubre.
 
 - [ ] **El acordeón "Detalles" aparece un frame después** en el primer
       render de la ficha, debajo del botón "Agregar": desde el paso 64b
