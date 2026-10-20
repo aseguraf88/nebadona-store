@@ -63,12 +63,12 @@ export const DELIVERY_METHODS = [
     },
     {
         id: 'warehouse',
-        name: 'Retiro en bodega',
+        name: 'Punto de retiro',
         condition: 'La Granja · gratis',
         deliveryType: 'pickup',
         details: [
             'Gratis.',
-            'Lunes a viernes de 19:00 a 22:00. Sábado y domingo de 10:00 a 20:00.',
+            'Día y hora a convenir.',
             'Te damos la dirección por WhatsApp.',
             'Pagas en efectivo o por transferencia.',
         ],
@@ -86,7 +86,7 @@ export const getDeliveryMethod = (id) =>
 // es la que se lee primero
 export const PRODUCT_DELIVERY_HIGHLIGHTS = [
     { icon: Truck, strong: 'Envío a todo Chile', rest: '· el envío lo pagas al recibir' },
-    { icon: Warehouse, strong: 'Retiro gratis', rest: 'en bodega (La Granja)' },
+    { icon: Warehouse, strong: 'Retiro gratis', rest: 'en La Granja' },
     { icon: MessageCircle, strong: 'Pagas después de confirmar', rest: 'por WhatsApp' },
 ]
 

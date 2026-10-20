@@ -12,7 +12,7 @@ const INFO_CARDS = [
         icon: Wallet,
         details: [
             'Transferencia bancaria, en todas las formas de entrega.',
-            'Efectivo, solo si retiras en bodega o en el punto de encuentro.',
+            'Efectivo, solo en el punto de retiro y en el punto de encuentro.',
             'Con Starken, transfieres los productos antes del despacho y el envío lo pagas al recibir.',
         ],
     },
