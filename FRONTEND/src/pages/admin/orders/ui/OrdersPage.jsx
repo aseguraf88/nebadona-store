@@ -1,7 +1,9 @@
 import { useState, useEffect, useMemo, Fragment } from 'react'
 import toast from 'react-hot-toast'
+import { Gift } from 'lucide-react'
 import { getOrders, updateOrderStatus } from '../../../../entities/order'
 import { useProduct } from '../../../../entities/product'
+import { GIFT_BOX_ORDER_LINE } from '../../../../shared/config/giftBox'
 import { getDeliveryMethod } from '../../../../shared/config/shipping'
 
 // Metadata de los estados reales del backend (OrderModel).
@@ -264,8 +266,21 @@ const OrdersPage = () => {
                                 filteredOrders.map((order) => (
                                     <Fragment key={order._id}>
                                         <tr key={order._id} className="hover">
-                                            <td className="font-mono font-bold text-primary">
-                                                #ORD-{order.orderNumber}
+                                            <td>
+                                                <span className="font-mono font-bold text-primary">
+                                                    #ORD-{order.orderNumber}
+                                                </span>
+                                                {/* Consulta de empaque especial (las
+                                                    órdenes anteriores llegan con false) */}
+                                                {order.giftBoxRequested === true && (
+                                                    <span className="badge badge-sm border-secondary bg-secondary/20 text-base-content mt-1 flex w-fit items-center gap-1 whitespace-nowrap">
+                                                        <Gift
+                                                            aria-hidden="true"
+                                                            className="h-3 w-3"
+                                                        />
+                                                        Empaque especial
+                                                    </span>
+                                                )}
                                             </td>
                                             <td className="text-sm text-base-content/70">
                                                 {formatDate(order.createdAt)}
@@ -330,6 +345,14 @@ const OrdersPage = () => {
                                                             {getShippingAddress(order) &&
                                                                 ` · ${getShippingAddress(order)}`}
                                                         </p>
+                                                        {order.giftBoxRequested === true && (
+                                                            <p className="text-sm">
+                                                                <span className="font-semibold">
+                                                                    Consulta:
+                                                                </span>{' '}
+                                                                {GIFT_BOX_ORDER_LINE}
+                                                            </p>
+                                                        )}
                                                         {order.products.map(
                                                             (item) => (
                                                                 <div
