@@ -7,6 +7,7 @@ import franchiseNamesRoutes from './routes/franchiseNamesRoutes.js'
 import cartRoutes from './routes/cartRoutes.js'
 import orderRoutes from './routes/orderRoutes.js'
 import salesRoutes from './routes/salesRoutes.js'
+import fairRoutes from './routes/fairRoutes.js'
 import cors from 'cors'
 import cookieParser from 'cookie-parser'
 import rateLimit from 'express-rate-limit'
@@ -79,6 +80,8 @@ app.use('/api/cart', cartRoutes)
 app.use('/api/orders', orderRoutes)
 // App de ventas de la feria (paso 67b): sin authLimiter, ver salesRoutes.js
 app.use('/api/sales', salesRoutes)
+// Stock de la feria y traspasos (paso 67c-1): solo administrador
+app.use('/api/fair', fairRoutes)
 
 app.use((req, res) => {
     res.status(404).json({ message: 'Recurso no encontrado.' })

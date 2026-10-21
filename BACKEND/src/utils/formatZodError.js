@@ -38,6 +38,10 @@ const FIELD_LABELS = {
     stock: 'Stock',
     attributes: 'Atributos',
     status: 'Estado',
+    // Traspaso a la feria (paso 67c-1)
+    requestId: 'Identificador del traspaso',
+    lines: 'Líneas',
+    quantity: 'Cantidad',
 }
 
 const TYPE_NAMES = {
