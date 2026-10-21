@@ -23,6 +23,7 @@ import {
 import { InventoryPage } from '../pages/admin/inventory'
 import { OrdersPage } from '../pages/admin/orders'
 import { CustomersPage } from '../pages/admin/customers'
+import { FairPage } from '../pages/admin/fair'
 import ProtectedRoute from '../app/routes/ProtectedRoute'
 import { ShoppingPage } from '../pages/shopping'
 import { ProductPage } from '../pages/product'
@@ -115,6 +116,7 @@ function App() {
                                 path="inventory"
                                 element={<InventoryPage />}
                             />
+                            <Route path="fair" element={<FairPage />} />
 
                             <Route path="orders" element={<OrdersPage />} />
                             <Route

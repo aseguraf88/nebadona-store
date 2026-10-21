@@ -9,6 +9,7 @@ import {
     TbShoppingBag,
     TbBox,
     TbPackages,
+    TbBuildingStore,
     TbUsers,
     TbSettings,
     TbLogout,
@@ -56,6 +57,11 @@ const AdminLayout = () => {
                     name: 'Inventario',
                     path: '/admin/dashboard/inventory',
                     icon: TbPackages,
+                },
+                {
+                    name: 'Feria',
+                    path: '/admin/dashboard/fair',
+                    icon: TbBuildingStore,
                 },
                 {
                     name: 'Clientes',
