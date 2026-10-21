@@ -4,8 +4,10 @@ import FairModel from '../models/FairModel.js'
 import FairStockModel from '../models/FairStockModel.js'
 import FairMovementModel from '../models/FairMovementModel.js'
 import ProductModel from '../models/ProductModel.js'
-import { adjustVariantStock } from '../services/variantStock.js'
-import { adjustFairStock } from '../services/fairStock.js'
+import {
+    decrementWebStockBulk,
+    incrementFairStockBulk,
+} from '../services/fairStock.js'
 import {
     openFairSchema,
     transferSchema,
@@ -151,31 +153,29 @@ export const createTransfer = async (req, res) => {
                 )
             }
 
-            // Web: se revisan todas las líneas para nombrar juntos los
-            // problemas; el error deshace también las que sí alcanzaban
-            const missing = []
-            const insufficient = []
-            const webStock = new Map()
-            for (const { sku, quantity } of lines) {
-                const web = await adjustVariantStock({
-                    sku,
-                    delta: -quantity,
-                    mode: 'conditional',
-                    session,
-                })
-                if (web.status === 'not_found') missing.push(sku)
-                else if (web.status === 'insufficient') {
-                    insufficient.push(
-                        `${sku} (disponible ${web.stock}, pedido ${quantity})`,
-                    )
-                } else webStock.set(sku, web.stock)
-            }
+            // Una lectura de los productos de todas las líneas, dentro de la
+            // transacción: nombra lo que falla antes de escribir y da el
+            // producto, la etiqueta y el stock web de cada línea. Se revisan
+            // todas para nombrar juntos los problemas
+            const bySku = await variantsBySku(
+                lines.map((line) => line.sku),
+                session,
+            )
+            const missing = lines
+                .filter((line) => !bySku.has(line.sku))
+                .map((line) => line.sku)
             if (missing.length > 0) {
                 throw new FairRequestError(
                     400,
                     `SKU inexistente: ${missing.join(', ')}. No se traspasó nada.`,
                 )
             }
+            const insufficient = lines
+                .filter((line) => bySku.get(line.sku).variant.stock < line.quantity)
+                .map(
+                    (line) =>
+                        `${line.sku} (disponible ${bySku.get(line.sku).variant.stock}, pedido ${line.quantity})`,
+                )
             if (insufficient.length > 0) {
                 throw new FairRequestError(
                     409,
@@ -183,38 +183,48 @@ export const createTransfer = async (req, res) => {
                 )
             }
 
-            const bySku = await variantsBySku(
-                lines.map((line) => line.sku),
-                session,
+            // Web y feria en un lote cada una. La baja lleva la misma
+            // condición que adjustVariantStock: si otra petición cambió ese
+            // stock después de la lectura, la transacción choca y se
+            // reintenta desde el principio. Si aun así una línea no
+            // coincide, se deshace todo
+            if (!(await decrementWebStockBulk({ lines, session }))) {
+                throw new FairRequestError(
+                    409,
+                    'El stock de la web cambió durante el traspaso. Vuelve a intentarlo; no se traspasó nada.',
+                )
+            }
+            const productIdBySku = new Map(
+                [...bySku].map(([sku, found]) => [sku, found.product._id]),
             )
-            const movements = []
-            for (const { sku, quantity } of lines) {
+            const fairStockBySku = await incrementFairStockBulk({
+                fairId: fair._id,
+                lines,
+                productIdBySku,
+                session,
+            })
+            if (!fairStockBySku) {
+                throw new Error('incrementFairStockBulk: no se aplicaron todas las líneas')
+            }
+
+            const movements = lines.map(({ sku, quantity }) => {
                 const found = bySku.get(sku)
-                const productId = found?.product._id ?? null
-                const fairResult = await adjustFairStock({
-                    fairId: fair._id,
-                    sku,
-                    delta: quantity,
-                    mode: 'allowNegative',
-                    productId,
-                    session,
-                })
-                movements.push({
+                return {
                     fair: fair._id,
                     type: 'transfer',
                     requestId,
                     sku,
-                    product: productId,
-                    label: found
-                        ? variantLabel(found.product.name, found.variant)
-                        : sku,
+                    product: found.product._id,
+                    label: variantLabel(found.product.name, found.variant),
                     fairDelta: quantity,
                     webDelta: -quantity,
-                    fairStockAfter: fairResult.stock,
-                    webStockAfter: webStock.get(sku),
+                    fairStockAfter: fairStockBySku.get(sku),
+                    // La lectura es de esta misma transacción y la baja
+                    // coincidió: el saldo es lo leído menos lo traspasado
+                    webStockAfter: found.variant.stock - quantity,
                     createdBy: req.user._id,
-                })
-            }
+                }
+            })
             const saved = await FairMovementModel.insertMany(movements, {
                 session,
             })
