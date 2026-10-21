@@ -107,6 +107,33 @@ export const createProduct = async (req, res) => {
     }
 }
 
+// Stock de las variantes que ya existen (mismo sku en la base). El
+// formulario manda, por cada una, el stock con que la cargó
+// (originalStock), que puede tener horas: si no lo tocó, se conserva el de
+// la base y no se pierde una aprobación o una venta hecha entre medio; si
+// lo editó, se guarda solo si la base no cambió desde entonces. Sin
+// originalStock también es conflicto (pestaña con el código anterior o una
+// llamada a mano). Las variantes nuevas llevan el stock que traen
+const resolveVariantStock = (incoming, current) => {
+    const stockBySku = new Map(current.map((v) => [v.sku, v.stock]))
+    const conflicts = []
+    const variants = incoming.map(({ originalStock, ...variant }) => {
+        if (!stockBySku.has(variant.sku)) return variant
+        const dbStock = stockBySku.get(variant.sku)
+        if (originalStock === undefined) {
+            conflicts.push({ sku: variant.sku, stock: dbStock })
+            return variant
+        }
+        // No lo tocó: el de la base
+        if (variant.stock === originalStock) return { ...variant, stock: dbStock }
+        // Lo editó, pero la base cambió desde que lo cargó
+        if (dbStock !== originalStock)
+            conflicts.push({ sku: variant.sku, stock: dbStock })
+        return variant
+    })
+    return { variants, conflicts }
+}
+
 export const updateProduct = async (req, res) => {
     try {
         const parsedData = productUpdateSchema.parse(req.body)
@@ -128,6 +155,23 @@ export const updateProduct = async (req, res) => {
         const product = await ProductModel.findById(req.params.id)
         if (!product) {
             return res.status(404).json({ message: 'Producto no encontrado.' })
+        }
+
+        if (parsedData.variants) {
+            const { variants, conflicts } = resolveVariantStock(
+                parsedData.variants,
+                product.variants
+            )
+            if (conflicts.length > 0) {
+                const detail = conflicts
+                    .map(({ sku, stock }) => `${sku}: stock actual ${stock}`)
+                    .join('; ')
+                return res.status(409).json({
+                    message: `El stock cambió mientras editabas (${detail}). Recarga la página y vuelve a intentarlo.`,
+                    conflicts,
+                })
+            }
+            parsedData.variants = variants
         }
 
         Object.assign(product, parsedData)

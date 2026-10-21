@@ -9,6 +9,9 @@ const variantSchema = z.object({
     // Entero > 0 o sin precio propio (null): 0 haría gratis la variante.
     // Misma regla que parseClpPrice en el import CSV (productsControllers.js)
     price: z.number().int().positive().nullable().optional(),
+    // Solo en la edición: el stock con que el formulario cargó la variante.
+    // updateProduct lo usa para no pisar el stock de la base y no lo guarda
+    originalStock: z.number().int().min(0).optional(),
 })
 
 const imageInputSchema = z.string().refine((value) => {

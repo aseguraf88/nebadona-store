@@ -128,6 +128,11 @@ const mapProductToTemplate = (product) => ({
                       : [],
                   stock: Number(v.stock || 0),
                   price: v.price ? String(v.price) : '',
+                  // Ocultos: con qué sku y stock se cargó. El payload manda
+                  // originalStock para que el backend no pise el stock de la
+                  // base (updateProduct, productsControllers.js)
+                  loadedSku: v.sku || '',
+                  loadedStock: Number(v.stock || 0),
               }))
             : EMPTY_TEMPLATE.variants,
     images: (Array.isArray(product?.imageUrls)
@@ -306,18 +311,26 @@ export function useProductForm() {
                 popular: Boolean(template.popular),
                 tags: parsedTags,
                 status: template.status || 'DRAFT',
-                variants: template.variants.map((v) => ({
-                    sku: v.sku?.trim().toUpperCase() || '',
-                    size: v.size?.trim().toUpperCase() || null,
-                    baseColor: v.baseColor?.trim().toLowerCase() || null,
-                    designColors: Array.isArray(v.designColors)
-                        ? v.designColors
-                              .map((c) => c.trim().toLowerCase())
-                              .filter(Boolean)
-                        : [],
-                    stock: Number(v.stock || 0),
-                    price: v.price ? Number(v.price) : null,
-                })),
+                variants: template.variants.map((v) => {
+                    const sku = v.sku?.trim().toUpperCase() || ''
+                    return {
+                        sku,
+                        size: v.size?.trim().toUpperCase() || null,
+                        baseColor: v.baseColor?.trim().toLowerCase() || null,
+                        designColors: Array.isArray(v.designColors)
+                            ? v.designColors
+                                  .map((c) => c.trim().toLowerCase())
+                                  .filter(Boolean)
+                            : [],
+                        stock: Number(v.stock || 0),
+                        price: v.price ? Number(v.price) : null,
+                        // Solo si la variante ya existía con este mismo sku:
+                        // una nueva o con el sku cambiado no lo lleva
+                        ...(v.loadedSku && v.loadedSku === sku
+                            ? { originalStock: v.loadedStock }
+                            : {}),
+                    }
+                }),
             }
 
             let result
@@ -332,10 +345,18 @@ export function useProductForm() {
                 toast.success('¡Producto guardado exitosamente!')
 
                 if (isEditMode) {
-                    const persisted = {
-                        ...template,
-                        images: imageUrls.map((src) => buildImageFromUrl(src)),
-                    }
+                    // Desde la respuesta y no desde lo escrito: el stock que
+                    // conservó el backend y el loadedStock del próximo
+                    // guardado quedan con el valor de la base. Sin producto
+                    // en la respuesta, lo escrito, como antes
+                    const persisted = result?.product
+                        ? mapProductToTemplate(result.product)
+                        : {
+                              ...template,
+                              images: imageUrls.map((src) =>
+                                  buildImageFromUrl(src),
+                              ),
+                          }
                     setTemplate(persisted)
                     setSavedTemplate(persisted)
                 } else if (result?.product?._id) {
