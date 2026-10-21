@@ -1380,9 +1380,10 @@ octubre. Sin código todavía: cada grupo se convierte en uno o más pasos.
         numérico; 35 órdenes con algún ítem sin SKU (2 aprobadas); 18
         ítems con un SKU que ya no existe (4 en órdenes aprobadas);
         ninguna orden con el mismo SKU en dos ítems.
-      - **Pendiente: el formulario del dashboard reescribe el stock.**
-        Pasó a ítem propio: "El formulario del dashboard pisa el
-        stock", en esta misma sección.
+      - **El formulario del dashboard reescribía el stock:** resuelto
+        en el commit `3ed4094` (21 de octubre); ver el ítem "El
+        formulario del dashboard pisa el stock", en esta misma
+        sección.
       - **El import CSV reemplaza el stock.** Hace `$set` del arreglo
         `variants` con el stock del CSV; si falta la columna, queda en
         0 (`productsControllers.js`, alrededor de las líneas 428 y 518
@@ -1393,16 +1394,49 @@ octubre. Sin código todavía: cada grupo se convierte en uno o más pasos.
         atomicidad (dos órdenes simultáneas pueden chocar) y los límites
         de peticiones se cuentan en memoria, por instancia.
 
-- [ ] **El formulario del dashboard pisa el stock (`updateProduct`).**
-      Sin número de paso; importa antes de la feria. `updateProduct`
-      guarda el arreglo `variants` completo, con el stock que tenía el
-      formulario al abrirse. Si entre medio se aprueba una orden (o, más
-      adelante, se vende en la feria o se traspasa stock a la feria),
-      ese descuento se pierde al guardar. Visto en memoria (la operación
-      que genera `save()`), no probado contra la base. Anotado en el
-      paso 67a ("Hallazgos del 14 de octubre y resultado del paso 67a",
-      en el ítem de la feria). Relacionado: el import CSV también
-      reemplaza el stock (mismo lugar) y "Stock en el import CSV".
+- [x] ~~**El formulario del dashboard pisa el stock (`updateProduct`).**~~
+      — resuelto (commit `3ed4094`, 21 de octubre), sin número de paso.
+      **El problema:** `updateProduct` guardaba el arreglo `variants`
+      completo, con el stock que tenía el formulario. Ese stock sale de
+      `adminProducts`, que se carga al entrar al dashboard, así que podía
+      tener horas. Guardar cualquier cambio del producto (también solo la
+      descripción) perdía una aprobación hecha entre medio. Confirmado
+      contra la base de prueba con el código anterior (el stock volvió a
+      10 después de bajar a 7). Anotado en el paso 67a.
+      **Arreglo (opción B):**
+      - El formulario guarda, por cada variante cargada, con qué SKU y
+        stock se cargó, y manda `originalStock` solo si el SKU no
+        cambió (`useProductForm.js`; `productSchema.js` lo acepta como
+        entero mayor o igual a 0).
+      - `updateProduct` (`resolveVariantStock`): en una variante que ya
+        existe, si el stock no se tocó, conserva el de la base; si se
+        editó, lo guarda solo si la base no cambió desde que se cargó.
+        Responde **409** "El stock cambió mientras editabas (SKU: stock
+        actual N; …). Recarga la página y vuelve a intentarlo." si se
+        editó y la base cambió, o si una variante existente llega sin
+        `originalStock` (pestaña abierta con el código anterior al
+        despliegue, o una llamada a mano). Lista todos los SKU en conflicto y no guarda
+        nada. `originalStock` no se guarda nunca. Las variantes nuevas
+        llevan el stock que traen.
+      - Después de guardar, el formulario se arma desde la respuesta: el
+        campo de stock muestra el valor de la base.
+      **Probado:** 41 de 41 comprobaciones contra la base de prueba
+      `ecommerceDB_pruebastock` (script en el scratchpad, no
+      versionado), y la interfaz en local por Alejandro (dos pestañas,
+      409, imágenes). No probado en producción.
+      **Límites conocidos:**
+      - **No se hizo B2:** entre la lectura y el `save()` de
+        `updateProduct` queda una ventana de milisegundos; un `$inc`
+        que caiga justo ahí se pierde. Se cerraría con una transacción,
+        como en `updateOrderStatus`.
+      - Un SKU renombrado se trata como variante nueva, con el stock que
+        tenga el formulario.
+      - El resto del producto sigue siendo "el último que guarda gana".
+      - **Durante la feria no se edita stock desde el formulario.**
+      - **El import CSV no queda cubierto:** reemplaza el stock de todo
+        producto que traiga. Regla: no importar CSV durante la feria.
+        Que una celda Stock vacía conserve el stock de un SKU existente
+        (en vez de dejarlo en 0) va en "Stock en el import CSV".
 
 - [ ] **Armar regalos (caja de regalo como consulta).** La versión 1
       está hecha (ver abajo); quedan la 1.5 y la 2, cada una como paso
@@ -2091,6 +2125,13 @@ Relacionado con "🎨 Pulido visual / UI-UX", más arriba:
       precio inválido); vacío sigue siendo 0. Hoy `parseInt("-2")` deja
       -2 y `bulkWrite` no valida. Va en un commit aparte, después del
       67a.
+      **Se suma (21 de octubre, CSV-2):** una celda Stock vacía (o sin
+      columna) en un SKU que ya existe conserva el stock de la base en
+      vez de dejarlo en 0 (sustituye lo anterior para los SKU que ya
+      existen); en un SKU nuevo sigue siendo 0. La consulta
+      de `existingStandards` ya lee esos productos: bastaría con traer
+      también `variants.sku` y `variants.stock`. Viene de "El formulario
+      del dashboard pisa el stock".
 
 - [ ] El contador de `express-rate-limit` vive en la memoria de cada
       instancia serverless de Vercel: se reinicia en cada arranque en frío
