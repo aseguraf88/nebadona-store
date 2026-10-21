@@ -294,14 +294,20 @@ técnica para todas las categorías.
 
 Paso 67, app de ventas de la feria (ítem "Ventas en la feria:
 aplicación de venta rápida" en `BACKLOG.md`). Hechos: 67a (probado en
-base de prueba y en producción) y 67b (commit `f8dd43e`; probado en
+base de prueba y en producción), 67b (commit `f8dd43e`; probado en
 base de prueba, y en producción con login y `/api/sales/me` desde
-PowerShell; en un navegador real, pendiente). El anexo del stock
-de la feria y el 67c quedan en espera mientras se hacen las tareas
-web.
+PowerShell; en un navegador real, pendiente) y 67c-1, stock de la
+feria y traspasos (commits `84e21c9`, `d25ad68` y `a334f74`; probado
+solo en local contra `ecommerceDB_pruebaferia`, nada en producción).
+Sigue el **67c-2** (ventas, `Sale` y catálogo de ventas).
+
+**No abrir una feria real en producción hasta tener el cierre
+(67e):** sin cierre, el stock traspasado queda fuera de la web y
+borrar la feria a mano en la base no lo devuelve.
 
 Aparte, la versión 1 de "Armar regalos" (casilla de "empaque
 especial", commits `9b95120` a `5665ceb`) está hecha, probada en local
 y probada por Alejandro en pruebas.nebadon.cl el 20 de octubre; ver
-`BACKLOG.md`. Activas ahora: las tareas web ("¿Cómo comprar?" y
-Hero). La app de ventas (67c en adelante) queda en espera.
+`BACKLOG.md`. Pendientes aparte, en espera de bocetos y referencias de
+Alejandro: "¿Cómo comprar?" y Hero. La app de ventas sigue con el
+67c-2.

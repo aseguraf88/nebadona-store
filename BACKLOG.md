@@ -768,7 +768,7 @@ como punto de partida, en vez de diseñar a ciegas.
       tarjeta (lugar, gratis) las distingue, pero conviene mirar en las
       pruebas con clientes si confunde.
       Probado en local por Alejandro (20 de octubre). No probado en
-      producción.
+      producción. También probado en pruebas.nebadon.cl.
 
 ## 📝 Lista de la dueña y usuarios (octubre)
 
@@ -1220,10 +1220,10 @@ octubre. Sin código todavía: cada grupo se convierte en uno o más pasos.
            historial. Si el stock web no alcanza, informa "no alcanza"
            y no cambia nada.
       - **`adjustVariantStock` no sirve para el lado feria** (está fijo
-        a `ProductModel` y `variants.$.stock`). Falta una función
-        hermana, que se define en el 67c, junto con el modelo de la
-        feria.
-      - Nada de esto está implementado ni probado.
+        a `ProductModel` y `variants.$.stock`). La función hermana es
+        `adjustFairStock` (`services/fairStock.js`, 67c-1).
+      - Implementado en el 67c-1 (ver "Sub-pasos"), **salvo el cierre**,
+        las diferencias y "aplicar ajuste", que quedan para el 67e.
 
       **Sub-pasos (orden):**
       - **67a:** descuento de stock atómico en `updateOrderStatus`
@@ -1300,10 +1300,53 @@ octubre. Sin código todavía: cada grupo se convierte en uno o más pasos.
         - JavaScript no puede leer Retry-After entre orígenes: la app
           de ventas no debe depender de ese encabezado.
       - **Anexo a la Parte 1:** modelo del stock de la feria y del
-        traspaso (antes del 67c): decidido el 19 de octubre; sin
-        implementar.
-      - **67c:** modelo `Sale`, catálogo, lote idempotente, corregir,
-        anular y "mis ventas".
+        traspaso: decidido el 19 de octubre; implementado en el 67c-1.
+      - **67c-1:** stock de la feria y traspasos. Hecho en los commits
+        `84e21c9` (backend), `d25ad68` (rendimiento) y `a334f74`
+        (página "Feria" del panel), 21 de octubre:
+        - modelos `Fair`, `FairStock` y `FairMovement`,
+          `services/fairStock.js` y rutas `/api/fair` solo para
+          administrador (sesión de la tienda): abrir feria, feria actual
+          con su stock, traspaso de la web a la feria y movimientos;
+        - página "Feria" del panel: abrir la feria, traspasar stock de
+          la web a la feria, "Pegar lista" y un aviso de que el cierre
+          todavía no existe.
+        **Decisiones:**
+        - una sola feria abierta a la vez (índice único parcial por
+          `status: 'open'`; la segunda responde 409);
+        - traspaso idempotente con `requestId`: un reintento con las
+          mismas líneas devuelve el resultado anterior sin traspasar
+          de nuevo; con otras líneas, 409;
+        - todo o nada: un SKU inexistente (400) o uno que no alcanza
+          en la web (409) deshace todas las líneas;
+        - límites: 100 líneas por traspaso y 1000 unidades por línea;
+        - el stock de la feria vive en su propia colección, fuera de
+          `variants`;
+        - no hay retorno a la web hasta el cierre (67e): un traspaso
+          equivocado se corrige al cerrar.
+        **Rendimiento:** la baja en la web y la suma en la feria van en
+        un `bulkWrite` cada una, dentro de la misma transacción. Un
+        traspaso de 100 líneas bajó de 13,9 s a 581 ms, medido desde el
+        computador de desarrollo hacia la base de prueba; en Vercel
+        puede variar.
+        **Probado solo en local, contra la base de prueba
+        `ecommerceDB_pruebaferia`** (21 de octubre): `prueba-feria.mjs`
+        110 de 110 y 11 puntos de interfaz en la página "Feria". Nada
+        se probó en producción.
+        **Cómo se hacen las pruebas de interfaz:** sembrar la base de
+        prueba con `sembrar-feria-ui.mjs`, crear el admin de prueba con
+        `crear-admin-prueba.mjs`, levantar el backend local con
+        `MONGO_DB_NAME` puesto a `ecommerceDB_pruebaferia` y el
+        frontend local. Regla: antes de abrir una feria, Inventario
+        debe mostrar solo PRUEBA-UI.
+        **Scripts de prueba:** viven fuera del repo, en
+        `pruebas-nebadon`. `BACKEND/scripts/crear-admin-prueba.mjs`
+        sigue sin versionar hasta cerrar la serie 67c.
+        **Aviso:** no abrir una feria real en producción hasta tener el
+        cierre (67e). Sin cierre, el stock traspasado queda fuera de la
+        web, y borrar la feria a mano en la base no lo devuelve.
+      - **67c-2:** ventas, modelo `Sale` y catálogo de ventas: lote
+        idempotente, corregir, anular y "mis ventas".
       - **67d:** la app `VENTAS/` (catálogo con fotos, venta, borradores,
         cola, sincronización).
         - La app trata un 500 de /api/sales como fallo temporal
@@ -1947,6 +1990,11 @@ Relacionado con "🎨 Pulido visual / UI-UX", más arriba:
       seleccionada, que se elige en un efecto después del primer render.
       No se nota al cargar. Baja prioridad.
 
+- [ ] **Página "Feria" del panel: el aviso "web N" bajo la fila usa
+      solo el color rojo** para decir que el stock de la web no alcanza.
+      Agregarle el texto "(no alcanza)", para que no dependa solo del
+      color. Baja prioridad (67c-1).
+
 - [ ] **Deuda técnica: `npm run lint` no pasa limpio.** Al cierre del
       paso 64b da 47 problemas (42 errores y 5 avisos) en 21 archivos,
       todos anteriores a ese paso. Por regla:
@@ -1962,6 +2010,15 @@ Relacionado con "🎨 Pulido visual / UI-UX", más arriba:
       de estilo y esos efectos están probados en producción. El resto no
       se revisó uno por uno. El build no depende del lint. Revisarlo como
       paso propio, por regla y sin cambiar comportamiento.
+      Desde el 67c-1 son 49 (43 errores y 6 avisos). Los 2 nuevos son de
+      `FairPage.jsx` (208:9 `set-state-in-effect` y 209:8
+      `exhaustive-deps`), por la carga inicial en un `useEffect`: es el
+      mismo patrón que `OrdersPage.jsx` 108:9. Se probó `useEffectEvent`
+      (quita el aviso, no el error) y sacar los cambios de estado previos
+      al primer `await` (el `setRefreshing(true)` condicional sigue
+      marcado). Dejarlo limpio exigía reordenar `loadFair` de forma
+      artificial o duplicarla, así que queda como deuda conocida, junto
+      con el de `OrdersPage`.
 
 - [ ] Limpieza cosmética menor, sin apuro: `EnviosYEntregas.jsx` rompe
       la convención del resto del proyecto de nombrar componentes en
