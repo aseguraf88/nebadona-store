@@ -1933,10 +1933,14 @@ Relacionado con "🎨 Pulido visual / UI-UX", más arriba:
       etc.), usando `informe-consistencia-ui-ux.md`, que ya tiene los
       hallazgos del Admin priorizados.
 
-- [ ] **Reorganizar "¿Cómo comprar?" del Home:** la franja se ve muy
+- [x] ~~**Reorganizar "¿Cómo comprar?" del Home:** la franja se ve muy
       delgada, los íconos son demasiado pequeños, las cajas de cada paso
       deben ser cuadradas, y en mobile deben quedar en dos filas y dos
-      columnas.
+      columnas.~~ — resuelto (commit `bfa8bd1`).
+      Decisiones: cajas con borde primary, número en círculo amarillo,
+      paso 4 relleno, flechas entre pasos, 2×2 bajo 1024 px, prop
+      `columns` en `HowToBuy` (`/envios-y-entregas` usa 2 columnas), alto
+      de cajas definido por el contenido.
 
 ## 🔵 Baja prioridad, no bloqueante
 

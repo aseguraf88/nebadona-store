@@ -308,6 +308,5 @@ borrar la feria a mano en la base no lo devuelve.
 Aparte, la versión 1 de "Armar regalos" (casilla de "empaque
 especial", commits `9b95120` a `5665ceb`) está hecha, probada en local
 y probada por Alejandro en pruebas.nebadon.cl el 20 de octubre; ver
-`BACKLOG.md`. Pendientes aparte, en espera de bocetos y referencias de
-Alejandro: "¿Cómo comprar?" y Hero. La app de ventas sigue con el
-67c-2.
+`BACKLOG.md`. Pendiente aparte, en espera de bocetos y referencias de
+Alejandro: Hero. La app de ventas sigue con el 67c-2.
