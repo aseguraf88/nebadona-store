@@ -74,7 +74,7 @@ const EnviosYEntregas = () => {
                     </p>
 
                     {/* Las mismas 4 tarjetas del Home (shared/config/shipping.js) */}
-                    <HowToBuy />
+                    <HowToBuy columns={2} />
 
                     <section>
                         <h2 className={sectionTitleClass}>Formas de entrega</h2>
