@@ -39,21 +39,26 @@ export const DELIVERY_METHODS = [
     {
         id: 'express',
         name: 'Express en Santiago',
-        condition: 'Uber o DiDi · el mismo día',
+        condition: 'Uber o DiDi · el viaje lo contratas tú',
         deliveryType: 'delivery',
         details: [
             'Por Uber o DiDi, el mismo día.',
-            'Te cotizamos el viaje y pagas todo en una sola transferencia.',
+            'Tú contratas y pagas el viaje.',
+            'Te damos la dirección de retiro por WhatsApp para que mandes el transporte.',
+            'Una vez entregado el paquete al conductor, el resto corre por tu cuenta.',
+            'Los productos los pagas por transferencia.',
         ],
-        payment: 'Todo en una sola transferencia.',
+        payment:
+            'Transferencia de los productos; el viaje lo contrata y paga el cliente.',
         icon: Zap,
     },
     {
         id: 'meetup',
         name: 'Punto de encuentro',
-        condition: 'Metro Ciudad del Niño (L2) o Mirador (L5)',
+        condition: 'Metro Ciudad del Niño (L2) o Mirador (L5) · gratis',
         deliveryType: 'pickup',
         details: [
+            'Gratis.',
             'Ciudad del Niño (Línea 2) o Mirador (Línea 5).',
             'Día y hora a convenir.',
             'Pagas en efectivo o por transferencia.',
@@ -67,7 +72,7 @@ export const DELIVERY_METHODS = [
         condition: 'La Granja · gratis',
         deliveryType: 'pickup',
         details: [
-            'Gratis.',
+            'Gratis, en La Granja.',
             'Día y hora a convenir.',
             'Te damos la dirección por WhatsApp.',
             'Pagas en efectivo o por transferencia.',
