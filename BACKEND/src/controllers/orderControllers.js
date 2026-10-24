@@ -54,6 +54,24 @@ export const createWhatsAppOrder = async (req, res) => {
             ? DELIVERY_TYPE_BY_METHOD[deliveryMethod]
             : requestedDeliveryType
 
+        // Dirección: Starken la necesita; Express no (el cliente pone el
+        // destino en su app). Sin deliveryMethod (checkout anterior al paso
+        // 54) no se valida. zipCode queda fuera: el checkout no lo pide
+        if (deliveryMethod === 'agency') {
+            const missingAddress = ['street', 'number', 'city', 'state'].some(
+                (field) =>
+                    typeof shippingInfo?.[field] !== 'string' ||
+                    !shippingInfo[field].trim(),
+            )
+            if (missingAddress) {
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        'Dirección de entrega: es obligatoria para el envío por agencia.',
+                })
+            }
+        }
+
         // 1b. Cantidad, stock y precio real de cada variante pedida (una sola
         // consulta). Si algo no cuadra, se rechaza la orden completa: el PDF
         // y el mensaje de WhatsApp se arman en el frontend con el carrito,
