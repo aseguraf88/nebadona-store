@@ -34,10 +34,14 @@ const Checkout = () => {
 
     const [loading, setLoading] = useState(false)
     // La modalidad elegida (shared/config/shipping.js). deliveryType sale de
-    // ella: 'delivery' (pide dirección) o 'pickup'; null si no hay elegida
+    // ella: 'delivery' (pide dirección; obligatoria salvo con addressOptional)
+    // o 'pickup'; null si no hay elegida
     const [deliveryMethodId, setDeliveryMethodId] = useState(null)
     const deliveryMethod = getDeliveryMethod(deliveryMethodId)
     const deliveryType = deliveryMethod?.deliveryType ?? null
+    const addressOptional = deliveryMethod?.addressOptional === true
+    const addressRequired = addressOptional ? false : 'Requerido'
+    const addressMark = addressOptional ? '' : ' *'
     const [completedOrder, setCompletedOrder] = useState(null)
 
     const fieldClass = (hasError) =>
@@ -53,6 +57,7 @@ const Checkout = () => {
     const {
         register,
         handleSubmit,
+        clearErrors,
         formState: { errors },
     } = useForm({
         defaultValues: {
@@ -187,11 +192,21 @@ const Checkout = () => {
         doc.setFont('helvetica', 'normal')
         doc.setFontSize(10)
 
-        // Nombre de la modalidad; la dirección solo en las de despacho
+        // Nombre de la modalidad; la dirección solo en las de despacho, armada
+        // con lo que exista (en Express es opcional): sin "#" ni comas sueltas
         doc.text(deliveryMethod.name, 105, 48)
         if (deliveryType === 'delivery') {
-            doc.text(`${data.street} #${data.number}, ${data.city}`, 105, 54)
-            doc.text(`Región: ${data.state}`, 105, 60)
+            const streetPart = [
+                data.street?.trim(),
+                data.number?.trim() && `#${data.number.trim()}`,
+            ]
+                .filter(Boolean)
+                .join(' ')
+            const addressLines = [
+                [streetPart, data.city?.trim()].filter(Boolean).join(', '),
+                data.state?.trim() && `Región: ${data.state.trim()}`,
+            ].filter(Boolean)
+            addressLines.forEach((line, i) => doc.text(line, 105, 54 + i * 6))
         } else {
             doc.text('Día y hora a convenir por WhatsApp', 105, 54)
         }
@@ -505,11 +520,21 @@ const Checkout = () => {
                                                 Datos de contacto
                                             </h2>
                                         </div>
+                                        {/* Los errores de la dirección se
+                                            conservan al desmontar el formulario:
+                                            se borran para que no queden en rojo
+                                            en una modalidad donde es opcional */}
                                         <button
                                             type="button"
-                                            onClick={() =>
+                                            onClick={() => {
+                                                clearErrors([
+                                                    'street',
+                                                    'number',
+                                                    'city',
+                                                    'state',
+                                                ])
                                                 setDeliveryMethodId(null)
-                                            }
+                                            }}
                                             className="text-xs font-bold text-primary hover:underline flex items-center gap-1"
                                         >
                                             <FiArrowLeft size={14} /> Cambiar
@@ -587,15 +612,28 @@ const Checkout = () => {
 
                                     {deliveryType === 'delivery' && (
                                         <div className="bg-base-200/40 p-4 rounded-xl border border-base-200 space-y-4">
-                                            <p className="text-xs font-bold uppercase tracking-wider text-base-content/60">
-                                                Dirección de entrega
-                                            </p>
+                                            <div>
+                                                <p className="text-xs font-bold uppercase tracking-wider text-base-content/60">
+                                                    {addressOptional
+                                                        ? 'Dirección de entrega (opcional)'
+                                                        : 'Dirección de entrega'}
+                                                </p>
+                                                {addressOptional && (
+                                                    <p className="mt-1 text-xs text-base-content/60">
+                                                        Con Express, tú
+                                                        contratas el Uber o DiDi
+                                                        y pones el destino en tu
+                                                        app. Si quieres, puedes
+                                                        dejarnos la dirección.
+                                                    </p>
+                                                )}
+                                            </div>
                                             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                                                 <div className="md:col-span-2">
                                                     <input
                                                         {...register('street', {
                                                             required:
-                                                                'Requerido',
+                                                                addressRequired,
                                                         })}
                                                         className={fieldClass(
                                                             Boolean(
@@ -603,14 +641,14 @@ const Checkout = () => {
                                                             ),
                                                         )}
                                                         type="text"
-                                                        placeholder="Calle *"
+                                                        placeholder={`Calle${addressMark}`}
                                                     />
                                                 </div>
                                                 <div>
                                                     <input
                                                         {...register('number', {
                                                             required:
-                                                                'Requerido',
+                                                                addressRequired,
                                                         })}
                                                         className={fieldClass(
                                                             Boolean(
@@ -618,7 +656,7 @@ const Checkout = () => {
                                                             ),
                                                         )}
                                                         type="text"
-                                                        placeholder="N° / Depto *"
+                                                        placeholder={`N° / Depto${addressMark}`}
                                                     />
                                                 </div>
                                             </div>
@@ -628,7 +666,7 @@ const Checkout = () => {
                                                     <input
                                                         {...register('city', {
                                                             required:
-                                                                'Requerido',
+                                                                addressRequired,
                                                         })}
                                                         className={fieldClass(
                                                             Boolean(
@@ -636,14 +674,14 @@ const Checkout = () => {
                                                             ),
                                                         )}
                                                         type="text"
-                                                        placeholder="Comuna / Ciudad *"
+                                                        placeholder={`Comuna / Ciudad${addressMark}`}
                                                     />
                                                 </div>
                                                 <div>
                                                     <input
                                                         {...register('state', {
                                                             required:
-                                                                'Requerido',
+                                                                addressRequired,
                                                         })}
                                                         className={fieldClass(
                                                             Boolean(
@@ -651,7 +689,7 @@ const Checkout = () => {
                                                             ),
                                                         )}
                                                         type="text"
-                                                        placeholder="Región *"
+                                                        placeholder={`Región${addressMark}`}
                                                     />
                                                 </div>
                                             </div>

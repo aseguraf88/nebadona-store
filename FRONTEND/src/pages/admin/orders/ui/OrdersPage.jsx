@@ -54,13 +54,18 @@ const getDeliveryLabel = (order) =>
     getDeliveryMethod(order.deliveryMethod)?.name ??
     (order.deliveryType === 'delivery' ? '🚚 Despacho' : '📍 Retiro')
 
-// Dirección guardada (solo en las de despacho); null si no hay
+// Dirección guardada (solo en las de despacho), armada con lo que exista: en
+// Express es opcional y puede venir parcial. null si no hay nada
 const getShippingAddress = (order) => {
     const address = order.shippingInfo?.address
-    if (!address?.street) return null
-    return `${address.street} #${address.number}, ${address.city}${
-        address.state ? `, ${address.state}` : ''
-    }`
+    if (!address) return null
+    const streetPart = [address.street, address.number && `#${address.number}`]
+        .filter(Boolean)
+        .join(' ')
+    const text = [streetPart, address.city, address.state]
+        .filter(Boolean)
+        .join(', ')
+    return text || null
 }
 
 // Entrar a 'approved' descuenta stock. Salir de 'approved' lo restaura.

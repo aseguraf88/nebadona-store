@@ -19,7 +19,8 @@ import {
 // impersonal y terminada en punto: la leen la dueña en el WhatsApp y el PDF,
 // y el cliente en el checkout) y deliveryType, que la orden sigue guardando
 // (el backend lo deriva igual: orderControllers.js, DELIVERY_TYPE_BY_METHOD).
-// La dirección se pide solo en las de tipo 'delivery'
+// La dirección se pide en las de tipo 'delivery', salvo las marcadas con
+// addressOptional
 export const DELIVERY_METHODS = [
     {
         id: 'agency',
@@ -41,6 +42,7 @@ export const DELIVERY_METHODS = [
         name: 'Express en Santiago',
         condition: 'Uber o DiDi · el viaje lo contratas tú',
         deliveryType: 'delivery',
+        addressOptional: true,
         details: [
             'Por Uber o DiDi, el mismo día.',
             'Tú contratas y pagas el viaje.',
